@@ -21,7 +21,7 @@ func cubicEdgesFactors(volume: int): seq[int] =
     for i in 1..diff:
       result.insert 1, 0
 
-func minArea*(volume: int): int= # scvf: sorted cubic Vertexes Factors
+func minArea*(volume: int): int=
   let e = (cubicEdgesFactors volume).distribute(3).mapIt(it.foldl a * b) # e: edges
   2 * ( e[0] * e[1] + e[0] * e[2] + e[1] * e[2])
 
