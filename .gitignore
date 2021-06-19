@@ -1,1 +1,5 @@
 play.nim
+bin/
+.vscode/
+
+*.exe

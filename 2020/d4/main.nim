@@ -20,7 +20,7 @@ template check(pred: untyped): untyped =
   if not pred:
     return false
 
-func hasFields(p: Passport): bool=}
+func hasFields(p: Passport): bool=
   const mustHaveKeys = ["byr","iyr","eyr","hgt","hcl","ecl","pid"]
   mustHaveKeys.allIt p.hasKey it
 
@@ -50,7 +50,7 @@ func isValid(p: Passport): bool=
 # code ----------------------------------------
 
 var passports = 
-  ("./input.txt".readFile.split "\c\n\c\n").mapIt it.exportData
+  ("./2020/d4/input.txt".readFile.split "\c\n\c\n").mapIt it.exportData
 
 block part1:
   passports = passports.filterIt it.hasFields
