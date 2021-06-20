@@ -1,5 +1,4 @@
 import sequtils, strutils, tables
-import print
 
 const 
   inpfPath = "./input.txt"
