@@ -46,7 +46,7 @@ block part2: # to be hosent i dont know what to do
     seats[pos.y].add pos.x
 
   for k in seats.keys:
-    if seats[k].len != 0 and seats[k].len < cols.len:
+    if seats[k].len in 1..<cols.len:
       for x in cols:
         if x notin seats[k]:
           echo (k,x), (k,x).seatId # echos candidates
