@@ -1,13 +1,13 @@
 import sequtils, strutils, tables
 
-const 
+const
   inpfPath = "./input.txt"
   rows = 0..<128
   cols = 0..<8
 
 type SeatPlace = tuple[y, x: int]
 
-func findPos(codeLine: string): SeatPlace=
+func findPos(codeLine: string): SeatPlace =
   var
     rowRng = rows
     colRng = cols
@@ -17,21 +17,21 @@ func findPos(codeLine: string): SeatPlace=
     template halfCols: untyped = colrng.len div 2
 
     case c:
-    of 'F': rowRng = rowRng.a .. (rowRng.b  - halfRows)
+    of 'F': rowRng = rowRng.a .. (rowRng.b - halfRows)
     of 'B': rowRng = (rowRng.a + halfRows) .. rowRng.b
     of 'L': colRng = colRng.a .. (colRng.b - halfCols)
     of 'R': colRng = (colRng.a + halfCols) .. colRng.b
     else:
       raise newException(ValueError, "the code character is not defied")
-  
+
   (rowRng.a, colRng.a)
 
-func seatId(sp: SeatPlace): int = 
+func seatId(sp: SeatPlace): int =
   sp.y * 8 + sp.x
 
 block part1:
   var maxSeatID = 0
-  
+
   for codeLine in inpfPath.lines:
     maxSeatID = max(maxSeatID, codeLine.findPos.seatId)
 
@@ -48,4 +48,4 @@ block part2: # to be hosent i dont know what to do
     if seats[k].len in 1..<cols.len:
       for x in cols:
         if x notin seats[k]:
-          echo (k,x), (k,x).seatId # echos candidates
+          echo (k, x), (k, x).seatId # echos candidates

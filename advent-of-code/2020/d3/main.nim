@@ -17,11 +17,11 @@ func wouldBeEncounter(line: seq[int], lineWidth, xpos: int): bool =
 
 func walkOnMap(map: seq[seq[int]], lineWidth, ystep, xstep: int): int =
   var (y, x) = (ystep, xstep)
-  
+
   while y < map.len:
     if wouldBeEncounter(map[y], lineWidth, x):
       result.inc
-    
+
     inc y, ystep
     inc x, xstep
 

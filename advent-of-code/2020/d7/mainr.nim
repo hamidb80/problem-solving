@@ -7,7 +7,7 @@ type Bag = object
   color: string
 
 func hash(b: Bag): Hash = hash b.color
-func `==`(a,b: Bag): bool = a.color == b.color
+func `==`(a, b: Bag): bool = a.color == b.color
 
 func parseBags(bags: seq[string]): HashSet[Bag] =
   for bag in bags:
@@ -27,7 +27,7 @@ func parseRule(line: string): tuple[mainBagColor: string, bags: HashSet[Bag]] =
 # preparing data -------------------------------------------------
 
 var rules: Table[string, HashSet[Bag]]
-const targetBag = Bag(color:"shiny gold", count: 1)
+const targetBag = Bag(color: "shiny gold", count: 1)
 for line in "./input.txt".lines:
   let rule = line.parseRule
   rules[rule.mainBagColor] = rule.bags
@@ -35,11 +35,11 @@ for line in "./input.txt".lines:
 # code -----------------------------------------------------------
 
 func isParentOf(
-  table:var Table[string, HashSet[Bag]], 
+  table: var Table[string, HashSet[Bag]],
   visited: var HashSet[Bag],
   target: Bag,
-  )=
-  
+  ) =
+
   for parentColor, subBags in table:
     let cb = Bag(color: parentColor)
     if cb notin visited and target in subBags:
@@ -52,9 +52,9 @@ block part1:
   echo visited.len
 
 func countSubBags(
-  table: var Table[string, HashSet[Bag]], 
+  table: var Table[string, HashSet[Bag]],
   target: Bag
-  ): int=
+  ): int =
 
   var c = 0
   for subBag in table[target.color]:

@@ -6,19 +6,19 @@ type Inctruction = object
   command: string
   value: int
 
-func parseInstruction(line: string): Inctruction=
+func parseInstruction(line: string): Inctruction =
   let sl = line.splitWhitespace
   Inctruction(command: sl[0], value: sl[1].parseInt)
 
 
-template findIndexIt(s: typed, pred:untyped): int=
+template findIndexIt(s: typed, pred: untyped): int =
   var result = -1
 
   for i, it{.inject.} in s:
     if pred:
       result = i
       break
-  
+
   result
 # preparing data -------------------------------------------
 
@@ -29,7 +29,7 @@ var instructions = collect newSeq: # i just learned collect
 # code ----------------------------------------------------
 
 block part1:
-  var 
+  var
     visitedLines: seq[int]
     line = 0
     accumulator = 0
@@ -55,35 +55,36 @@ block part1:
 
 block part2:
 
-  func isReversable(lastCommand: string): bool=
+  func isReversable(lastCommand: string): bool =
     lastCommand in ["jmp", "nop"]
-  func reverse(lastCommand: string): string=
+  func reverse(lastCommand: string): string =
     case lastCommand:
     of "jmp": "nop"
     of "nop": "jmp"
-    else: 
-      raise newException(ValueError, "the command is not in 'jmp' or 'nop'" )
+    else:
+      raise newException(ValueError, "the command is not in 'jmp' or 'nop'")
 
   # fix the app ------------------------
   var
     lineHistory: seq[int]
     line = 0
     changedInsLine = -1
-  
+
   while line < instructions.len:
     if line in lineHistory:
       template ins: untyped = instructions[changedInsLine]
 
-      if changedInsLine != -1: 
+      if changedInsLine != -1:
         ins.command = ins.command.reverse
-        lineHistory = lineHistory[0 ..< (lineHistory.findIndexIt it == changedInsLine)]
-      
+        lineHistory = lineHistory[0 ..< (lineHistory.findIndexIt it ==
+            changedInsLine)]
+
       changedInsLine = lineHistory.pop
       while changedInsLine > 0:
         if ins.command.isReversable:
           ins.command = ins.command.reverse
           break
-        
+
         changedInsLine = lineHistory.pop
       line = changedInsLine
 
