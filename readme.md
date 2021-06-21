@@ -1,6 +1,6 @@
-# my attemps to solve programming problems:
+# my attemps to solve programming problems
 
-- `advent-of-code`:
+- `advent-of-code`
   - **2020**:
     other people:
     1. [narimiran](https://github.com/narimiran/AdventOfCode2020)
