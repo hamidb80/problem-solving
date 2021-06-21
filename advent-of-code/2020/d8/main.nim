@@ -20,6 +20,7 @@ template findIndexIt(s: typed, pred: untyped): int =
       break
 
   result
+
 # preparing data -------------------------------------------
 
 var instructions = collect newSeq: # i just learned collect
@@ -28,7 +29,7 @@ var instructions = collect newSeq: # i just learned collect
 
 # code ----------------------------------------------------
 
-block part1:
+block part1: # stop the app before loop
   var
     visitedLines: seq[int]
     line = 0
@@ -54,9 +55,9 @@ block part1:
       break part1
 
 block part2:
-
   func isReversable(lastCommand: string): bool =
     lastCommand in ["jmp", "nop"]
+
   func reverse(lastCommand: string): string =
     case lastCommand:
     of "jmp": "nop"
@@ -65,28 +66,30 @@ block part2:
       raise newException(ValueError, "the command is not in 'jmp' or 'nop'")
 
   # fix the app ------------------------
+
   var
     lineHistory: seq[int]
     line = 0
     changedInsLine = -1
 
-  while line < instructions.len:
-    if line in lineHistory:
+  while line < instructions.len: # until end of the app
+    if line in lineHistory: # if you've seen this line before
       template ins: untyped = instructions[changedInsLine]
 
-      if changedInsLine != -1:
+      if changedInsLine != -1: # if you tried to fix the code before
         ins.command = ins.command.reverse
-        lineHistory = lineHistory[0 ..< (lineHistory.findIndexIt it ==
-            changedInsLine)]
+        lineHistory = lineHistory[
+          0 ..< (lineHistory.findIndexIt it == changedInsLine)]
 
       changedInsLine = lineHistory.pop
-      while changedInsLine > 0:
+      while changedInsLine > 0: # select an earlier line
         if ins.command.isReversable:
           ins.command = ins.command.reverse
           break
 
         changedInsLine = lineHistory.pop
       line = changedInsLine
+
 
     lineHistory.add line
 

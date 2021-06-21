@@ -1,4 +1,4 @@
-import strutils, tables, sets, hashes
+import strutils, tables, sets, hashes, sugar
 
 # functionalities ------------------------------------------------
 
@@ -26,11 +26,12 @@ func parseRule(line: string): tuple[mainBagColor: string, bags: HashSet[Bag]] =
 
 # preparing data -------------------------------------------------
 
-var rules: Table[string, HashSet[Bag]]
 const targetBag = Bag(color: "shiny gold", count: 1)
-for line in "./input.txt".lines:
-  let rule = line.parseRule
-  rules[rule.mainBagColor] = rule.bags
+
+var rules: Table[string, HashSet[Bag]] = collect initTable:
+  for line in "./input.txt".lines:
+    let rule = line.parseRule
+    {rule.mainBagColor: rule.bags}
 
 # code -----------------------------------------------------------
 
