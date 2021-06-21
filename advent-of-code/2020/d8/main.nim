@@ -2,14 +2,12 @@ import strutils, sugar
 
 # functionalitites ------------------------------------------
 
-type Inctruction = object
+type Instruction = object
   command: string
   value: int
 
-func parseInstruction(line: string): Inctruction =
-  let sl = line.splitWhitespace
-  Inctruction(command: sl[0], value: sl[1].parseInt)
-
+func parseInstruction(line: string): Instruction =
+  Instruction(command: line[0..<3], value: line[4..^1].parseInt)
 
 template findIndexIt(s: typed, pred: untyped): int =
   var result = -1
@@ -29,30 +27,38 @@ var instructions = collect newSeq: # i just learned collect
 
 # code ----------------------------------------------------
 
-block part1: # stop the app before loop
+func run(instructions: var seq[Instruction], loopDetector: static[bool]): tuple[
+    isFinished: bool, acc: int] =
+
+  when loopDetector:
+    var visitedLines: seq[int]
+
   var
-    visitedLines: seq[int]
     line = 0
-    accumulator = 0
+    acc = 0
 
-  while true:
-    visitedLines.add line
+  while line <= instructions.high:
+    when loopDetector:
+      visitedLines.add line
+
     let ins = instructions[line]
-
     case ins.command:
     of "jmp":
       line.inc ins.value
     of "acc":
-      accumulator.inc ins.value
+      acc.inc ins.value
       line.inc
-    of "nop":
+    else: # "nop"
       line.inc
-    else:
-      raise newException(ValueError, "undefined command")
 
-    if line in visitedLines:
-      echo accumulator
-      break part1
+    when loopDetector:
+      if line in visitedLines:
+        return (false, acc)
+
+  (true, acc)
+
+block part1: # stop the app before loop
+  echo run(instructions, true).acc
 
 block part2:
   func isReversable(lastCommand: string): bool =
@@ -100,19 +106,4 @@ block part2:
 
   # run the app ------------------------
 
-  var accumulator = 0
-  line = 0
-  while line < instructions.len:
-    let ins = instructions[line]
-    case ins.command:
-    of "jmp":
-      line.inc ins.value
-    of "nop":
-      line.inc
-    of "acc":
-      accumulator.inc ins.value
-      line.inc
-    else: discard
-
-  echo accumulator
-
+  echo run(instructions, false).acc
