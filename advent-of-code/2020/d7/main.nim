@@ -19,9 +19,7 @@ func parseBags(bags: seq[string]): HashSet[Bag] =
         color: words[1 ..< ^1].join " ")
 
 func parseRule(line: string): tuple[mainBagColor: string, bags: HashSet[Bag]] =
-  let
-    ls = line.split " bags contain "
-
+  let ls = line.split " bags contain "
   (ls[0], (ls[1].split ',').parseBags)
 
 # preparing data -------------------------------------------------
