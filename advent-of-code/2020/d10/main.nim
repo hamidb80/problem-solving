@@ -19,7 +19,7 @@ block part1:
 
   echo diffs[1] * diffs[3]
 
-proc waysToSort(nums: seq[int], maxDiff: bool): int=
+func waysToSort(nums: seq[int], maxDiff: bool): int=
   if maxDiff:
     result = 1
     var cutFrom = 0
