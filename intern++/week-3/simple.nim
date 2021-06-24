@@ -1,7 +1,7 @@
 import sugar, sequtils, strutils
 
-func gt(a,b: int): bool = `>`(a, b)
-func lt(a,b: int): bool = `<`(a, b)
+func gt(a,b: int): bool = a > b
+func lt(a,b: int): bool = a < b
 
 let size = stdin.readLine.splitWhitespace.map parseInt
 let m = collect newseq: # m: matrix
