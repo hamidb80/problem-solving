@@ -87,12 +87,12 @@ block part2:
               inc onc
             break
         
-        # vertical & horizontal
+        # on row and column
         for vx in 1..x: checkCell(x-vx, y)
         for vx in x+1..<size.x: checkCell(vx, y)
         for vy in 1..y: checkCell(x, y-vy)
         for vy in y+1..<size.y: checkCell(x, vy)
-        # diameters
+        # on diameters
         for r in 1..min(x, y): checkCell(x-r, y-r)
         for r in 1..min(size.x-x-1, size.y-y-1): checkCell(x+r, y+r)
         for r in 1..min(x, size.y-y-1): checkCell(x-r, y+r)
