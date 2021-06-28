@@ -14,22 +14,33 @@ block part1:
 
   echo busList[minWaitIndex] * waits[minWaitIndex]
 
-func occur(n1, n2, plus: int): int=
-  if n1 * n2 == 0: return n1 + n2
+func occur(base, divid, plus, step: int): int=
+  if divid == 0: return base
+  var time = base
 
-  let 
-    mx = max(n1, n2)
-    mn = min(n1, n2)
-    np = 
-      if mx == n1: plus
-      else: -plus
-
-  var time = mx
-
-  while (time + np) mod mn != 0:
-    time += mx
+  while (time + plus) mod divid != 0:
+    time += step
 
   time
+
+proc drawTimeline(time: int, busIds:seq[int])=
+  let 
+    off = busIds.mapIt:
+      let t = time mod it
+      if t == 0: 0
+      else: it - t
+    max = max off
+
+
+  for timeCursor in time..time+max:
+    let a = collect newseq:
+      for it in busIds:
+        if timeCursor mod it == 0: '0'
+        else: '-'
+
+    echo timeCursor, " | ", a.join
+
+
 
 block part2:
   # print occur(17, 13, +2)
@@ -49,7 +60,10 @@ block part2:
     if id == 0: 
       continue
     
-    echo (ans, id, i)
-    ans = occur(ans, id, i)
+    let step = ans * (busTimingList[i-1] + 1)
+
+    echo "occur", (ans, id, i, step)
+    ans = occur(ans, id, i, step)
 
   echo ans
+  drawTimeline ans, busTimingList.filterIt it != 0
