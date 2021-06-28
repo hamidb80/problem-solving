@@ -5,9 +5,6 @@ let
   lines = (readFile "./sample.txt").splitLines
   tttbs  = lines[0].parseInt # time to take to bus top
 
-func `[]`(r:HSlice[int, int], index: int): int= 
-  r.a + index
-
 
 block part1:
   let  
@@ -17,45 +14,42 @@ block part1:
 
   echo busList[minWaitIndex] * waits[minWaitIndex]
 
-func occur(less, mx, plus: int): int=
-  # var time = 0
+func occur(n1, n2, plus: int): int=
+  if n1 * n2 == 0: return n1 + n2
+
+  let 
+    mx = max(n1, n2)
+    mn = min(n1, n2)
+    np = 
+      if mx == n1: plus
+      else: -plus
+
   var time = mx
 
-  while (time + plus) mod less != 0:
+  while (time + np) mod mn != 0:
     time += mx
 
   time
 
 block part2:
+  # print occur(17, 13, +2)
+  # print occur(13, 17, -2)
+
   let 
     busTimingList = lines[1].split(',').mapIt:
       if it == "x": 0
       else: it.parseInt
-  
-    stepBusIndex = busTimingList.maxIndex
-    step = busTimingList[stepBusIndex]
-
-
-  # var maxOnIdsTimesToMatch = collect newSeq:
-    # for i, id in busTimingList:
-      # occur(id, step)
-
 
   print busTimingList
 
-  var maxOnIdsTimesToMatch = collect newSeq:
-    for i, id in busTimingList:
-      if id != 0:
-        occur id, step, i - stepBusIndex
+  var ans = busTimingList[0]
+  for i in 1..busTimingList.high:
+    let id = busTimingList[i]
 
-  print maxOnIdsTimesToMatch
+    if id == 0: 
+      continue
+    
+    echo (ans, id, i)
+    ans = occur(ans, id, i)
 
-  echo lcm maxOnIdsTimesToMatch.filterIt it != 0
-  # maxOnIdsTimesToMatch.applyIt:
-  #   let coeff = kn2Lcm div it.kn2
-  #   (it.kn1 * coeff, it.kn2 * coeff)
-
-  # print maxOnIdsTimesToMatch
-  # print gcd maxOnIdsTimesToMatch.mapIt it.kn1
-  # let l = lcm maxOnIdsTimesToMatch.mapIt it.kn1
-  # print gcd(l, maxOnIdsTimesToMatch[0].kn2)
+  echo ans
