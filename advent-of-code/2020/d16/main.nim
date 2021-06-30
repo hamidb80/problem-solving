@@ -1,5 +1,7 @@
-import sugar, strutils, sequtils, math, tables
-import print 
+import sugar, strutils, sequtils, math, tables, sets
+import print
+
+const NotFound = -1
 
 type
   Rule = tuple
@@ -8,12 +10,12 @@ type
 
   Ticket = seq[int]
 
-func line2ticket(line: string): Ticket =
+func parseTicket(line: string): Ticket =
   line.split(',').map parseInt
 
-let 
-  document = readFile("./sample.txt").split "\c\n\c\n"
-  
+let
+  document = readFile("./input.txt").split "\c\n\c\n"
+
   rules: seq[Rule] = collect newseq:
     for line in document[0].splitLines:
       let defineIndex = line.find ':'
@@ -24,8 +26,8 @@ let
           values[0]..values[1]
       ))
 
-  yourTicket = document[1].splitLines[1].line2ticket
-  nearbyTickets = document[2].splitLines[1..^1].map line2ticket
+  yourTicket = document[1].splitLines[1].parseTicket
+  nearbyTickets = document[2].splitLines[1..^1].map parseTicket
 
 block part1:
   var numbers: seq[int]
@@ -69,4 +71,26 @@ block part2:
 
   # print tickets
   print validRuleColoumns
-  print validRuleColoumns.len
+
+  var unResolvedRules = validRuleColoumns.keys.toseq.toHashSet
+  while unResolvedRules.len > 0:
+    for key in unResolvedRules:
+      if validRuleColoumns[key].len == 1:
+        let uniqueCol = validRuleColoumns[key][0]
+        for k, v in validRuleColoumns:
+          if k != key:
+            let i = v.find uniqueCol
+            if i != NotFound:
+              del validRuleColoumns[k], i
+
+        unResolvedRules.excl key
+        break
+
+  print validRuleColoumns
+
+  let vals = collect newseq:
+    for key, val in validRuleColoumns:
+      if "departure" in key:
+        val[0]
+
+  echo vals.foldl a * b
