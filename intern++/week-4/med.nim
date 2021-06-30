@@ -27,9 +27,16 @@ var
   lastTime = 0
 
 # for i in 0..contactList.high:
+template NO: untyped =
+  echo "NO"
+  quit()
+
 for contact in contactList:
   let passedTime = contact.`when` - lastTime
   if passedTime > 0:
+    if tasks.anyIt it < lastTime + passedTime:
+      NO
+
     for i in 1..min(passedTime * maxTasks, tasks.len):
       del tasks, minIndex tasks
 
@@ -38,7 +45,6 @@ for contact in contactList:
   tasks.add contact.`when` + contact.waitsFor
 
   if tasks.len > maxTasks:
-    echo "NO"
-    quit()
+    NO
 
 echo "YES"
