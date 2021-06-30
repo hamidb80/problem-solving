@@ -71,7 +71,7 @@ var activeCubesPure = block:
         if cell == '#':
           [x, y, 0, 0]
 
-func calc(activeCubes: seq[HyperPoint], space: Hyper, area: Hyper ):seq[HyperPoint]=
+func calc(activeCubes: seq[HyperPoint], space: Hyper, area: Hyper): seq[HyperPoint] =
   result = activeCubes
 
   inSpace p, space[X], space[Y], space[Z], space[W]:
@@ -94,12 +94,12 @@ func calc(activeCubes: seq[HyperPoint], space: Hyper, area: Hyper ):seq[HyperPoi
 
 block part1:
   var activeCubes = activeCubesPure
-  
+
   for _ in 1..6:
     let space = getSpaceSize(activeCubes)
 
     activeCubes = calc(
-      activeCubes, 
+      activeCubes,
       [space[X].expand 1, space[Y].expand 1, space[Z].expand 1, 0..0],
       [-1..1, -1..1, -1..1, 0..0]
     )
@@ -108,12 +108,12 @@ block part1:
 
 block part2:
   var activeCubes = activeCubesPure
-  
+
   for _ in 1..6:
     let space = getSpaceSize(activeCubes)
 
     activeCubes = calc(
-      activeCubes, 
+      activeCubes,
       [space[X].expand 1, space[Y].expand 1, space[Z].expand 1, space[W].expand 1],
       [-1..1, -1..1, -1..1, -1..1]
     )
