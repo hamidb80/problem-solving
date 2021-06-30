@@ -12,17 +12,15 @@ func cmp(a,b: Message): int=
 
 [contactsLen, maxTasks] <- stdin.readLine.split(' ').map parseInt
 
-var contactList = collect newseq:
+var contactList: seq[Message] = collect newseq:
   for i in 1..contactsLen:
     let values = stdin.readLine.split(' ').map parseInt
-    (`when`: values[0], waitsFor: values[1])
+    (values[0], values[1])
 
-# it should sorted by priority rather than just when
 contactList.sort cmp
+# print contactList
 
 # code  --------------------------------------------------
-
-# print contactList
 
 var 
   tasks: seq[int] ## a seq of task priority
