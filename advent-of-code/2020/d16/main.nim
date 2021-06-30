@@ -1,6 +1,8 @@
 import sugar, strutils, sequtils, math, tables, sets
 import print
 
+# datastrcuture ----------------------------------
+
 const NotFound = -1
 
 type
@@ -10,8 +12,18 @@ type
 
   Ticket = seq[int]
 
+# functionalities --------------------------------
+
 func parseTicket(line: string): Ticket =
   line.split(',').map parseInt
+
+func isMatched(number: int, ranges: seq[HSlice[int, int]]): bool =
+  ranges.anyIt number in it
+
+func isValid(number: int, rules: seq[Rule]): bool =
+  rules.anyIt isMatched(number, it.ranges)
+
+# preparing data -----------------------------------------
 
 let
   document = readFile("./input.txt").split "\c\n\c\n"
@@ -28,6 +40,8 @@ let
 
   yourTicket = document[1].splitLines[1].parseTicket
   nearbyTickets = document[2].splitLines[1..^1].map parseTicket
+
+# code -------------------------------------------
 
 block part1:
   var numbers: seq[int]
@@ -47,12 +61,6 @@ block part1:
   echo sum numbers
 
 
-func isMatched(number: int, ranges: seq[HSlice[int, int]]): bool =
-  ranges.anyIt number in it
-
-func isValid(number: int, rules: seq[Rule]): bool =
-  rules.anyIt isMatched(number, it.ranges)
-
 block part2:
   let
     tickets = nearbyTickets.filterIt it.allIt it.isValid rules
@@ -60,7 +68,7 @@ block part2:
 
   var validRuleColoumns: Table[string, seq[int]]
 
-  for rule in rules:
+  for rule in rules: ## find mathed columns for rules
     for col in 0..<columns:
 
       if tickets.allIt it[col].isMatched(rule.ranges):
@@ -70,10 +78,10 @@ block part2:
           validRuleColoumns[rule.title] = @[col]
 
   # print tickets
-  print validRuleColoumns
+  # print validRuleColoumns
 
   var unResolvedRules = validRuleColoumns.keys.toseq.toHashSet
-  while unResolvedRules.len > 0:
+  while unResolvedRules.len > 0: ## find corresponding columns
     for key in unResolvedRules:
       if validRuleColoumns[key].len == 1:
         let uniqueCol = validRuleColoumns[key][0]
@@ -86,11 +94,11 @@ block part2:
         unResolvedRules.excl key
         break
 
-  print validRuleColoumns
+  # print validRuleColoumns
 
   let vals = collect newseq:
     for key, val in validRuleColoumns:
       if "departure" in key:
-        val[0]
+        yourTicket[val[0]]
 
   echo vals.foldl a * b
