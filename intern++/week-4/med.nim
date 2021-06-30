@@ -5,7 +5,7 @@ import unpack, strutils, sequtils, sugar, algorithm
 
 type Message = tuple
   `when`: int
-  waitsFor: int
+  until: int
 
 func cmp(a,b: Message): int=
   cmp a.`when`, b.`when`
@@ -28,25 +28,19 @@ var
   tasks: seq[int] ## a seq of task priority
   lastTime = 0
 
-# for i in 0..contactList.high:
-template NO: untyped =
-  echo "NO"
-  quit()
-
 for contact in contactList:
   let passedTime = contact.`when` - lastTime
   if passedTime > 0:
-    if tasks.anyIt it < lastTime + passedTime:
-      NO
-
     for i in 1..min(passedTime * maxTasks, tasks.len):
       del tasks, minIndex tasks
 
+    
+    if tasks.anyIt it < lastTime + passedTime:
+      echo "NO"
+      quit()
+
     lastTime += passedTime 
 
-  tasks.add contact.`when` + contact.waitsFor
-
-  if tasks.len > maxTasks:
-    NO
+  tasks.add contact.until + 1
 
 echo "YES"
