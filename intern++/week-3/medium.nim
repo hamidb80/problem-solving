@@ -1,3 +1,5 @@
+# https://quera.ir/problemset/contest/3432/
+
 import sets, strutils, sequtils, sugar
 
 discard stdin.readLine

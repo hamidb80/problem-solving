@@ -1,3 +1,5 @@
+# https://quera.ir/problemset/contest/33023/
+
 import sugar, sequtils, strutils
 
 func gt(a,b: int): bool = a > b

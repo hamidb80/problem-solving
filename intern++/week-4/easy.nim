@@ -1,3 +1,5 @@
+# https://quera.ir/problemset/contest/26651/
+
 import sequtils, strutils
 
 func toIntSeq(line: string): seq[int]= 
