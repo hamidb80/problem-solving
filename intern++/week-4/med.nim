@@ -34,7 +34,6 @@ for contact in contactList:
     for i in 1..min(passedTime * maxTasks, tasks.len):
       del tasks, minIndex tasks
 
-    
     if tasks.anyIt it < lastTime + passedTime:
       echo "NO"
       quit()
