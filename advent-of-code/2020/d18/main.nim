@@ -22,7 +22,7 @@ type
 
 # functionalities ---------------------------------------
 
-func extractIfYouCan(m: MathObj): MathObj =
+func extractIfYouCan(m: MathObj): MathObj {.inline.}=
   if m.kind == MOPar and m.children.len == 1:
     m.children[0]
   else:
@@ -48,7 +48,7 @@ func parseMath(line: string): MathObj =
     of ')':
       parDepth.dec
       if parDepth == 0:
-        add parseMath line[(lastIndex+1)..(i-1)]
+        add parseMath line[lastIndex+1..i-1]
 
     elif parDepth == 0:
       case c:
