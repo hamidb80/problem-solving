@@ -22,12 +22,21 @@ type
 
 # functionalities ---------------------------------------
 
+func extractIfYouCan(m: MathObj): MathObj =
+  if m.kind == MOPar and m.children.len == 1:
+    m.children[0]
+  else:
+    m
+
 func parseMath(line: string): MathObj =
   result = MathObj(kind: MOPar)
 
   var
     parDepth = 0
     lastIndex = -1
+
+  template add(mathobj): untyped =
+    result.children.add mathobj
 
   for i, c in line:
     case c:
@@ -39,20 +48,19 @@ func parseMath(line: string): MathObj =
     of ')':
       parDepth.dec
       if parDepth == 0:
-        result.children.add parseMath line[(lastIndex+1)..(i-1)]
+        add parseMath line[(lastIndex+1)..(i-1)]
 
     elif parDepth == 0:
       case c:
       of '+', '*':
-        result.children.add MathObj(kind: MOOpera, operator: c)
+        add MathObj(kind: MOOpera, operator: c)
       of '0'..'9':
-        result.children.add MathObj(kind: MONumber, number: parseInt $c)
+        add MathObj(kind: MONumber, number: parseInt $c)
       else:
         raise newException(ValueError, "undefined character")
     else: discard
 
-  if result.children.len == 1:
-    result = result.children[0]
+  result = extractIfYouCan result
 
 func calculate(expression: MathObj): int =
   doAssert expression.kind == MOPar
@@ -75,12 +83,6 @@ func calculate(expression: MathObj): int =
       op = child.operator
     of MONumber:
       doOperation child.number
-
-func extractIfYouCan(m: MathObj): MathObj =
-  if m.kind == MOPar and m.children.len == 1:
-    m.children[0]
-  else:
-    m
 
 proc applyPriority(expression: MathObj): MathObj =
   ## puting n1 + n2 + ... together inside a par
