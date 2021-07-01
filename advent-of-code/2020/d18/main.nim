@@ -3,6 +3,8 @@ import print
 
 # data structure ------------------------------
 
+const NoOperator = ' '
+
 type 
   MOKinds = enum # Math Object kind
     MONumber
@@ -52,8 +54,6 @@ func parseMath(line: string): MathObj=
   if result.children.len == 1: 
     result = result.children[0]
 
-const NoOperator = ' '
-
 func calculate(expression: MathObj): int=
   doAssert expression.kind == MOPar
 
@@ -76,70 +76,64 @@ func calculate(expression: MathObj): int=
     of MONumber:
       doOperation child.number
 
-func sumResult(document: seq[MathObj]): int {.inline.}=
-  sum document.mapIt it.calculate
+func extractIfYouCan(m: MathObj): MathObj=
+  if m.kind == MOPar and m.children.len == 1:
+    m.children[0]
+  else:
+    m
 
-proc del*[T](x: var seq[T], rng: HSlice[int, int]) {.noSideEffect.} =
-  ## Deletes the item in range `rng`
-  for i in 1..rng.len:
-    del x, rng.a
+proc applyPriority(expression: MathObj): MathObj=
+  ## puting n1 + n2 + ... together inside a par
+  result = MathObj(kind: MOPar)
+  doAssert expression.kind == MOPar
+
+  var multipicationIndexs: seq[int]
+  for i, child in expression.children:
+    if child.kind == MOOpera and child.operator == '*':
+      multipicationIndexs.add i
+
+  add multipicationIndexs, expression.children.len
+
+  var 
+    i = 0
+    cache: seq[MathObj]
+
+  for index in multipicationIndexs:
+    while i < index:
+      let child = expression.children[i]
+      case child.kind:
+      of MOPar:
+        cache.add applyPriority child
+      else:
+        cache.add child
+
+      inc i
+    inc i
+    
+    result.children.add extractIfYouCan MathObj(kind: MOPar, children: cache)
+    if index != expression.children.len:
+      result.children.add expression.children[index]
+
+    cache = @[]
+
+  result = extractIfYouCan result
 
 # preparing data ---------------------------------------
 
 var document = collect newseq:
-  for line in "./test.txt".lines:
+  for line in "./input.txt".lines:
     parseMath line
 
-
 # code -------------------------------------------------
+
+func sumResult(document: seq[MathObj]): int {.inline.}=
+  sum document.mapIt it.calculate
 
 block part1:
   echo sumResult document
 
-proc applyPriority(expression: MathObj): MathObj=
-  result = MathObj(kind: MOPar)
-  doAssert expression.kind == MOPar
-
-  template addPar(newChildren: untyped): untyped =
-    result.children.add MathObj(kind: MOPar, children: newChildren)
-
-  var 
-    same= 0..0
-    lastOp = '+'
-  for i, child in expression.children:
-    if child.kind == MOOpera:
-      if lastOp == '+':
-        if child.operator == '+':
-          same.b = i + 1
-
-        elif same.a != same.b: # put it inside par
-          addPar expression.children[same]
-        else:
-          result.children.add child
-
-      elif child.operator == '+':
-        same = i+1..i+1
-
-      if child.operator == '*': # WHATS GOING ON??
-        result.children.add child
-
-      lastOp = child.operator
-    
-    else:
-      if i == expression.children.high:
-        if same.len == 1:
-          result.children.add expression.children[same.a - 1] # for operator
-          result.children.add expression.children[same.a]
-        else:
-          addPar expression.children[same]
-
-      elif child.kind == MOPar: 
-        result.children.add applyPriority child
-      elif child.kind == MONumber and lastOp == '*':
-        result.children.add child
-
 block part2:
   let newDoc = document.mapIt it.applyPriority
-  print newDoc
+  # print newDoc
 
-  echo sumResult document
+  echo sumResult newDoc
