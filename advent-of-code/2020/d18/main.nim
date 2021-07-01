@@ -5,7 +5,7 @@ import print
 
 const NoOperator = ' '
 
-type 
+type
   MOKinds = enum # Math Object kind
     MONumber
     MOOpera
@@ -22,13 +22,13 @@ type
 
 # functionalities ---------------------------------------
 
-func parseMath(line: string): MathObj=
+func parseMath(line: string): MathObj =
   result = MathObj(kind: MOPar)
 
-  var 
+  var
     parDepth = 0
     lastIndex = -1
-  
+
   for i, c in line:
     case c:
     of ' ': continue
@@ -46,15 +46,15 @@ func parseMath(line: string): MathObj=
       of '+', '*':
         result.children.add MathObj(kind: MOOpera, operator: c)
       of '0'..'9':
-        result.children.add MathObj(kind: MONumber,  number: parseInt $c)
+        result.children.add MathObj(kind: MONumber, number: parseInt $c)
       else:
         raise newException(ValueError, "undefined character")
     else: discard
 
-  if result.children.len == 1: 
+  if result.children.len == 1:
     result = result.children[0]
 
-func calculate(expression: MathObj): int=
+func calculate(expression: MathObj): int =
   doAssert expression.kind == MOPar
 
   var op = NoOperator
@@ -76,13 +76,13 @@ func calculate(expression: MathObj): int=
     of MONumber:
       doOperation child.number
 
-func extractIfYouCan(m: MathObj): MathObj=
+func extractIfYouCan(m: MathObj): MathObj =
   if m.kind == MOPar and m.children.len == 1:
     m.children[0]
   else:
     m
 
-proc applyPriority(expression: MathObj): MathObj=
+proc applyPriority(expression: MathObj): MathObj =
   ## puting n1 + n2 + ... together inside a par
   result = MathObj(kind: MOPar)
   doAssert expression.kind == MOPar
@@ -94,7 +94,7 @@ proc applyPriority(expression: MathObj): MathObj=
 
   add multipicationIndexs, expression.children.len
 
-  var 
+  var
     i = 0
     cache: seq[MathObj]
 
@@ -109,7 +109,7 @@ proc applyPriority(expression: MathObj): MathObj=
 
       inc i
     inc i
-    
+
     result.children.add extractIfYouCan MathObj(kind: MOPar, children: cache)
     if index != expression.children.len:
       result.children.add expression.children[index]
@@ -126,7 +126,7 @@ var document = collect newseq:
 
 # code -------------------------------------------------
 
-func sumResult(document: seq[MathObj]): int {.inline.}=
+func sumResult(document: seq[MathObj]): int {.inline.} =
   sum document.mapIt it.calculate
 
 block part1:
