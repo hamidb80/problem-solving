@@ -18,50 +18,53 @@ const NotFound = 0
 
 # functionalities ---------------------------------
 
-func matchRuleSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): int =
+template hasSomething[T](s: openArray[T]): untyped =
+  s.len != 0
+
+func flat1level[T](s:seq[seq[T]]): seq[T]=
+  for item in s:
+    result.add item
+
+func matchSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): seq[int] =
   ## match functions return return mathced len if they could otherwise NotFound
   template fail: untyped =
     # debugEcho fmt "\"{s}\" failed at {ruleIds} prog:{progessIndex}"
     return
 
-  var progessIndex = 0
+  var progessIndexes = @[0]
   for ruleId in ruleIds:
     let rule = rules[ruleId]
 
     if rule.kind == RKRelative:      
-      # debugEcho "testing ", subrule, " over \"", s, '"'
-      let mlen = block:
-        var c = NotFound
-        for ruleIds in rule.orRulesRef:
-          let m = s[progessIndex..^1].matchRuleSeq(ruleIds, rules, false)
-          if m != NotFound:
-            c = m
-            break #FIXME maybe we should care about others too if it wasn't master
-        c
-      # debugEcho ">>testing ", subrule, " over \"", s, '"'
-
-      if mlen != NotFound:
-        inc progessIndex, mlen
-      else:
-        fail
+      let temp = collect newseq:
+        for pi in progessIndexes:
+          for ruleIds in rule.orRulesRef:
+            let m = s[pi..^1].matchSeq(ruleIds, rules, false)
+            if m.hasSomething:
+              m.mapIt it + pi
+      
+      progessIndexes = temp.flat1level
 
     else:
-      # debugEcho fmt "\"{s}\"[{progessIndex}] ruleIds={ruleIds} pattern='{rule.pattern}'"
-      if s.len > progessIndex and s[progessIndex] == rule.pattern:
-        inc progessIndex
-      else:
-        fail
+      for i, pi in progessIndexes:
+        if s.len > pi and s[pi] == rule.pattern:
+          inc progessIndexes[i]
+        else:
+          fail
 
-  if isMaster and progessIndex != s.len: NotFound
-  else: progessIndex
+  result = 
+    if isMaster:
+      if progessIndexes.anyIt it == s.len: @[0]
+      else: @[]
+    else: progessIndexes
 
-func matchRule(s: string, rule: Rule, rules: var Table[int, Rule]): int =
+func matchRule(s: string, rule: Rule, rules: var Table[int, Rule]): bool =
   doAssert rule.kind == RKRelative
 
   for subrule in rule.orRulesRef:
-    let m = s.matchRuleSeq(subrule, rules)
-    if m != NotFound:
-      return m
+    let m = s.matchSeq(subrule, rules)
+    if m.hasSomething:
+      return true
 
 template matchRule(s: string, ruleId: int, rules: var Table[int, Rule]): untyped =
   matchRule s, rules[ruleId], rules
@@ -69,7 +72,7 @@ template matchRule(s: string, ruleId: int, rules: var Table[int, Rule]): untyped
 # preprating data ---------------------------------
 
 let
-  document = readFile("./test.txt").split("\c\n\c\n")
+  document = readFile("./input.txt").split("\c\n\c\n")
   tests = document[1].splitLines
 
 var
@@ -97,8 +100,8 @@ var
 # code ---------------------------------------
 
 proc getAns: int =
-  echo (tests.filterIt it.matchRule(0, rules) != NotFound).join("\n")
-  tests.countIt it.matchRule(0, rules) != NotFound
+  # debugecho (tests.filterIt it.matchRule(0, rules)).join("\n")
+  tests.countIt it.matchRule(0, rules)
 
 block part1:
   echo getAns()
