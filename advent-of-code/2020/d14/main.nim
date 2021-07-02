@@ -58,6 +58,10 @@ let collections = collect newseq:
 
 # code ----------------------------------------
 
+func sumMemory(mem: var Memory): int =
+  for _, v in mem:
+    result += v
+
 block part1:
   var memory: Memory
 
@@ -65,9 +69,7 @@ block part1:
     for mset in coll.memsets:
       memory[mset.loc] = fromBin[int]applyMaskV1(coll.mask, mset.val)
 
-  var sum = 0
-  for _, v in memory: sum += v
-  echo sum
+  echo sumMemory memory
 
 block part2:
   var memory: Memory
@@ -78,6 +80,4 @@ block part2:
       for adr in addrs:
         memory[fromBin[int](adr)] = fromBin[int](mset.val)
 
-  var sum = 0
-  for _, v in memory: sum += v
-  echo sum
+  echo sumMemory memory
