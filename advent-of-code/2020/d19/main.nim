@@ -14,20 +14,18 @@ type
     of RKRelative:
       orRulesRef: seq[seq[int]]
 
-const NotFound = 0
-
 # functionalities ---------------------------------
 
 template hasSomething[T](s: openArray[T]): untyped =
   s.len != 0
 
-func flat1level[T](s:seq[seq[T]]): seq[T]=
+func flat1level[T](s: seq[seq[T]]): seq[T] =
   for item in s:
     result.add item
 
 func matchSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): seq[int] =
   ## match functions return return mathced len if they could otherwise NotFound
-  template fail: untyped =
+  template FAIL: untyped =
     # debugEcho fmt "\"{s}\" failed at {ruleIds} prog:{progessIndex}"
     return
 
@@ -35,14 +33,16 @@ func matchSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaste
   for ruleId in ruleIds:
     let rule = rules[ruleId]
 
-    if rule.kind == RKRelative:      
+    if rule.kind == RKRelative:
       let temp = collect newseq:
         for pi in progessIndexes:
+          let subs = s[pi..^1] # caching
+
           for ruleIds in rule.orRulesRef:
-            let m = s[pi..^1].matchSeq(ruleIds, rules, false)
+            let m = subs.matchSeq(ruleIds, rules, false)
             if m.hasSomething:
               m.mapIt it + pi
-      
+
       progessIndexes = temp.flat1level
 
     else:
@@ -50,9 +50,9 @@ func matchSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaste
         if s.len > pi and s[pi] == rule.pattern:
           inc progessIndexes[i]
         else:
-          fail
+          FAIL
 
-  result = 
+  result =
     if isMaster:
       if progessIndexes.anyIt it == s.len: @[0]
       else: @[]
@@ -85,14 +85,10 @@ var
 
       var rule: Rule
       if '"' in rest:
-        rule = Rule(
-          kind: RKAtcual,
-          pattern: rest.strip(chars = {'"'})[0])
+        rule = Rule(kind: RKAtcual, pattern: rest[1])
       else:
         let ruleNums = rest.split(" | ").mapIt it.splitWhitespace.map parseInt
-        rule = Rule(
-          kind: RKRelative,
-          orRulesRef: ruleNums)
+        rule = Rule(kind: RKRelative, orRulesRef: ruleNums)
 
       {ruleNumber: rule}
 
@@ -100,7 +96,6 @@ var
 # code ---------------------------------------
 
 proc getAns: int =
-  # debugecho (tests.filterIt it.matchRule(0, rules)).join("\n")
   tests.countIt it.matchRule(0, rules)
 
 block part1:
