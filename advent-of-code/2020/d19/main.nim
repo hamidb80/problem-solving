@@ -19,7 +19,7 @@ type
 template hasSomething[T](s: openArray[T]): untyped =
   s.len != 0
 
-func flat1level[T](s: seq[seq[T]]): seq[T] =
+func flatten[T](s: seq[seq[T]]): seq[T] =
   for item in s:
     result.add item
 
@@ -43,7 +43,7 @@ func matchSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaste
             if m.hasSomething:
               m.mapIt it + pi
 
-      progessIndexes = temp.flat1level
+      progessIndexes = temp.flatten
 
     else:
       for i, pi in progessIndexes:
