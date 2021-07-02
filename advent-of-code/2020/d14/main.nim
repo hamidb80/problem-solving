@@ -59,7 +59,7 @@ let collections = collect newseq:
 # code ----------------------------------------
 
 block part1:
-  var memory: Memory 
+  var memory: Memory
 
   for coll in collections:
     for mset in coll.memsets:
@@ -68,9 +68,9 @@ block part1:
   var sum = 0
   for _, v in memory: sum += v
   echo sum
-  
+
 block part2:
-  var memory: Memory 
+  var memory: Memory
 
   for coll in collections:
     for mset in coll.memsets:
