@@ -1,7 +1,8 @@
 play.nim
 play.txt
-bin/
-.vscode/
 
+.vscode/
+bin/
 *.exe
+
 issue.md

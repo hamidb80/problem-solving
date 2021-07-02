@@ -1,5 +1,4 @@
-import sequtils, strutils, sugar, tables
-import print, strformat
+import sequtils, strutils, sugar, tables, strformat
 
 # data structuring --------------------------------------
 
@@ -19,7 +18,6 @@ const NotFound = 0
 
 # functionalities ---------------------------------
 ## match functions return return mathced len if they could otherwise NotFound
-func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster = true): int
 
 func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): int =
   template fail: untyped =
@@ -30,17 +28,17 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster =
   for ruleId in ruleIds:
     let rule = rules[ruleId]
 
-    if rule.kind == RKRelative:
+    if rule.kind == RKRelative:      
       # debugEcho "testing ", subrule, " over \"", s, '"'
-      # debugEcho ">>testing ", subrule, " over \"", s, '"'
       let mlen = block:
         var c = NotFound
-        for subrule in rule.orRulesRef:
-          let m = s[progessIndex..^1].match(subrule, rules, false)
+        for ruleIds in rule.orRulesRef:
+          let m = s[progessIndex..^1].match(ruleIds, rules, false)
           if m != NotFound:
             c = m
-            break
+            break #FIXME maybe we should care about others too if it wasn't master
         c
+      # debugEcho ">>testing ", subrule, " over \"", s, '"'
 
       if mlen != NotFound:
         inc progessIndex, mlen
@@ -50,7 +48,6 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster =
     else:
       # debugEcho fmt "\"{s}\"[{progessIndex}] ruleIds={ruleIds} pattern='{rule.pattern}'"
       if s.len > progessIndex and s[progessIndex] == rule.pattern:
-        # debugEcho fmt "\"{s}\"[{progessIndex}] == '{rule.pattern}'"
         inc progessIndex
       else:
         fail
@@ -99,34 +96,9 @@ var
 
 # code ---------------------------------------
 
-# print rules
-# print tests
-
 proc getAns: int =
-  when false:
-    bbabbbbaabaabba
-    babbbbaabbbbbabbbbbbaabaaabaaa
-    aaabbbbbbaaaabaababaabababbabaaabbababababaaa
-    bbbbbbbaaaabbbbaaabbabaaa
-    bbbababbbbaaaaaaaabbababaaababaabab
-    ababaaaaaabaaab
-    ababaaaaabbbaba
-    baabbaaaabbaaaababbaababb
-    abbbbabbbbaaaababbbbbbaaaababb
-    aaaaabbaabaaaaababaa
-    aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
-    aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba
-
-    bbabbbbaabaabba
-    aaabbbbbbaaaabaababaabababbabaaabbababababaaa
-    ababaaaaaabaaab
-    ababaaaaabbbaba
-    baabbaaaabbaaaababbaababb
-    aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
-  
-  # echo (tests.filterIt it.match(0, rules) != NotFound).join("\n")
+  echo (tests.filterIt it.match(0, rules) != NotFound).join("\n")
   tests.countIt it.match(0, rules) != NotFound
-
 
 block part1:
   echo getAns()
