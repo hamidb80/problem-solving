@@ -1,9 +1,10 @@
 import sugar, strutils, tables
-import print
+# import print
 
 # data structuring ------------------------------
 
 type
+  Memory = Table[int, int]
   Collection = object
     mask: string
     memsets: seq[tuple[loc: int, val: string]]
@@ -12,8 +13,7 @@ const bitSize = 36
 
 # functionalities -------------------------------
 
-func applyMask(mask, sbit: string): string =
-  assert (mask.len, sbit.len) == (bitSize, bitSize)
+func applyMaskV1(mask, sbit: string): string =
   result = newstring bitSize
 
   for i in countdown(bitSize - 1, 0):
@@ -21,6 +21,21 @@ func applyMask(mask, sbit: string): string =
       if mask[i] == 'X': sbit[i]
       else: mask[i]
 
+func applyMaskV2(mask, sbit: string): seq[string] =
+  var temp = newString mask.len
+
+  for i in 0..mask.high:
+    case mask[i]:
+    of '0': temp[i] = sbit[i]
+    of '1': temp[i] = '1'
+    else: # 'X'
+      let rng = i+1..^1
+      return collect newseq:
+        for c in ["0", "1"]:
+          for branch in applyMaskV2(mask[rng], sbit[rng]):
+            temp[0..<i] & c & branch
+
+  @[temp]
 # preparing data --------------------------------
 
 let collections = collect newseq:
@@ -44,15 +59,25 @@ let collections = collect newseq:
 # code ----------------------------------------
 
 block part1:
-  var memory: Table[int, int]
+  var memory: Memory 
 
   for coll in collections:
     for mset in coll.memsets:
-      memory[mset.loc] = fromBin[int]applyMask(coll.mask, mset.val)
+      memory[mset.loc] = fromBin[int]applyMaskV1(coll.mask, mset.val)
 
   var sum = 0
   for _, v in memory: sum += v
   echo sum
-
+  
 block part2:
-  discard
+  var memory: Memory 
+
+  for coll in collections:
+    for mset in coll.memsets:
+      let addrs = applyMaskV2(coll.mask, mset.loc.toBin bitSize)
+      for adr in addrs:
+        memory[fromBin[int](adr)] = fromBin[int](mset.val)
+
+  var sum = 0
+  for _, v in memory: sum += v
+  echo sum
