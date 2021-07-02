@@ -6,6 +6,7 @@
 5: "b"
 
 ababbb
+
 abbbab
 bababa
 aaabbb

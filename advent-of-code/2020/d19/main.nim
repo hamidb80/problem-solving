@@ -10,23 +10,22 @@ type
 
   Rule = ref object
     case kind: RuleKinds
-    of RKAtcual: 
+    of RKAtcual:
       pattern: char
-    of RKRelative: 
+    of RKRelative:
       orRulesRef: seq[seq[int]]
 
 const NotFound = 0
 
 # functionalities ---------------------------------
-func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster= true): int
+## match functions return return mathced len if they could otherwise NotFound
+func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster = true): int
 
-
-func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster= true): int=
-  template fail: untyped=
+func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): int =
+  template fail: untyped =
     # debugEcho fmt "\"{s}\" failed at {ruleIds} prog:{progessIndex}"
     return
 
-  ## returns NotFound if couldn't else returns mathced len
   var progessIndex = 0
   for ruleId in ruleIds:
     let rule = rules[ruleId]
@@ -34,7 +33,7 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster= 
     if rule.kind == RKRelative:
       # debugEcho "testing ", subrule, " over \"", s, '"'
       # debugEcho ">>testing ", subrule, " over \"", s, '"'
-      let mlen =block:
+      let mlen = block:
         var c = NotFound
         for subrule in rule.orRulesRef:
           let m = s[progessIndex..^1].match(subrule, rules, false)
@@ -47,6 +46,7 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster= 
         inc progessIndex, mlen
       else:
         fail
+
     else:
       # debugEcho fmt "\"{s}\"[{progessIndex}] ruleIds={ruleIds} pattern='{rule.pattern}'"
       if s.len > progessIndex and s[progessIndex] == rule.pattern:
@@ -54,11 +54,11 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster= 
         inc progessIndex
       else:
         fail
-  
+
   if isMaster and progessIndex != s.len: NotFound
   else: progessIndex
 
-func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster= true): int=
+func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster = true): int =
   doAssert rule.kind == RKRelative
 
   for subrule in rule.orRulesRef:
@@ -66,20 +66,19 @@ func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster= true): 
     if m != NotFound:
       return m
 
-func match(s: string, ruleId: int, rules: var Table[int, Rule], isMaster= true): int=
-  let currentRule = rules[ruleId]
-  match s, currentRule, rules, isMaster
-    
+template match(s: string, ruleId: int, rules: var Table[int, Rule], isMaster = true): untyped =
+  match s, rules[ruleId], rules, isMaster
+
 # preprating data ---------------------------------
 
-let 
-  document = readFile("./input.txt").split("\c\n\c\n")
+let
+  document = readFile("./test.txt").split("\c\n\c\n")
   tests = document[1].splitLines
 
-var 
+var
   rules = collect initTable:
     for line in document[0].splitLines:
-      let 
+      let
         coloni = line.find(':')
         ruleNumber = line[0..<coloni].parseInt
         rest = line[coloni+2..^1]
@@ -87,12 +86,12 @@ var
       var rule: Rule
       if '"' in rest:
         rule = Rule(
-          kind: RKAtcual, 
-          pattern: rest.strip(chars= {'"'})[0])
+          kind: RKAtcual,
+          pattern: rest.strip(chars = {'"'})[0])
       else:
         let ruleNums = rest.split(" | ").mapIt it.splitWhitespace.map parseInt
         rule = Rule(
-          kind: RKRelative, 
+          kind: RKRelative,
           orRulesRef: ruleNums)
 
       {ruleNumber: rule}
@@ -103,6 +102,37 @@ var
 # print rules
 # print tests
 
+proc getAns: int =
+  when false:
+    bbabbbbaabaabba
+    babbbbaabbbbbabbbbbbaabaaabaaa
+    aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+    bbbbbbbaaaabbbbaaabbabaaa
+    bbbababbbbaaaaaaaabbababaaababaabab
+    ababaaaaaabaaab
+    ababaaaaabbbaba
+    baabbaaaabbaaaababbaababb
+    abbbbabbbbaaaababbbbbbaaaababb
+    aaaaabbaabaaaaababaa
+    aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+    aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba
+
+    bbabbbbaabaabba
+    aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+    ababaaaaaabaaab
+    ababaaaaabbbaba
+    baabbaaaabbaaaababbaababb
+    aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+  
+  # echo (tests.filterIt it.match(0, rules) != NotFound).join("\n")
+  tests.countIt it.match(0, rules) != NotFound
+
+
 block part1:
-  # echo tests.countIt it.match(0, rules) != NotFound
-  echo tests.countIt it.match(0, rules) != NotFound
+  echo getAns()
+
+block part2:
+  rules[8].orRulesRef = @[@[42], @[42, 8]]
+  rules[11].orRulesRef = @[@[42, 31], @[42, 11, 31]]
+
+  echo getAns()
