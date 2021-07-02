@@ -17,9 +17,9 @@ type
 const NotFound = 0
 
 # functionalities ---------------------------------
-## match functions return return mathced len if they could otherwise NotFound
 
-func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): int =
+func matchRuleSeq(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster = true): int =
+  ## match functions return return mathced len if they could otherwise NotFound
   template fail: untyped =
     # debugEcho fmt "\"{s}\" failed at {ruleIds} prog:{progessIndex}"
     return
@@ -33,7 +33,7 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster =
       let mlen = block:
         var c = NotFound
         for ruleIds in rule.orRulesRef:
-          let m = s[progessIndex..^1].match(ruleIds, rules, false)
+          let m = s[progessIndex..^1].matchRuleSeq(ruleIds, rules, false)
           if m != NotFound:
             c = m
             break #FIXME maybe we should care about others too if it wasn't master
@@ -55,16 +55,16 @@ func match(s: string, ruleIds: seq[int], rules: var Table[int, Rule], isMaster =
   if isMaster and progessIndex != s.len: NotFound
   else: progessIndex
 
-func match(s: string, rule: Rule, rules: var Table[int, Rule], isMaster = true): int =
+func matchRule(s: string, rule: Rule, rules: var Table[int, Rule]): int =
   doAssert rule.kind == RKRelative
 
   for subrule in rule.orRulesRef:
-    let m = s.match(subrule, rules, isMaster)
+    let m = s.matchRuleSeq(subrule, rules)
     if m != NotFound:
       return m
 
-template match(s: string, ruleId: int, rules: var Table[int, Rule], isMaster = true): untyped =
-  match s, rules[ruleId], rules, isMaster
+template matchRule(s: string, ruleId: int, rules: var Table[int, Rule]): untyped =
+  matchRule s, rules[ruleId], rules
 
 # preprating data ---------------------------------
 
@@ -97,8 +97,8 @@ var
 # code ---------------------------------------
 
 proc getAns: int =
-  echo (tests.filterIt it.match(0, rules) != NotFound).join("\n")
-  tests.countIt it.match(0, rules) != NotFound
+  echo (tests.filterIt it.matchRule(0, rules) != NotFound).join("\n")
+  tests.countIt it.matchRule(0, rules) != NotFound
 
 block part1:
   echo getAns()
