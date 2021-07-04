@@ -1,17 +1,15 @@
-import sugar, strutils, sequtils
+import sugar, strutils, sequtils, tables, math
 import print
-
-{.experimental: "views".}
 
 # structuring data ---------------------------------
 
-type 
+type
   Tile = object
     id: int
     # body: seq[string]
     edges: array[4, string]
 
-const 
+const
   Up = 0
   Right = 1
   Bottom = 2
@@ -19,28 +17,40 @@ const
 
 # functionalities ------------------------------------
 
-func thinkOfString(s: seq[char]): string=
+func thinkOfString(s: seq[char]): string =
   cast[string](s)
 
-proc checkArrangement(tiles:var seq[Tile]): bool=
-  let edgeMatchesWithOthers = tiles.mapIt do:
-    let id = it.id
-    var s = 0
-    for edge in it.edges:
-      s += tiles.countIt it.id != id and edge in it.edges
-    s
+proc checkArrangement(tiles: var seq[Tile]): bool =
+  var emwo: CountTable[int] # edge Matches With Others
 
-  print edgeMatchesWithOthers
-  
+  # FIXME what's going in man?
+  for tile in tiles:
+    let id = tile.id
+    for edge in tile.edges:
+      emwo.inc id, tiles.countIt it.id != id and edge in it.edges
+
+  let
+    size2 = 4                           # edges
+    size3 = (int sqrt float tiles.len) * 4 - size2 # borders - edges
+    size4 = tiles.len - (size2 + size3) # inner square
+
+  for k, v in emwo:
+    print (k, v)
+
+  [
+    emwo.getOrDefault 2,
+    emwo.getOrDefault 3,
+    emwo.getOrDefault 4
+  ] == [size2, size3, size4]
 
 # preparing data ------------------------------------
 
 var tiles = collect newseq:
   for part in "./sample.txt".readFile.split "\c\n\c\n":
-    let 
+    let
       lines = part.splitLines
-      body = lines.toOpenArray(1, lines.high)
-    
+      body = lines[1..^1]
+
     Tile(
       id: lines[0]["Tile ".len..^2].parseInt,
       edges: [
@@ -48,9 +58,8 @@ var tiles = collect newseq:
         body.mapIt(it[^1]).thinkOfString, # right
         body[^1], # down
         body.mapIt(it[0]).thinkOfString # left
-      ]
-    )
-    
+    ])
+
 # code --------------------------------------------------
 
 print tiles
