@@ -1,5 +1,4 @@
-play.nim
-play.txt
+play.*
 
 .vscode/
 bin/

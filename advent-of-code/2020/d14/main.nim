@@ -36,6 +36,7 @@ func applyMaskV2(mask, sbit: string): seq[string] =
             temp[0..<i] & c & branch
 
   @[temp]
+
 # preparing data --------------------------------
 
 let collections = collect newseq:
