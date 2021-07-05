@@ -101,9 +101,8 @@ proc fixBrokenRelations(tiles: var TileLookup) =
     for rel in rels:
       let trs = transform2match(rel.fromSide, rel.toSide)
       if trs.len == 0: continue
-      # print rel
-      tiles[rel.toId] = trs[0](tiles[rel.toId])
-
+      tiles[rel.toId] = trs[0](tiles[rel.toId]) ## FIXME wrong
+      
 # preparing data -------------------------------------------------
 
 var tiles = collect initTable:
@@ -123,38 +122,48 @@ var tiles = collect initTable:
     ])}
 
 # code -----------------------------------------------------------
+template dodo: untyped =
+  var canIStop = true
+  while canIStop:
+    for id, tile in tiles:
+      # showAllTransforms tile, tiles
+      if tile.findRelations(tiles).len >= 2: continue
+      canIStop = false
 
-fixBrokenRelations tiles
+      let 
+        relations = transforms.mapIt (tile.applyTransform it.fns).findRelations(tiles).len
+        mxi = relations.maxIndex
 
-var canIStop = true
-while canIStop:
+      tiles[id] = tile.applyTransform transforms[mxi].fns
+
+    if canIStop: break
+
   for id, tile in tiles:
-    # showAllTransforms tile, tiles
-    if tile.findRelations(tiles).len >= 2: continue
-    canIStop = false
+    let beforeRels = tile.findRelations(tiles).len
+    if beforeRels == 4: continue
 
     let 
       relations = transforms.mapIt (tile.applyTransform it.fns).findRelations(tiles).len
       mxi = relations.maxIndex
 
-    tiles[id] = tile.applyTransform transforms[mxi].fns
+    if relations[mxi] > beforeRels:
+      # echo (id, transforms[mxi].name, beforeRels, relations[mxi])
+      tiles[id] = tile.applyTransform transforms[mxi].fns
 
-  if canIStop: break
 
-# for id, tile in tiles:
-#   let beforeRels = tile.findRelations(tiles).len
-#   if beforeRels == 4: continue
+for i in 1..10:
+  fixBrokenRelations tiles
+  dodo
 
-#   let 
-#     relations = transforms.mapIt (tile.applyTransform it.fns).findRelations(tiles).len
-#     mxi = relations.maxIndex
 
-#   if relations[mxi] > beforeRels:
-#     echo (id, transforms[mxi].name, beforeRels, relations[mxi])
+echo tiles[3343].findRelations tiles
+
+# -------------------------------------------
+drawTable tiles
 
 let res = (tiles.keys.toseq.filterIt (tiles[it].findRelations tiles).len == 2)
 
-print countRels(2, tiles)
+p   rint countRels(2, tiles)
 print countRels(3, tiles)
 print countRels(4, tiles)
 
