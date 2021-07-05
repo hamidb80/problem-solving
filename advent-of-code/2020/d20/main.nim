@@ -1,25 +1,29 @@
-import sugar, strutils, sequtils, tables, math
+import sugar, strutils, sequtils
 import print
 
 # structuring data ---------------------------------
 
 type
-  Tile = object
-    id: int
+  Tile* = object
+    id*: int
     # body: seq[string]
-    edges: array[4, string]
+    edges*: array[4, string]
 
 const
-  Up = 0
-  Right = 1
-  Bottom = 2
-  Left = 3
+  Up* = 0
+  Right* = 1
+  Bottom* = 2
+  Left* = 3
 
 # functionalities ------------------------------------
 
-func thinkOfString(s: seq[char]): string =
+func thinkOfString*(s: seq[char]): string =
   cast[string](s)
 
+func reversed*(s:string): string=
+  for ci in countdown(s.high, 0):
+    result.add s[ci]
+#[
 proc checkArrangement(tiles: var seq[Tile]): bool =
   var emwo: CountTable[int] # edge Matches With Others
 
@@ -42,27 +46,70 @@ proc checkArrangement(tiles: var seq[Tile]): bool =
     emwo.getOrDefault 3,
     emwo.getOrDefault 4
   ] == [size2, size3, size4]
+]#
+
+func flippedVertical*(tile: Tile): Tile=
+    Tile(
+      id: tile.id,
+      edges: [
+        tile.edges[Up].reversed,
+        tile.edges[Left],
+        tile.edges[Bottom].reversed,
+        tile.edges[Right]
+    ])
+
+func flippedHorizontal*(tile: Tile): Tile=
+  Tile(
+      id: tile.id,
+      edges: [
+        tile.edges[Bottom],
+        tile.edges[Right].reversed,
+        tile.edges[Up],
+        tile.edges[Left].reversed,
+    ])
+
+func rotatedRight*(tile: Tile): Tile=
+  Tile(
+      id: tile.id,
+      edges: [
+        tile.edges[Left].reversed,
+        tile.edges[Up],
+        tile.edges[Right].reversed,
+        tile.edges[Bottom],
+    ])
+
+func rotatedLeft*(tile: Tile): Tile=
+  Tile(
+      id: tile.id,
+      edges: [
+        tile.edges[Right],
+        tile.edges[Bottom].reversed,
+        tile.edges[Left],
+        tile.edges[Up].reversed,
+    ])
+
 
 # preparing data ------------------------------------
 
-var tiles = collect newseq:
-  for part in "./sample.txt".readFile.split "\c\n\c\n":
-    let
-      lines = part.splitLines
-      body = lines[1..^1]
+when isMainModule:
+  var tiles = collect newseq:
+    for part in "./sample.txt".readFile.split "\c\n\c\n":
+      let
+        lines = part.splitLines
+        body = lines[1..^1]
 
-    Tile(
-      id: lines[0]["Tile ".len..^2].parseInt,
-      edges: [
-        body[0], # up
-        body.mapIt(it[^1]).thinkOfString, # right
-        body[^1], # down
-        body.mapIt(it[0]).thinkOfString # left
-    ])
+      Tile(
+        id: lines[0]["Tile ".len..^2].parseInt,
+        edges: [
+          body[0], # up
+          body.mapIt(it[^1]).thinkOfString, # right
+          body[^1], # down
+          body.mapIt(it[0]).thinkOfString # left
+      ])
 
 # code --------------------------------------------------
 
-print tiles
+  print tiles
 
-block part1:
-  echo checkArrangement tiles
+  block part1:
+    discard
