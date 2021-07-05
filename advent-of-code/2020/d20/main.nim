@@ -10,7 +10,7 @@ type
     edges*: array[4, string]
 
 const
-  Up* = 0
+  Top* = 0
   Right* = 1
   Bottom* = 2
   Left* = 3
@@ -52,7 +52,7 @@ func flippedVertical*(tile: Tile): Tile=
     Tile(
       id: tile.id,
       edges: [
-        tile.edges[Up].reversed,
+        tile.edges[Top].reversed,
         tile.edges[Left],
         tile.edges[Bottom].reversed,
         tile.edges[Right]
@@ -64,7 +64,7 @@ func flippedHorizontal*(tile: Tile): Tile=
       edges: [
         tile.edges[Bottom],
         tile.edges[Right].reversed,
-        tile.edges[Up],
+        tile.edges[Top],
         tile.edges[Left].reversed,
     ])
 
@@ -73,7 +73,7 @@ func rotatedRight*(tile: Tile): Tile=
       id: tile.id,
       edges: [
         tile.edges[Left].reversed,
-        tile.edges[Up],
+        tile.edges[Top],
         tile.edges[Right].reversed,
         tile.edges[Bottom],
     ])
@@ -85,9 +85,18 @@ func rotatedLeft*(tile: Tile): Tile=
         tile.edges[Right],
         tile.edges[Bottom].reversed,
         tile.edges[Left],
-        tile.edges[Up].reversed,
+        tile.edges[Top].reversed,
     ])
 
+let transforms*: seq[tuple[
+  fns: seq[proc(t: Tile): Tile{.nimcall.}], 
+  name: string]] = @[
+    (@[flippedVertical], "flip vertical"),
+    (@[flippedHorizontal], "flip horizontal"),
+    (@[rotatedRight], "rotate right"),
+    (@[rotatedLeft], "rotate left"),
+    (@[rotatedRight, rotatedRight], "multi"),
+  ]
 
 # preparing data ------------------------------------
 
