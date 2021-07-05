@@ -6,7 +6,6 @@ type
     fromSide, toSide, fromId, toId: int
 
   TransformFunction = proc(t: Tile): Tile {.nimcall.}
-
   TileLookup = Table[int, Tile]
 
 func `$`(rel: Relation): string =
@@ -21,8 +20,9 @@ func findRelations(tile: Tile, lookupTiles: var TileLookup): seq[Relation] =
         if e1 == e2:
           result.add Relation(fromSide: ie1, toSide: ie2, fromId: tile.id, toId: t.id)
 
-proc countRels(relsNum: int, tiles: var TileLookup): int = 
-  tiles.keys.toseq.countIt (tiles[it].findRelations tiles).len == relsNum
+proc countRels(tiles: var TileLookup): CountTable[int] = 
+  for id, t in tiles:
+    inc result, (t.findRelations tiles).len
 
 proc applyTransform(t: Tile, fns: seq[TransformFunction]): Tile =
   result = t
@@ -65,6 +65,10 @@ proc showAllTransforms(t: Tile, lookupTiles: var TileLookup) =
 
   printTable mytable
 
+template report =
+  for key, v in countRels tiles:
+    echo key, ":", v
+
 func transform2match(fromSide, toSide: int): seq[TransformFunction] =
   [
     [ # Top
@@ -92,8 +96,9 @@ func transform2match(fromSide, toSide: int): seq[TransformFunction] =
       @[flippedVertical], # -> # Left
     ]
   ][fromSide][toSide]
-# func isBrokenRelation(fromSide, toSide: int): bool =
-#   abs(fromSide - toSide) == 2
+
+func isBrokenRelation(rel: Relation): bool =
+  abs(rel.fromSide - rel.toSide) != 2
 
 proc fixBrokenRelations(tiles: var TileLookup) =
   for id, tile in tiles:
@@ -102,9 +107,14 @@ proc fixBrokenRelations(tiles: var TileLookup) =
       let trs = transform2match(rel.fromSide, rel.toSide)
       if trs.len == 0: continue
       tiles[rel.toId] = trs[0](tiles[rel.toId]) ## FIXME wrong
-      
-# preparing data -------------------------------------------------
 
+func findUnusuals(tiles: var TileLookup): seq[string]=
+  for id, t in tiles:
+    let urel = t.findRelations(tiles).filterIt it.isBrokenRelation
+    if urel.len > 0:
+      result.add fmt"{id} :: {urel}"
+
+# preparing data -------------------------------------------------
 var tiles = collect initTable:
   for part in "./input.txt".readFile.split "\c\n\c\n":
     let
@@ -122,13 +132,14 @@ var tiles = collect initTable:
     ])}
 
 # code -----------------------------------------------------------
-template dodo: untyped =
-  var canIStop = true
-  while canIStop:
+template rearrange: untyped =
+  # transform tiles that have less than 2 relations
+  var shouldContinue = false
+  while true:
     for id, tile in tiles:
       # showAllTransforms tile, tiles
       if tile.findRelations(tiles).len >= 2: continue
-      canIStop = false
+      shouldContinue = true
 
       let 
         relations = transforms.mapIt (tile.applyTransform it.fns).findRelations(tiles).len
@@ -136,8 +147,11 @@ template dodo: untyped =
 
       tiles[id] = tile.applyTransform transforms[mxi].fns
 
-    if canIStop: break
+    if shouldContinue: 
+      shouldContinue = false
+    else: break
 
+  # see if it is possible to transform some tiles to get more relations?
   for id, tile in tiles:
     let beforeRels = tile.findRelations(tiles).len
     if beforeRels == 4: continue
@@ -150,21 +164,15 @@ template dodo: untyped =
       # echo (id, transforms[mxi].name, beforeRels, relations[mxi])
       tiles[id] = tile.applyTransform transforms[mxi].fns
 
+fixBrokenRelations tiles
+echo findUnusuals(tiles).join "\n"
+# rearrange
 
-for i in 1..10:
-  fixBrokenRelations tiles
-  dodo
+# echo "---------------------------------\n".repeat 7
 
-
-echo tiles[3343].findRelations tiles
-
-# -------------------------------------------
 drawTable tiles
+# echo findUnusuals(tiles).join "\n"
+# report
 
-let res = (tiles.keys.toseq.filterIt (tiles[it].findRelations tiles).len == 2)
-
-p   rint countRels(2, tiles)
-print countRels(3, tiles)
-print countRels(4, tiles)
-
-echo res.foldl a * b
+# let res = (tiles.keys.toseq.filterIt (tiles[it].findRelations tiles).len == 2)
+# echo res.foldl a * b
