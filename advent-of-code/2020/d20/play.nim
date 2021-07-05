@@ -12,14 +12,6 @@ type
 func `$`(rel: Relation): string =
   fmt"{rel.fromSide}{rel.toSide} -> {rel.toId}"
 
-template findIndexIt(s: typed, pred: untyped): untyped =
-  var index = -1
-  for i, it{.inject.} in s:
-    if pred:
-      index = i
-      break
-  index
-
 func findRelations(tile: Tile, lookupTiles: var TileLookup): seq[Relation] =
   for id, t in lookupTiles:
     if t.id == tile.id: continue
@@ -28,7 +20,6 @@ func findRelations(tile: Tile, lookupTiles: var TileLookup): seq[Relation] =
       for ie2, e2 in t.edges:
         if e1 == e2:
           result.add Relation(fromSide: ie1, toSide: ie2, fromId: tile.id, toId: t.id)
-
 
 proc countRels(relsNum: int, tiles: var TileLookup): int = 
   tiles.keys.toseq.countIt (tiles[it].findRelations tiles).len == relsNum
@@ -101,8 +92,8 @@ func transform2match(fromSide, toSide: int): seq[TransformFunction] =
       @[flippedVertical], # -> # Left
     ]
   ][fromSide][toSide]
-func isBrokenRelation(fromSide, toSide: int): bool =
-  abs(fromSide - toSide) == 2
+# func isBrokenRelation(fromSide, toSide: int): bool =
+#   abs(fromSide - toSide) == 2
 
 proc fixBrokenRelations(tiles: var TileLookup) =
   for id, tile in tiles:
@@ -134,6 +125,7 @@ var tiles = collect initTable:
 # code -----------------------------------------------------------
 
 fixBrokenRelations tiles
+
 var canIStop = true
 while canIStop:
   for id, tile in tiles:
