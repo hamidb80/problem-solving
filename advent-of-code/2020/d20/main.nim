@@ -69,7 +69,8 @@ func rotatedLeft*(tile: Tile): Tile=
         tile.edges[Top].reversed,
     ])
 
-let transforms*: seq[Transform] = @[
+let 
+  transforms*: seq[Transform] = @[
     (@[], "nothing"),
     (@[flippedVertical], "flip vertical"),
     (@[flippedHorizontal], "flip horizontal"),
@@ -77,3 +78,5 @@ let transforms*: seq[Transform] = @[
     (@[rotatedLeft], "rotate left"),
     (@[rotatedRight, rotatedRight], "multi"),
   ]
+
+  noTransform* = transforms[0]

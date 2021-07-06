@@ -173,14 +173,14 @@ template rearrange=
       # echo (id, transforms[mxi].name, beforeRels, relations[mxi])
       tiles[id] = tile.applyTransform transforms[mxi].fns
 
-rearrange
-fixBrokenRelations tiles
+# rearrange
+# fixBrokenRelations tiles
 
 drawTable tiles
 
-echo "---------------\n".repeat 2
-echo "unusuals: ", findUnusuals(tiles).join "\n"
-report
+# echo "---------------\n".repeat 2
+# echo "unusuals: ", findUnusuals(tiles).join "\n"
+# report
 
 
 # let res = (tiles.keys.toseq.filterIt (tiles[it].findRelations tiles).len == 2)
