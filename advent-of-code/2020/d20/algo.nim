@@ -4,14 +4,13 @@ import main, print
 type
   Relation = object
     fromSide, toSide, fromId, toId: int
-  
-  TilesLookup = Table[int, Tile]
-  
+
+  # TilesLookup = Table[int, Tile]
+
   Chain = tuple
     start: int
     middle: seq[int]
     `end`: int
-    
 
 func `$`(rel: Relation): string =
   fmt"{rel.fromSide}{rel.toSide} -> {rel.toId}"
@@ -79,9 +78,8 @@ func transform2match(fromSide, toSide: int): seq[TransformFunction] =
     ]
   ][fromSide][toSide]
 
-# template transformHook(t1, t2: untyped, trs: seq[Transform]): untyped =
-  
 # preparing data -------------------------------------------------
+
 var tiles = collect initTable:
   for part in "./input.txt".readFile.split "\c\n\c\n":
     let
@@ -115,20 +113,22 @@ block part1:
   echo verticesRel[2].foldl a * b
 
 block part2:
-  for k,v in verticesRel:
-    echo (k, v.len)
-
   var 
     size = int sqrt tiles.len.float # table width & height
     cc: Table[int, seq[int]]
     chains: seq[Chain]
   
+  var selectedIds: seq[int]
   for vid in verticesRel[2]: # vid: vectex id
-    var selectedIds = @[vid]
+    selectedIds.add vid
     for _ in 1..size-2: # do it until end of the edge
       for node3Id in verticesRel[3]: # looking for chains
         if node3Id in selectedIds: continue
-        if tiles[selectedIds[^1]].areSomehowConnected(tiles[node3Id], transforms):
+        if tiles[selectedIds[^1]].areSomehowConnected(tiles[node3Id], transforms): 
+          # transform to make seconds element compatible if they have unusual relation
+          let rel = tiles[node3Id].getRelaltion  tiles[selectedIds[^1]]
+          tiles[node3Id] = tiles[node3Id].applyTransform transform2match(rel.fromside, rel.toside)
+          
           selectedIds.add node3Id
           cc.insertOrAdd vid, node3Id
           break # stop looking for more maches for previous id
@@ -137,7 +137,6 @@ block part2:
     for ovid in verticesRel[2]: # ovid: other vectex id
       if ovid == vid: continue
       if tiles[selectedIds[^1]].areSomehowConnected(tiles[ovid], transforms):
-
         cc[vid].add ovid
 
     chains.add (vid, cc[vid][0..^2],cc[vid][^1])
