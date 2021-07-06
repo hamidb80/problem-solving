@@ -258,10 +258,6 @@ block part2:
 
       chains.add (head, middle, tail)
 
-    # break
-    # if edgeLen == 6:
-    #   break
-
   echo "============"
   for ch in chains:
     echo ch
