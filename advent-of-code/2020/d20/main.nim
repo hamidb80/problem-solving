@@ -9,7 +9,7 @@ type
     # body: seq[string]
     edges*: array[4, string]
   
-  TransformFunction* = proc(t: Tile): Tile {.nimcall.}
+  TransformFunction* = proc(t: Tile): Tile {.nimcall, noSideEffect.}
   Transform* = tuple
     fns: seq[TransformFunction]
     name: string
@@ -79,4 +79,4 @@ let
     (@[rotatedRight, rotatedRight], "multi"),
   ]
 
-  noTransform* = transforms[0]
+  noTransform* = @[transforms[0]]

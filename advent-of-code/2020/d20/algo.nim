@@ -47,20 +47,25 @@ proc applyTransform(t: Tile, fns: seq[TransformFunction]): Tile =
   for fn in fns:
     result = result.fn
 
-proc findWayToConnect(t1, t2: Tile, trfs: seq[Transform]): Option[seq[TransformFunction]] =
+func findWayToConnect(t1, t2: Tile, trfs: seq[Transform] = noTransform): Option[Transform] =
   for trf in trfs:
-    let newt2 = t2.applyTransform trf.fns
-    if t1.haveRelation newt2:
-      return some trf.fns
+    if (t1.applyTransform trf.fns).haveRelation t2:
+      return some trf
 
-proc areConnected(t1, t2: Tile, trfs: seq[Transform]): bool =
+func findWayToConnect(t1:Tile, ts: seq[Tile], trfs: seq[Transform] = noTransform): Option[Transform] =
   for trf in trfs:
-    let newt2 = t2.applyTransform trf.fns
-    if t1.haveRelation newt2:
-      return true
+    if ts.allit (t1.applyTransform trf.fns).haveRelation it:
+      return some trf
 
-proc areConnected(t: Tile, ts: openArray[Tile], trfs: seq[Transform]): bool =
-  ts.allIt t.areConnected(it, trfs)
+func areConnected(t1, t2: Tile, trfs: seq[Transform] = noTransform): bool =
+  ## is it possible to match t1 with some transforms to t2?
+  trfs.anyIt (t1.applyTransform it.fns).haveRelation t2
+
+proc areConnected(t: Tile, ts: openArray[Tile], trfs: seq[Transform] = noTransform): bool =
+  ## is it possible to match t1 with some transforms to all of ts?
+  trfs.anyIt:
+    let trf = @[it]
+    ts.allIt t.areConnected(it, trf)
 
 func transform2match(fromSide, toSide: int): seq[TransformFunction] =
   ## returns a set of transformation functions to make seconds tile matchable with first one
@@ -91,6 +96,16 @@ func transform2match(fromSide, toSide: int): seq[TransformFunction] =
       @[flippedVertical], # -> # Left
     ]
   ][fromSide][toSide]
+
+func intsqrt(n: int): int=
+  int sqrt n.float
+
+proc relationScanner(flatChain: seq[int], tiles: var Table[int, Tile]): bool=
+  result = true
+  for i in 0..<flatChain.high:
+    if not tiles[flatChain[i]].areConnected(tiles[flatChain[i+1]]):
+      debugecho flatChain[i..i+1]
+      return false
 
 # preparing data -------------------------------------------------
 
@@ -128,7 +143,7 @@ block part1:
 
 block part2:
   var
-    size = int sqrt tiles.len.float # table width & height
+    size = intsqrt tiles.len # table width & height
     cc: Table[int, seq[int]]
     chains: seq[Chain]
 
@@ -138,26 +153,44 @@ block part2:
   for vid in verticesRel[2]: # vid: vectex id
     selectedIds.add vid
     for _ in 1..size-2: # do it until end of the edge
-      for node3Id in verticesRel[3]: # looking for chains
-        if node3Id in selectedIds: continue
-        let trfs = tiles[selectedIds[^1]].findWayToConnect(tiles[node3Id], transforms)
-        if trfs.isSome:
+      for ovid in verticesRel[3]: # looking for chains
+        if ovid in selectedIds: continue
+        let trf = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
+        if trf.isSome:
           # transform to make seconds element compatible if they have unusual relation
-          tiles[node3Id] = tiles[node3Id].applyTransform trfs.get
-
-          selectedIds.add node3Id
-          cc.insertOrAdd vid, node3Id
+          tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+          
+          selectedIds.add ovid
+          cc.insertOrAdd vid, ovid
           break # stop looking for more maches for previous id
     
-    # find the another edge to complete the edge
+    # find the tail vertex to complete the edge
     for ovid in verticesRel[2]: # ovid: other vectex id
       if ovid == vid: continue
-      if tiles[selectedIds[^1]].areConnected(tiles[ovid], transforms):
+      let trfs = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
+      if trfs.isSome:
+        tiles[ovid] = tiles[ovid].applyTransform trfs.get.fns
         cc[vid].add ovid
 
     chains.add (vid, cc[vid][0..^2], cc[vid][^1])
+  
+  # print chains
 
-  # fill inside the square [image]`
+  # let flatChain = block:
+  #   var 
+  #     res: seq[int]
+  #     currentChain  = chains[0]
+    
+  #   for i in 1..4:
+  #     res.add currentChain.head
+  #     res.add currentChain.middle
+  #     currentChain = chains.findIt(it.head == currentChain.tail).get
+  #   res
+
+  # echo flatChain, flatChain.len
+  # echo "scan1 ", relationScanner(flatChain, tiles)
+
+  # fill inside the square [image]
   for edgeLen in countdown(size-4, 2, 2):
     for edgeNum in 1..4:
 
@@ -175,34 +208,44 @@ block part2:
         for progress in 1..edgeLen:
           for ovid in verticesRel[4]:
             if ovid in [selectedIds[^1], mainChain.middle[progress]]: continue
-            if tiles[ovid].areConnected([
+            let trf = tiles[ovid].findWayToConnect(@[
                 tiles[selectedIds[^1]],
                 tiles[mainChain.middle[progress]],
-              ], transforms):
-                
-              # TODO also rearrange it
-                # let rel = getRelation(tiles[ovid], tiles[selectedIds[^1]])
-                # if rel.haveRelation:
+              ], transforms)
 
-                echo (progress, edgeLen, edgeNum, ovid, head)
-                selectedIds.add ovid
-                ovid
+            if trf.isSome:
+              # echo "middle", (progress, edgeLen, edgeNum, ovid, head)
+              tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+              selectedIds.add ovid
+              ovid
 
-      let
-        tailChain = (chains.findIt it.head == mainChain.tail).get # find other corner
+  
+      let tailChain = (chains.findIt it.head == mainChain.tail).get # find other corner
 
-      print headChain
-      print mainChain
-      print tailChain
-      print head, middle
-      print chains
+      let tail = block:
+        var res: int
+      
+        for ovid in verticesRel[4]:
+          let trf = tiles[ovid].findWayToConnect(@[
+              tiles[middle[^1]],
+              tiles[mainChain.middle[^1]],
+              tiles[tailChain.middle[0]],
+            ], transforms)
 
-      let
-        tail = (verticesRel[4].findIt tiles[it].areConnected([
-          tiles[middle[^1]], # TODO give me error?
-          tiles[mainChain.middle[^1]],
-          tiles[tailChain.middle[0]],
-        ], @[noTransform])).get
+          if trf.isSome:
+            tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+            res = ovid
+            break
+        
+        if res == 0: 
+          print headChain
+          print mainChain
+          print tailChain
+          print head, middle
+          print chains
+          echo "scanned: ", relationScanner(@[head] & middle, tiles)
+          raise newException(ValueError, "not found a tail")
+        res
 
       chains.add (head, middle, tail)
 
