@@ -1,5 +1,6 @@
 import sugar, strutils, sequtils, tables, strformat, math, options
-import main, print
+import main
+import print
 
 type
   Relation = object
@@ -144,51 +145,60 @@ block part1:
 block part2:
   var
     size = intsqrt tiles.len # table width & height
-    cc: Table[int, seq[int]]
+    ea2rv: Table[int, seq[int]] # edges According To 2 Rel Vertex
     chains: seq[Chain]
 
-  var selectedIds: seq[int]
-
   # find the border
+  var selectedIds: seq[int]
   for vid in verticesRel[2]: # vid: vectex id
     selectedIds.add vid
     for _ in 1..size-2: # do it until end of the edge
       for ovid in verticesRel[3]: # looking for chains
         if ovid in selectedIds: continue
-        let trf = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
-        if trf.isSome:
+        # FIXME only attach to the left side of the current tile
+        let way = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
+        if way.isSome:
           # transform to make seconds element compatible if they have unusual relation
-          tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+          tiles[ovid] = tiles[ovid].applyTransform way.get.fns
           
           selectedIds.add ovid
-          cc.insertOrAdd vid, ovid
+          ea2rv.insertOrAdd vid, ovid
           break # stop looking for more maches for previous id
     
     # find the tail vertex to complete the edge
     for ovid in verticesRel[2]: # ovid: other vectex id
       if ovid == vid: continue
-      let trfs = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
-      if trfs.isSome:
-        tiles[ovid] = tiles[ovid].applyTransform trfs.get.fns
-        cc[vid].add ovid
+      let way = tiles[ovid].findWayToConnect(tiles[selectedIds[^1]], transforms)
+      if way.isSome:
+        tiles[ovid] = tiles[ovid].applyTransform way.get.fns
+        ea2rv[vid].add ovid # store tail vertedx as last item of seq
 
-    chains.add (vid, cc[vid][0..^2], cc[vid][^1])
+    chains.add (vid, ea2rv[vid][0..^2], ea2rv[vid][^1])
   
-  # print chains
+  # transform edges to create a square
+  # for chi1 in 0..chains.high:
+  #   for chi2 in 0..chains.high:
+  #     if chi1 == chi2: continue
+  #     if chains[chi1].tail == chains[chi2].head: # select every corner
+  #       let rel = getRelation(tiles[chains[chi1].tail], tiles[chains[chi2].head]).get
+  #       print rel
 
-  # let flatChain = block:
-  #   var 
-  #     res: seq[int]
-  #     currentChain  = chains[0]
-    
-  #   for i in 1..4:
-  #     res.add currentChain.head
-  #     res.add currentChain.middle
-  #     currentChain = chains.findIt(it.head == currentChain.tail).get
-  #   res
+  #[ 
+    print chains
+    # let flatChain = block:
+    #   var 
+    #     res: seq[int]
+    #     currentChain  = chains[0]
+      
+    #   for i in 1..4:
+    #     res.add currentChain.head
+    #     res.add currentChain.middle
+    #     currentChain = chains.findIt(it.head == currentChain.tail).get
+    #   res
 
-  # echo flatChain, flatChain.len
-  # echo "scan1 ", relationScanner(flatChain, tiles)
+    # echo flatChain, flatChain.len
+    # echo "scan1 ", relationScanner(flatChain, tiles)
+  ]#
 
   # fill inside the square [image]
   for edgeLen in countdown(size-4, 2, 2):
@@ -208,32 +218,31 @@ block part2:
         for progress in 1..edgeLen:
           for ovid in verticesRel[4]:
             if ovid in [selectedIds[^1], mainChain.middle[progress]]: continue
-            let trf = tiles[ovid].findWayToConnect(@[
+            let way = tiles[ovid].findWayToConnect(@[
                 tiles[selectedIds[^1]],
                 tiles[mainChain.middle[progress]],
               ], transforms)
 
-            if trf.isSome:
+            if way.isSome:
               # echo "middle", (progress, edgeLen, edgeNum, ovid, head)
-              tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+              tiles[ovid] = tiles[ovid].applyTransform way.get.fns
               selectedIds.add ovid
               ovid
 
-  
       let tailChain = (chains.findIt it.head == mainChain.tail).get # find other corner
 
       let tail = block:
         var res: int
       
         for ovid in verticesRel[4]:
-          let trf = tiles[ovid].findWayToConnect(@[
+          let way = tiles[ovid].findWayToConnect(@[
               tiles[middle[^1]],
               tiles[mainChain.middle[^1]],
               tiles[tailChain.middle[0]],
             ], transforms)
 
-          if trf.isSome:
-            tiles[ovid] = tiles[ovid].applyTransform trf.get.fns
+          if way.isSome:
+            tiles[ovid] = tiles[ovid].applyTransform way.get.fns
             res = ovid
             break
         
