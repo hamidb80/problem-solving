@@ -1,22 +1,24 @@
 import strutils, sequtils, sugar
 
-# -------------------------------
+# utils -------------------------------
+
 func toStr(s: seq[char]): string =
   cast[string](s)
-
-func reverseBit(b: char): char =
-  if b == '0': '1'
-  else: '0'
 
 func toBit(cond: bool): char =
   if cond: '1'
   else: '0'
+  
+func reverseBit(b: char): char =
+  toBit b == '0'
 
 func reverseBin(s: string): string =
   s.map(reverseBit).toStr()
 
 func wordLen(ls: seq[string]): int =
   ls[0].len
+
+# main ----------------------------------
 
 func test1(list: seq[string]): int =
   let gammaRate = toStr collect(
@@ -52,7 +54,8 @@ func test2Impl(list: seq[string], bit: char, index = 0): int =
 proc test2(list: seq[string]): int =
   test2Impl(list, '1') * test2Impl(list, '0')
 
-# -------------------------------
+# go -------------------------------
+
 let binList = readFile("./input.txt").splitLines()
 echo test1(binList)
 echo test2(binList)
