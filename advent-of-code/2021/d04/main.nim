@@ -38,13 +38,13 @@ func checkWin(board: Board): bool =
   # rows check
   for rowOffset in countup(0, 25 - 1, 5):
     if board[rowOffset..(rowOffset + 5 - 1)].allIt it == pin:
-      debugecho "row checked"
+      # debugecho "row checked"
       return true
 
   # columns check
   for col_i in 0..<5:
     if countup(0, 25 - 1, 5).toseq.allIt(board[it + col_i] == pin):
-      debugecho "col checked"
+      # debugecho "col checked"
       return true
 
 func winnerIndex(boards: seq[Board]): int =
