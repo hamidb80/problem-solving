@@ -8,11 +8,11 @@ const
   notFound = -1
   rowOffsets = countup(0, 25 - 1, 5).toseq
 
-func extractInfo(body: string): tuple[header: seq[int], boards: seq[Board]] =
-  let i = body.find("\n")
-  result.header = body[0..<i].strip.split(',').map parseInt
+func extractInfo(body: sink string): tuple[header: seq[int], boards: seq[Board]] =
+  let s = body.split("\n", 1)
+  result.header = s[0].strip.split(',').map parseInt
 
-  let numbers = body[i..^1].splitwhitespace().map parseInt
+  let numbers = s[1].splitwhitespace().map parseInt
   for board_offset in countup(0, numbers.high, 25):
     result.boards.add numbers[board_offset..(board_offset + 25 - 1)]
 
@@ -38,13 +38,11 @@ func checkWin(board: Board): bool =
   # rows check
   for rowOffset in rowOffsets:
     if board[rowOffset..(rowOffset + 5 - 1)].allIt it == pin:
-      # debugecho "row checked"
       return true
 
   # columns check
   for col_i in 0..<5:
     if rowOffsets.allIt(board[it + col_i] == pin):
-      # debugecho "col checked"
       return true
 
 func winnerIndex(boards: seq[Board]): int =
@@ -77,7 +75,7 @@ func test2(header: seq[int], boards: seq[Board]): int =
     pinnumber myboards, n
     if i < 5: continue
 
-    if myboards.len == 1: ## special care for last one
+    if myboards.len == 1: # special care for last one
       if myboards[0].checkwin:
         # debugecho myboards[0]
         return myboards[0].winnerSum * n
