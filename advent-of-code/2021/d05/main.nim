@@ -1,4 +1,4 @@
-import sequtils, strutils, sugar, tables
+import sequtils, strutils, tables
 import sequtils as su
 import strutils as sr
 
@@ -15,11 +15,9 @@ func parsePoint(s: string): Point =
   let a = s.split(',')
   (a[0].parseInt, a[1].parseInt)
 
-func parseInput(ls: sink seq[string]): seq[Vec] =
-  collect newseq:
-    for line in ls:
-      let points = line.split(" -> ").map(parsePoint)
-      (points[0], points[1])
+func parseLine(line: string): Vec =
+  let points = line.split(" -> ").map(parsePoint)
+  (points[0], points[1])
 
 # utils --------------------------------
 
@@ -78,6 +76,6 @@ proc dangerPoints(lines: seq[Vec], diagonal: static bool): int =
 
 # go -----------------------
 
-let content = parseInput("./input.txt".lines.toseq)
+let content = "./input.txt".lines.toseq.map parseLine
 echo dangerPoints(content, false)
 echo dangerPoints(content, true)
