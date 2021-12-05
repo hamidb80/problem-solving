@@ -37,15 +37,14 @@ func direction(n1, n2: int): Direction =
 func direction(v: Vec): tuple[x, y: Direction] =
   (direction(v.head.x, v.tail.x), direction(v.head.y, v.tail.y))
 
-func expandVec(v: Vec): seq[Point] =
+iterator expandVec(v: Vec): Point =
   let
     value = v.maxDelta
     dir = v.direction
     head = v.head
 
   for c in 0..value:
-    result.add:
-      (head.x + apply(dir.x, c), head.y + apply(dir.y, c))
+    yield (head.x + apply(dir.x, c), head.y + apply(dir.y, c))
 
 func `$`(pc: CountTable[Point]): string =
   ## for debugging purposes
