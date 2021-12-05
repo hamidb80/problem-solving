@@ -48,7 +48,7 @@ func expandVec(v: Vec): seq[Point] =
       (head.x + apply(dir.x, c), head.y + apply(dir.y, c))
 
 func `$`(pc: CountTable[Point]): string =
-  ## debugging purposes
+  ## for debugging purposes
   let
     points = pc.keys.toseq
     size: Point = (points.mapIt(it.x).max(), points.mapIt(it.y).max())
@@ -66,9 +66,9 @@ proc dangerPoints(lines: seq[Vec], diagonal: static bool): int =
 
   let valid =
     when diagonal:
-      lines.filterIt(it.head.x == it.tail.x or it.head.y == it.tail.y)
-    else:
       lines
+    else:
+      lines.filterIt(it.head.x == it.tail.x or it.head.y == it.tail.y)
 
   for v in valid:
     for p in v.expandVec:
@@ -80,5 +80,5 @@ proc dangerPoints(lines: seq[Vec], diagonal: static bool): int =
 # go -----------------------
 
 let content = parseInput("./input.txt".lines.toseq)
-echo dangerPoints(content, true)
 echo dangerPoints(content, false)
+echo dangerPoints(content, true)
