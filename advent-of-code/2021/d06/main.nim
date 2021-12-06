@@ -3,9 +3,9 @@ import sequtils, strutils, tables, math
 
 # prepare ------------------------------
 
-type FishIntervalCount = array[0..8, int]
+type Arr9 = array[0..8, int]
 
-func toCountArray(s: seq[int]): FishIntervalCount=
+func toCountArray(s: seq[int]): Arr9 =
   for i in s:
     result[i].inc
 
@@ -28,12 +28,12 @@ func howManyFishesAfter(fishesIntervalTimer: CountTable[int], days: int): int =
 
   internals.values.toseq.sum
 
-func optimized(fic: FishIntervalCount, days: int): int=
+func optimized(fishesIntervalTimer: Arr9, days: int): int =
   ## using array instead of count table
-  var internals = fic
+  var internals = fishesIntervalTimer
 
   for _ in 1..days:
-    var newInternals: FishIntervalCount
+    var newInternals: Arr9
 
     for timer, fishes in internals.pairs:
       if timer == 0:
