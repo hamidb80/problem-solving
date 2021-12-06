@@ -37,8 +37,8 @@ func optimized(fishesInternalTimer: Arr9, days: int): int =
 
     for timer, fishes in internals.pairs:
       if timer == 0:
-        newInternals[6].inc fishes
-        newInternals[8].inc fishes
+        newInternals[6] = fishes
+        newInternals[8] = fishes
       else:
         newInternals[timer - 1].inc fishes
 
