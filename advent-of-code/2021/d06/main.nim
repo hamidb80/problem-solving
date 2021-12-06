@@ -11,8 +11,8 @@ func toCountArray(s: seq[int]): Arr9 =
 
 # implement ----------------------------
 
-func howManyFishesAfter(fishesIntervalTimer: CountTable[int], days: int): int =
-  var internals = fishesIntervalTimer
+func howManyFishesAfter(fishesInternalTimer: CountTable[int], days: int): int =
+  var internals = fishesInternalTimer
 
   for _ in 1..days:
     var newInternals = initCountTable[int]()
@@ -28,9 +28,9 @@ func howManyFishesAfter(fishesIntervalTimer: CountTable[int], days: int): int =
 
   internals.values.toseq.sum
 
-func optimized(fishesIntervalTimer: Arr9, days: int): int =
+func optimized(fishesInternalTimer: Arr9, days: int): int =
   ## using array instead of count table
-  var internals = fishesIntervalTimer
+  var internals = fishesInternalTimer
 
   for _ in 1..days:
     var newInternals: Arr9
