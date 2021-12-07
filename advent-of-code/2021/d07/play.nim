@@ -2,13 +2,11 @@ import sequtils, strutils, tables, algorithm
 import plotly
 
 #[
-  i though i have to something with staticstics :D
-  thats just for examing my idea that failed, nothing more
+  i though i have to do something with staticstics :D
+  thats just examining my assumption, nothing more [it didn't work btw]
 ]#
 
-type 
-  Point = tuple[x, y: int]
-  NumFreq = tuple[number, frequency: int]
+type Point = tuple[x, y: int]
 
 proc showInDiagram*(lines: varargs[seq[Point]]) =
   show Plot[int](
@@ -40,5 +38,5 @@ let
     .sorted(sortByNumber)
 
 
-# showInDiagram numFreq
+showInDiagram numFreq
 
