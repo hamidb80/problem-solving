@@ -4,6 +4,9 @@ import plotly
 #[
   i though i have to do something with staticstics :D
   thats just examining my assumption, nothing more [it didn't work btw]
+
+  UPDATE: i found out it was acually simpler with statistics :-\
+  https://github.com/remigijusj/aoc-2021/blob/main/2021/d07.nim
 ]#
 
 type Point = tuple[x, y: int]

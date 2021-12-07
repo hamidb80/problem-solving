@@ -17,14 +17,13 @@ proc test(xs: seq[int], extraCost: static bool): int =
   let numFreq = cast[seq[NumFreq]](xs.toCountTable.pairs.toseq)
   result = int.high
 
-  template calcMin(n): untyped =
-    if n < result:
-      result = n
-
   for i in min(xs)..max(xs):
-    calcMin numFreq.mapIt(
+    let s = numFreq.mapIt(
       (it.number - i).abs.calcCost(extraCost) * it.frequency
     ).sum
+
+    if s < result:
+      result = s
 
 
 # go ---------------------------
@@ -35,5 +34,5 @@ let crabsX =
   .split(',')
   .map(parseInt)
 
-echo test(crabsX, false)
-echo test(crabsX, true)
+echo test(crabsX, false) # 329389
+echo test(crabsX, true)  # 86397080
