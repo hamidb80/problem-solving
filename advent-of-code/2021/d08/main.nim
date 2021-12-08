@@ -38,7 +38,7 @@ func parseLine(line: string): Input =
   let s = line.split('|').mapIt it.strip.splitWhitespace
   (s[0].mapit it.toHashSet, s[1].mapIt(it.toHashSet))
 
-func first[T](s: HashSet[T]): T=
+func first[T](s: HashSet[T]): T =
   for i in s:
     return i
 
@@ -48,14 +48,14 @@ func countUniqs(data: seq[Input]): int =
   sum data.mapIt do:
     it.output.countIt(it.len in uniqLens)
 
-func extractSpecials(signalPatterns: seq[Pattern]): seq[Pattern] {.inline.}=
+func extractSpecials(signalPatterns: seq[Pattern]): seq[Pattern] =
   signalPatterns.filterIt(it.len in uniqLens).sorted do (s1, s2: Pattern) -> int:
     cmp s1.len, s2.len
 
 func resolveWireTable(patterns: seq[Pattern]): WireTable =
   # w: wire, ws: wires
   # p: pattern
-  let 
+  let
     specials = extractSpecials patterns
     ws_cf = specials[wi1]
     ws_acf = specials[wi7]
@@ -85,18 +85,18 @@ func resolveWireTable(patterns: seq[Pattern]): WireTable =
     first w_g: 'g',
   }
 
-func resolveDigit(digit: Pattern): int=
+func resolveDigit(digit: Pattern): int =
   for i, segs in numberSegments.pairs:
     if segs == digit:
       return i
 
   # raise newException(ValueError, "not matched >> " & digit.toseq.sorted.join)
 
-func transformSegs(digit: Pattern, wt: WireTable): Pattern=
+func transformSegs(digit: Pattern, wt: WireTable): Pattern =
   for seg in digit:
     result.incl wt[seg]
 
-func decodeNumber(digits: seq[Pattern]): int=
+func decodeNumber(digits: seq[Pattern]): int =
   digits.map(resolveDigit).join.parseInt
 
 func sumOutputs(data: seq[Input]): int =
