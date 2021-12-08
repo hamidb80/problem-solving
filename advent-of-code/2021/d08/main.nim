@@ -14,7 +14,7 @@ type
 const
   wi1 = 0 # wi => wire index
   wi7 = 1
-  wi4 = 2
+  # wi4 = 2 # not used; unfortunately
   wi8 = 3
 
   numberSegments = [
@@ -96,13 +96,13 @@ func transformSegs(digit: Pattern, wt: WireTable): Pattern=
   for seg in digit:
     result.incl wt[seg]
 
-func genNumber(digits: seq[Pattern]): int=
+func decodeNumber(digits: seq[Pattern]): int=
   digits.map(resolveDigit).join.parseInt
 
 func sumOutputs(data: seq[Input]): int =
   sum data.mapIt do:
     let wt = it.signalPatterns.resolveWireTable
-    it.output.mapIt(it.transformSegs wt).genNumber()
+    it.output.mapIt(it.transformSegs wt).decodeNumber()
 
 # go -----------------------------------------
 
