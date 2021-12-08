@@ -52,19 +52,20 @@ func extractSpecials(signalPatterns: seq[Pattern]): seq[Pattern] =
   signalPatterns.filterIt(it.len in uniqLens).sorted do (s1, s2: Pattern) -> int:
     cmp s1.len, s2.len
 
+func intersections[T](ss: seq[HashSet[T]]): HashSet[T] =
+  ss.foldl a * b
+
 func resolveWireTable(patterns: seq[Pattern]): WireTable =
-  # w: wire, ws: wires
-  # p: pattern
   let
     specials = extractSpecials patterns
+
+    # w: wire, ws: wires
     ws_cf = specials[wi1]
     ws_acf = specials[wi7]
     all = specials[wi8]
 
-    ps_069 = patterns.filterIt(it.len == 6)
-    ps_235 = patterns.filterIt(it.len == 5)
-    ws_abfg = ps_069.foldl a * b
-    ws_adg = ps_235.foldl a * b
+    ws_abfg = patterns.filterIt(it.len == 6).intersections
+    ws_adg = patterns.filterIt(it.len == 5).intersections
     ws_cde = all - ws_abfg
 
     w_a = ws_acf - ws_cf
@@ -107,5 +108,5 @@ func sumOutputs(data: seq[Input]): int =
 # go -----------------------------------------
 
 let content = lines("./input.txt").toseq.map(parseLine)
-echo countUniqs(content)
-echo sumOutputs(content)
+echo countUniqs(content) # 274
+echo sumOutputs(content) # 1012089
