@@ -81,7 +81,7 @@ func riskLevel(geo: Geo): int =
       if moves.allIt(center < geo[x + it.x, y + it.y]):
         result.inc center + 1
 
-func findAreaFromImpl(p: Point, geo: Geo, acc: var Area) =
+proc findAreaFromImpl(p: Point, geo: Geo, acc: var Area) =
   template go(dx, dy: int): untyped =
     let newp: Point = (p.x + dx, p.y + dy)
 
