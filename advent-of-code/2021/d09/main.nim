@@ -37,14 +37,15 @@ func `[]`(g: Geo, y: int): seq[int] =
 proc `[]=`(g: Geo, x, y: int, val: int) =
   g.data[calcPosition(g, x, y)] = val
 
-
-func resolveMoves(index, max: int): seq[int] =
+func findMoves(index, max: int): seq[int] =
   result = @[-1, +1]
   if index == 0: result.del 0
   elif index == max: result.del 1
 
 func isVisitedBefore(p: Point, areas: openArray[Area]): bool =
   areas.anyIt p in it
+
+# helpers ------------------------------------
 
 func showInMap(areas: seq[Area], geo: Geo): string =
   ## debuggin purposes
@@ -67,7 +68,6 @@ func `$`(p: Point): string =
 
 # implement ----------------------------------
 
-const noMove = [0, 0]
 func riskLevel(geo: Geo): int =
   for y in 0 ..< geo.height:
     for x in 0 ..< geo.width:
@@ -75,8 +75,8 @@ func riskLevel(geo: Geo): int =
         center = geo[x, y]
 
         moves: seq[Point] =
-          resolveMoves(x, geo.width - 1).zip(noMove) &
-          noMove.zip(resolveMoves(y, geo.height - 1))
+          findMoves(x, geo.width - 1).zip([0, 0]) &
+          [0, 0].zip(findMoves(y, geo.height - 1))
 
       if moves.allIt(center < geo[x + it.x, y + it.y]):
         result.inc center + 1
@@ -112,6 +112,6 @@ func maxBasinsSizeProduct(geo: Geo): int =
 
 # go -----------------------------------------
 
-let content = readfile("./input.txt").parseInput
-echo riskLevel(content) # 631
-echo maxBasinsSizeProduct(content) # 821560
+let input = readfile("./input.txt").parseInput
+echo riskLevel(input) # 631
+echo maxBasinsSizeProduct(input) # 821560
