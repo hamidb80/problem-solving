@@ -42,7 +42,7 @@ func findMoves(index, max: int): seq[int] =
   if index == 0: result.del 0
   elif index == max: result.del 1
 
-func isVisitedBefore(p: Point, areas: openArray[Area]): bool {.inline.}=
+func isVisitedBefore(p: Point, areas: openArray[Area]): bool {.inline.} =
   areas.anyIt p in it
 
 # helpers ------------------------------------
