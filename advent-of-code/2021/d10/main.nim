@@ -14,12 +14,11 @@ const
   closes = [')', ']', '}', '>']
   openCloseMap = zip(opens, closes).toTable
 
-# utils --------------------------------------
-
 # implement ----------------------------------
 
 func syntaxErrorScore(lines: seq[string], incomplete: static bool): int =
-  var scores: seq[int]
+  when incomplete:
+    var scores: seq[int]
 
   for l in lines:
     var stack: seq[char]
@@ -39,7 +38,7 @@ func syntaxErrorScore(lines: seq[string], incomplete: static bool): int =
       if stack.len != 0:
         scores.add 0
 
-        for (i, n) in stack.mapIt(closes.find(it) + 1).reversed.pairs:
+        for n in stack.mapIt(closes.find(it) + 1).reversed:
           scores[^1] = scores[^1] * 5 + n
 
   when incomplete:
