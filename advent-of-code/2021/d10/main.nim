@@ -22,22 +22,18 @@ func syntaxErrorScore(lines: seq[string], incomplete: static bool): int =
 
   for l in lines:
     var stack: seq[char]
-    for c in l:
-      if c in opens:
-        stack.add openCloseMap[c]
-      elif c == stack[^1]:
-        stack.del stack.high
-      else:
-        when incomplete:
-          stack = @[]
+    block task:
+      for c in l:
+        if c in opens:
+          stack.add openCloseMap[c]
+        elif c == stack[^1]:
+          stack.del stack.high
         else:
           result.inc scoreMap1[c]
-        break
+          break task
 
-    when incomplete:
-      if stack.len != 0:
+      when incomplete:
         scores.add 0
-
         for n in stack.mapIt(closes.find(it) + 1).reversed:
           scores[^1] = scores[^1] * 5 + n
 
@@ -48,5 +44,5 @@ func syntaxErrorScore(lines: seq[string], incomplete: static bool): int =
 # go -----------------------------------------
 
 let content = lines("./input.txt").toseq
-echo syntaxErrorScore(content, false)
-echo syntaxErrorScore(content, true)
+echo syntaxErrorScore(content, false) # 311949
+echo syntaxErrorScore(content, true) # 3042730309
