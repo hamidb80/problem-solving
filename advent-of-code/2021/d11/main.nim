@@ -32,7 +32,7 @@ func size(g: Geo): int = g.width * g.height
 func `+`(p1, p2: Point): Point =
   (p1.x + p2.x, p1.y + p2.y)
 
-func flushed(v: int): bool = v < 0
+func flashed(v: int): bool = v < 0
 
 func isInBoard(p: Point, g: Geo, ): bool =
   (p.x in 0..<g.width) and (p.y in 0..<g.height)
@@ -59,7 +59,7 @@ proc propagate(geo: var Geo, p: Point) =
       geo[np.x, np.y].inc
       propagate geo, np
 
-func countFlushesAfter(geo: Geo, steps: int): int =
+func countflashesAfter(geo: Geo, steps: int): int =
   var myGeo = geo
 
   for sn in 1..steps:
@@ -74,11 +74,11 @@ func countFlushesAfter(geo: Geo, steps: int): int =
       propagate mygeo, p
 
     search mygeo:
-      if mygeo[x, y].flushed:
+      if mygeo[x, y].flashed:
         mygeo[x, y] = 0
         result.inc
 
-func whenAllFlushes(geo: Geo): int =
+func whenAllflashes(geo: Geo): int =
   var myGeo = geo
 
   for sn in 1..int.high:
@@ -95,7 +95,7 @@ func whenAllFlushes(geo: Geo): int =
       propagate mygeo, p
 
     search mygeo:
-      if mygeo[x, y].flushed:
+      if mygeo[x, y].flashed:
         mygeo[x, y] = 0
         count.inc
 
@@ -105,5 +105,5 @@ func whenAllFlushes(geo: Geo): int =
 # go -----------------------------------------
 
 let content = parseInput("./input.txt")
-echo countFlushesAfter(content, 100) # 1739
-echo whenAllFlushes(content) # 324
+echo countflashesAfter(content, 100) # 1739
+echo whenAllflashes(content) # 324
