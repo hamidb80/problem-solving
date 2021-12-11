@@ -1,4 +1,4 @@
-import sequtils, strutils, sugar
+import sequtils, strutils, algorithm
 
 # prepare ------------------------------------
 
@@ -7,12 +7,8 @@ type
   Point = tuple[x, y: int]
 
 const
-  moveRange = (-1)..(+1)
-  moves = collect newseq:
-    for x in moveRange:
-      for y in moveRange:
-        if (x, y) != (0, 0):
-          (x, y)
+  moveRange = toseq (-1)..(+1)
+  moves = product([moveRange, moveRange]).mapIt((it[0], it[1])).filterIt it != (0, 0)
 
 func toInt(c: char): int =
   c.ord - '0'.ord
@@ -22,9 +18,6 @@ proc parseInput(fname: sink string): Geo =
     result.add line.mapIt it.toInt
 
 # utils --------------------------------------
-
-func `[]`(g: Geo, x, y: int): int =
-  g[y][x]
 
 func `[]`(g: var Geo, x, y: int): var int =
   g[y][x]
@@ -39,22 +32,22 @@ func size(g: Geo): int = g.width * g.height
 func `+`(p1, p2: Point): Point =
   (p1.x + p2.x, p1.y + p2.y)
 
-func isInBoard(g: Geo, p: Point): bool =
+func flushed(v: int): bool = v < 0
+
+func isInBoard(p: Point, g: Geo, ): bool =
   (p.x in 0..<g.width) and (p.y in 0..<g.height)
 
 func adjacents(geo: Geo, p: Point): seq[Point] =
-  moves.mapIt(it + p).filterIt isInBoard(geo, it)
+  moves.mapIt(it + p).filterIt it.isInBoard(geo)
+
+func `$`(g: Geo): string =
+  ## for debugging purposes
+  g.mapIt(it.join ".").join "\n"
 
 template search(geo: Geo, task: untyped): untyped =
   for y {.inject.} in 0..<myGeo.height:
     for x {.inject.} in 0..<myGeo.width:
       task
-
-func flushed(v: int): bool =
-  v < 0
-
-func `$`(g: Geo): string =
-  g.mapIt(it.join ".").join "\n"
 
 # implement ----------------------------------
 
