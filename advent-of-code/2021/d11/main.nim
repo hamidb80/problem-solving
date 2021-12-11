@@ -37,7 +37,7 @@ func flushed(v: int): bool = v < 0
 func isInBoard(p: Point, g: Geo, ): bool =
   (p.x in 0..<g.width) and (p.y in 0..<g.height)
 
-func adjacents(geo: Geo, p: Point): seq[Point] =
+func adjacents(p: Point, geo: Geo): seq[Point] =
   moves.mapIt(it + p).filterIt it.isInBoard(geo)
 
 func `$`(g: Geo): string =
@@ -55,7 +55,7 @@ proc propagate(geo: var Geo, p: Point) =
   if geo[p.x, p.y] > 9:
     geo[p.x, p.y] = int.low
 
-    for np in geo.adjacents(p):
+    for np in p.adjacents(geo):
       geo[np.x, np.y].inc
       propagate geo, np
 
