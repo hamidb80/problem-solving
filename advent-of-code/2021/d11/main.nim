@@ -39,21 +39,11 @@ func size(g: Geo): int = g.width * g.height
 func `+`(p1, p2: Point): Point =
   (p1.x + p2.x, p1.y + p2.y)
 
-# implement ----------------------------------
-
 func isInBoard(g: Geo, p: Point): bool =
   (p.x in 0..<g.width) and (p.y in 0..<g.height)
 
 func adjacents(geo: Geo, p: Point): seq[Point] =
   moves.mapIt(it + p).filterIt isInBoard(geo, it)
-
-proc propagate(geo: var Geo, p: Point) =
-  if geo[p.x, p.y] > 9:
-    geo[p.x, p.y] = int.low
-
-    for np in geo.adjacents(p):
-      geo[np.x, np.y].inc
-      propagate geo, np
 
 template search(geo: Geo, task: untyped): untyped =
   for y {.inject.} in 0..<myGeo.height:
@@ -65,6 +55,16 @@ func flushed(v: int): bool =
 
 func `$`(g: Geo): string =
   g.mapIt(it.join ".").join "\n"
+
+# implement ----------------------------------
+
+proc propagate(geo: var Geo, p: Point) =
+  if geo[p.x, p.y] > 9:
+    geo[p.x, p.y] = int.low
+
+    for np in geo.adjacents(p):
+      geo[np.x, np.y].inc
+      propagate geo, np
 
 func countFlushesAfter(geo: Geo, steps: int): int =
   var myGeo = geo
@@ -89,7 +89,7 @@ func whenAllFlushes(geo: Geo): int =
   var myGeo = geo
 
   for sn in 1..int.high:
-    var 
+    var
       dangerPoints: seq[Point]
       count = 0
 
