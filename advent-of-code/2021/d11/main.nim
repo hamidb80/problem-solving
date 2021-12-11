@@ -99,8 +99,8 @@ func whenAllFlushes(geo: Geo): int =
         mygeo[x, y] = 0
         count.inc
 
-      if count == mygeo.size:
-        return sn
+    if count == mygeo.size:
+      return sn
 
 # go -----------------------------------------
 
