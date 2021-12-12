@@ -1,10 +1,10 @@
-import sequtils, strscans
+import sequtils, strscans, tables, hashes
 
 # prepare ------------------------------------
 
 type
   Cave = distinct string
-  Connection = array[2, Cave]
+  Connections = TableRef[Cave, seq[Cave]]
   Path = seq[Cave]
 
 const
@@ -12,17 +12,29 @@ const
   endCave = "end".Cave
   noCave = "".Cave
 
-proc parseInput(fname: string): seq[Connection] =
-  for l in lines fname:
-    var v1, v2: string
-    discard scanf(l, "$w-$w", v1, v2)
-    result.add [v1.Cave, v2.Cave]
-
-# utils --------------------------------------
 
 func `==`(c1, c2: Cave): bool {.borrow.}
 func `[]`(c: Cave, index: int): char = c.string[index]
 func `$`(c: Cave): string = c.string ## debuggin purposes
+func hash(c: Cave): Hash = hash c.string ## debuggin purposes
+
+
+proc parseInput(fname: string): Connections =
+  result = newTable[Cave, seq[Cave]]()
+
+  template addConn(`from`, to: Cave): untyped =
+    if `from` in result:
+      result[`from`].add to
+    else:
+      result[`from`] = @[to]
+
+  for l in lines fname:
+    var v1, v2: string
+    discard scanf(l, "$w-$w", v1, v2)
+    addConn v1.Cave, v2.Cave
+    addConn v2.Cave, v1.Cave
+
+# utils --------------------------------------
 
 func isLarge(c: Cave): bool = (c[0].ord - 'a'.ord) < 0
 
@@ -31,17 +43,12 @@ template concat[T](head: seq[T], tail: T): untyped =
 
 # implement ----------------------------------
 
-func findConnectionsFor(connections: seq[Connection], `for`: Cave): seq[Cave] =
-  for conn in connections:
-    if `for` in conn:
-      result.add conn.filterIt(it != `for`)[0]
-
 func findPathImpl(
-  connections: seq[Connection], `from`: Cave,
+  connections: Connections, `from`: Cave,
   currentPath: seq[Cave], paths: var seq[Path],
   escapedCave: Cave
 ) =
-  for cave in findConnectionsFor(connections, `from`):
+  for cave in connections[`from`]:
     if cave == startCave:
       continue
 
@@ -59,18 +66,18 @@ func findPathImpl(
       elif escapedCave == noCave:
         recall cave
 
-func findPath(connections: seq[Connection], canVisitTwice: static bool): seq[Path] =
+func findPath(connections: Connections, canVisitTwice: static bool): seq[Path] =
   const escapedCave =
     if canVisitTwice: noCave
     else: startCave
 
   findPathImpl(connections, startCave, @[startCave], result, escapedCave)
 
-func howManyWays(content: seq[Connection], singleTwice: static bool): int =
+func howManyWays(content: Connections, singleTwice: static bool): int =
   len findPath(content, singleTwice)
 
 # go -----------------------------------------
 
-let content = parseInput("./input.txt")
-echo howManyWays(content, false) # 3495
-echo howManyWays(content, true) # 94849
+let conns = parseInput("./input.txt")
+echo howManyWays(conns, false) # 3495
+echo howManyWays(conns, true) # 94849
