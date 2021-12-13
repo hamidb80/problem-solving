@@ -1,4 +1,4 @@
-import sequtils, strutils, math
+import sequtils, strutils
 
 # prepare ------------------------------------
 
@@ -47,18 +47,14 @@ func `$`(points: seq[Point]): string =
 # implement ----------------------------------
 
 func mirror(number, line: int): int =
-  if number < line:
-    number
-  else:
-    line - abs(line - number)
+  if number < line: number
+  else: line - abs(line - number)
 
 func foldPaper(points: seq[Point], fold: Fold): seq[Point] =
   if fold.axis == ys:
-    points.mapIt:
-      (it.x, mirror(it.y, fold.value))
+    points.mapIt (it.x, mirror(it.y, fold.value))
   else:
-    points.mapIt:
-      (mirror(it.x, fold.value), it.y)
+    points.mapIt (mirror(it.x, fold.value), it.y)
 
 
 func visiblePoints(points: seq[Point], folds: seq[Fold]): seq[Point] =
