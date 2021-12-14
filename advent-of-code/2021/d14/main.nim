@@ -5,7 +5,7 @@ import sequtils, strutils, tables, strscans
 type
   Element = char
   Formula = seq[Element]
-  ElementPair = array[2, Element] # is always ordered
+  ElementPair = array[2, Element]
   PairInsertions = TableRef[ElementPair, Element]
 
   Data = tuple
