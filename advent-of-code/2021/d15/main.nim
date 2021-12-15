@@ -1,4 +1,4 @@
-import sequtils, strutils
+import sequtils, strutils, strformat
 
 # prepare ------------------------------------
 
@@ -19,6 +19,19 @@ func initGeo(size: int): Geo =
   result.size = size
   result.data = newSeqWith(size, newSeqWith(size, 0))
 
+func applyLimit(val: int): int =
+  if val > 9: val mod 9
+  else: val
+
+func expand(geo: Geo, times: int): Geo =
+  let sz = geo.size
+  result = initGeo(sz * times)
+
+  for xt in 0..<result.size:
+    for yt in 0..<result.size:
+      let addition = (xt div sz) + (yt div sz)
+      result[xt, yt] = applyLimit(geo[xt mod sz, yt mod sz] + addition)
+
 proc parseInput(fname: string): Geo =
   result = new Geo
   result.data =
@@ -29,36 +42,39 @@ proc parseInput(fname: string): Geo =
 
 func `$`(geo: Geo): string =
   # for debugging purposes
-  geo.data.join "\n"
+  geo.data.mapIt(it.mapIt(fmt"{it:4}").join".").join "\n"
 
 # implement ----------------------------------
 
 func lowestRiskImpl(geo, acc: Geo, i: int) =
   let mxi = geo.size - 1
 
-  template adjust(x, y): untyped =
+  template calcPathSum(x, y): untyped =
     acc[x, y] = min(acc[x+1, y], acc[x, y+1]) + geo[x, y]
 
   acc[mxi, i] = acc[mxi, i + 1] + geo[mxi, i]
   acc[i, mxi] = acc[i + 1, mxi] + geo[i, mxi]
 
   for z in countdown(mxi - 1, i):
-    adjust z, i
-    adjust i, z
+    calcPathSum z, i
+    calcPathSum i, z
 
-func lowestRisk(geo: Geo): int =
+proc lowestRisk(geo: Geo): int =
   let
-    lrps = initGeo(geo.size) # lowest risk path summation in every position
+    acc = initGeo(geo.size) # lowest risk path summation in every position
     mxi = geo.size - 1       # max index
 
-  lrps[mxi, mxi] = geo[mxi, mxi]
+  acc[mxi, mxi] = geo[mxi, mxi] # destination
 
   for i in countdown(mxi - 1, 0):
-    lowestRiskImpl(geo, lrps, i)
+    lowestRiskImpl(geo, acc, i)
 
-  lrps[0, 0] - geo[0, 0]
+  # writeFile "examine.txt", $acc  
+  acc[0, 0] - geo[0, 0]
 
 # go -----------------------------------------
 
-let content = parseInput("./input.txt")
-echo lowestRisk(content) # 435
+let geo = parseInput("./test.txt")
+echo lowestRisk(geo) # 435
+# writeFile "table.txt", $(geo.expand 5)
+echo lowestRisk(geo.expand 5) # 435
