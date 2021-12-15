@@ -1,5 +1,4 @@
 # https://github.com/remigijusj/aoc-2021/blob/main/2021/d15.nim
-
 import std/[sequtils]
 import astar # https://github.com/Nycto/AStarNim
 
@@ -48,6 +47,6 @@ proc inflate(grid: Grid, times: int): Grid =
 proc partOne(data: Grid): int = data.lowestRiskDiagonal
 proc partTwo(data: Grid): int = data.inflate(5).lowestRiskDiagonal
 
-let data = parseData("./test.txt")
+let data = parseData("./input.txt")
 echo partOne(data)
 echo partTwo(data)

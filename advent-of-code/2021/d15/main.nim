@@ -27,8 +27,8 @@ func expand(geo: Geo, times: int): Geo =
   let sz = geo.size
   result = initGeo(sz * times)
 
-  for xt in 0..<result.size:
-    for yt in 0..<result.size:
+  for xt in 0 ..< result.size:
+    for yt in 0 ..< result.size:
       let addition = (xt div sz) + (yt div sz)
       result[xt, yt] = applyLimit(geo[xt mod sz, yt mod sz] + addition)
 
@@ -74,7 +74,7 @@ proc lowestRisk(geo: Geo): int =
 
 # go -----------------------------------------
 
-let geo = parseInput("./test.txt")
+let geo = parseInput("./input.txt")
 echo lowestRisk(geo) # 435
 # writeFile "table.txt", $(geo.expand 5)
-echo lowestRisk(geo.expand 5) # 435
+echo lowestRisk(geo.expand 5) # 2846 ? but the right answer is 2842 | i don't know why
