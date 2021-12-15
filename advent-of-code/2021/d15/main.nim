@@ -1,18 +1,23 @@
-import sequtils
+import sequtils, strutils
 
 # prepare ------------------------------------
 
-type 
+type
   Geo = ref object
     data: seq[seq[int]]
-    width, height: int
-  
-  Point = tuple[x,y: int]
+    size: int
 
 # utils --------------------------------------
 
-func parseInt(c: char): int =
-  c.ord - '0'.ord
+func parseInt(c: char): int = c.ord - '0'.ord
+
+func `[]`(geo: Geo, x, y: int): int = geo.data[y][x]
+func `[]=`(geo: Geo, x, y, val: int) = geo.data[y][x] = val
+
+func initGeo(size: int): Geo =
+  result = new Geo
+  result.size = size
+  result.data = newSeqWith(size, newSeqWith(size, 0))
 
 proc parseInput(fname: string): Geo =
   result = new Geo
@@ -20,35 +25,40 @@ proc parseInput(fname: string): Geo =
     lines(fname).toseq.mapIt:
       it.mapit it.parseInt
 
-  result.height = result.data.len
-  result.width = result.data[0].len
+  result.size = result.data.len
 
-func destination(geo: Geo): Point {.inline.}=
-  (geo.width - 1, geo.height - 1)
-
-func `[]`(geo: Geo, p: Point): int {.inline.}=
-  geo.data[p.y][p.x]
+func `$`(geo: Geo): string =
+  # for debugging purposes
+  geo.data.join "\n"
 
 # implement ----------------------------------
 
-func lowestRiskImpl(geo: Geo, position: Point, currentSum: int, minRisk: var int)=
-  let newsum = currentSum + geo[position]
+func lowestRiskImpl(geo, acc: Geo, i: int) =
+  let mxi = geo.size - 1
 
-  if position == geo.destination:
-    minRisk = min(minRisk, newsum)
+  template adjust(x, y): untyped =
+    acc[x, y] = min(acc[x+1, y], acc[x, y+1]) + geo[x, y]
 
-  else:
-    if position.x != geo.width - 1:
-      lowestRiskImpl(geo, (position.x + 1, position.y), newsum, minRisk)
+  acc[mxi, i] = acc[mxi, i + 1] + geo[mxi, i]
+  acc[i, mxi] = acc[i + 1, mxi] + geo[i, mxi]
 
-    if position.y != geo.height - 1:
-      lowestRiskImpl(geo, (position.x, position.y + 1), newsum, minRisk)
+  for z in countdown(mxi - 1, i):
+    adjust z, i
+    adjust i, z
 
 func lowestRisk(geo: Geo): int =
-  result = int.high
-  lowestRiskImpl(geo, (0,0), -geo[(0,0)], result)
+  let
+    lrps = initGeo(geo.size) # lowest risk path summation in every position
+    mxi = geo.size - 1       # max index
+
+  lrps[mxi, mxi] = geo[mxi, mxi]
+
+  for i in countdown(mxi - 1, 0):
+    lowestRiskImpl(geo, lrps, i)
+
+  lrps[0, 0] - geo[0, 0]
 
 # go -----------------------------------------
 
-let content = parseInput("./test.txt")
-echo lowestRisk(content)
+let content = parseInput("./input.txt")
+echo lowestRisk(content) # 435
