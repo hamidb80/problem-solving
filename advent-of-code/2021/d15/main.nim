@@ -42,7 +42,7 @@ proc parseInput(fname: string): Geo =
 
 func `$`(geo: Geo): string =
   # for debugging purposes
-  geo.data.mapIt(it.mapIt(fmt"{it:4}").join".").join "\n"
+  geo.data.mapIt(it.mapIt(fmt" {it:2} ").join"").join "\n"
 
 # implement ----------------------------------
 
@@ -69,12 +69,12 @@ proc lowestRisk(geo: Geo): int =
   for i in countdown(mxi - 1, 0):
     lowestRiskImpl(geo, acc, i)
 
-  # writeFile "examine.txt", $acc  
+  writefile "examine.txt", $acc
   acc[0, 0] - geo[0, 0]
 
 # go -----------------------------------------
 
-let geo = parseInput("./input.txt")
+let geo = parseInput("./gold.txt")
 echo lowestRisk(geo) # 435
-# writeFile "table.txt", $(geo.expand 5)
-echo lowestRisk(geo.expand 5) # 2846 ? but the right answer is 2842 | i don't know why
+writeFile "table.txt", $geo
+# echo lowestRisk(geo.expand 5) # 2846 ? but the right answer is 2842 | i don't know why
