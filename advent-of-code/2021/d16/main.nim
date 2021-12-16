@@ -2,8 +2,6 @@ import sequtils, strutils
 
 # prepare ------------------------------------
 
-const notAvailable = -1
-
 type
   RawPacket = ref string
 
@@ -23,17 +21,11 @@ type
     PsLiteralData, PsLengthTypeId,
     PsSubPackets
 
+const notAvailable = -1
 template isAvailable(v: int): untyped =
   v != notAvailable
 
 # utils --------------------------------------
-
-func countLeading(str: string, chr: char): int=
-  for c in str:
-    if c == chr:
-      result.inc
-    else:
-      break
 
 func parseInput(s: sink string): RawPacket =
   result = new RawPacket
@@ -54,6 +46,7 @@ func parseLiteralBin(s: string): int =
 
 func parseRawPacketImpl(rp: RawPacket, rng: HSlice[int, int],
     acc: var DataPacket): int =
+
   var
     i = rng.a
     numberOfSubPackets = notAvailable
@@ -145,10 +138,27 @@ func sumVersionsImpl(packetTree: DataPacket, acc: var int) =
 func sumVersions(packetTree: DataPacket): int =
   sumVersionsImpl(packetTree, result)
 
-# func sumVersionsImpl(packetTree: DataPacket, acc: var int) =
-# func sumVersions(packetTree: DataPacket): int =
+func calc(packetTree: DataPacket): int =
+  if packetTree.kind == PkOperator:
+    let values = packetTree.nodes.map(calc)
+
+    values.foldl:
+      case packetTree.typeid:
+      of 0: a + b
+      of 1: a * b
+      of 2: min(a, b)
+      of 3: max(a, b)
+      of 5: (a > b).int
+      of 6: (a < b).int
+      of 7: (a == b).int
+      else:
+        raise newException(ValueError, "invalid 'typeid' for Packet")
+
+  else:
+    packetTree.value
 
 # go -----------------------------------------
 
-let data = readFile("./input.txt").parseInput
-echo sumVersions data.parseRawPacket # 984
+let data = readFile("./input.txt").parseInput.parseRawPacket
+echo sumVersions data # 984
+echo calc data #
