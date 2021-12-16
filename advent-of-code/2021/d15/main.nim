@@ -78,3 +78,7 @@ let geo = parseInput("./gold.txt")
 echo lowestRisk(geo) # 435
 writeFile "table.txt", $geo
 # echo lowestRisk(geo.expand 5) # 2846 ? but the right answer is 2842 | i don't know why
+
+## UPDATE: bro you have to use a well-known path finding algorithm, you incorrecly assumed that you
+## can only go bottom and right but you can go up and left too, and this part is scary if you wanna 
+## do it alone
