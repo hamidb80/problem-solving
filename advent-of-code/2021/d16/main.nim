@@ -161,4 +161,4 @@ func calc(packetTree: DataPacket): int =
 
 let data = readFile("./input.txt").parseInput.parseRawPacket
 echo sumVersions data # 984
-echo calc data #
+echo calc data # 1015320896946
