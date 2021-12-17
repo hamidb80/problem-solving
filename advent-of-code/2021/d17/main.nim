@@ -7,8 +7,6 @@ type
     x, y: HSlice[int, int]
 
   Velocity = tuple[x, y: int]
-  Point = Velocity
-
   Intersect = tuple[x, step: int, stopped: bool]
 
 # utils --------------------------------------
@@ -41,7 +39,7 @@ iterator intersects(xs: HSlice[int, int]): Intersect =
 func resolveY(a, v, t: int): int =
   t * v + sum1to(max(t - 1, 0)) * a
 
-func findVeclocities(area: Area): seq[Point] =
+func findVeclocities(area: Area): seq[Velocity] =
   for i in intersects(area.x):
     for vy in area.y.a .. int16.high:
       var
@@ -56,7 +54,6 @@ func findVeclocities(area: Area): seq[Point] =
 
         if i.stopped:
           step.inc
-        
         else:
           break
 
