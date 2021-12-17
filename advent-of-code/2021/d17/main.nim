@@ -1,4 +1,4 @@
-import sequtils, strscans, math, algorithm
+import sequtils, strscans
 
 # prepare ------------------------------------
 
@@ -41,28 +41,24 @@ iterator intersects(xs: HSlice[int, int]): Intersect =
 func resolveY(a, v, t: int): int =
   t * v + sum1to(max(t - 1, 0)) * a
 
-func shoots(area: Area): seq[Point] =
+func findVeclocities(area: Area): seq[Point] =
   for i in intersects(area.x):
     for vy in area.y.a .. int16.high:
-
-      template calcY: untyped =
-        resolveY(-1, vy, step)
-      template acc =
-        if y in area.y:
-          # debugecho (i.x, y, vy)
-          result.add (i.x, vy)
-
       var
         step = i.step
-        y = calcy()
+        y: int
 
-      acc()
-      if i.stopped:
-        while y > area.y.b:
+      while y > area.y.b:
+        y = resolveY(-1, vy, step)
+  
+        if y in area.y:
+          result.add (i.x, vy)
+
+        if i.stopped:
           step.inc
-          y = calcy()
-          acc()
-
+        
+        else:
+          break
 
   result.deduplicate
 
@@ -70,8 +66,7 @@ func shoots(area: Area): seq[Point] =
 
 let
   data = readFile("./input.txt").parseInput
-  ps = shoots(data)
+  vs = findVeclocities(data)
 
-let res* = ps.mapIt(cast[(int, int)](it)).sorted
-echo res.mapIt(it[1]).max.sum1to # 9180
-echo res.len # 3767
+echo vs.mapIt(it[1]).max.sum1to # 9180
+echo vs.len # 3767
