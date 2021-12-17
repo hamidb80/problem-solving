@@ -1,4 +1,4 @@
-import sequtils, strutils, strscans, math
+import sequtils, strscans, math, algorithm
 
 # prepare ------------------------------------
 
@@ -9,9 +9,11 @@ type
   Velocity = tuple[x, y: int]
   Point = Velocity
 
+  Intersect = tuple[x, step: int, stopped: bool]
+
 # utils --------------------------------------
 
-func toValidRange(rng: HSlice[int, int]): HSlice[int, int]=
+func toValidRange(rng: HSlice[int, int]): HSlice[int, int] =
   if rng.a > rng.b:
     rng.b .. rng.a
   else:
@@ -24,74 +26,52 @@ func parseInput(s: sink string): Area =
 
   (toValidRange(result.x), toValidRange(result.y))
 
-# implement ----------------------------------
-
-func applyDrag(v: Velocity): Velocity =
-  result.x =
-    if abs(v.x) == 0: v.x
-    else: sgn(v.x) * -1 + v.x
-  
-  result.y = v.y - 1
-
-func `+`(p1,p2: Point): Point=
-  (p1.x + p2.x, p1.y + p2.y)
-
-func contains(area: Area, p: Point): bool=
-  (p.x in area.x) and (p.y in area.y)
-
-func sum1to(n: int): int=
+func sum1to(n: int): int =
   n * (n + 1) div 2
 
-func reachesBeforeStop(d: int): int=
-  result = int.high
-  for n in countdown(d, 1):
-    if sum1to(n) > d:
-      result = min(result, n)
+# implement ----------------------------------
 
-func canMakeIt(v: Velocity, area: Area): bool=
-  var 
-    p: Point = (0,0)
-    myv = v
+iterator intersects(xs: HSlice[int, int]): Intersect =
+  for n in 1..xs.b:
+    let sn = sum1to(n)
+    for k in 0 ..< n:
+      if sn - sum1to(k) in xs:
+        yield (n, n - k, k == 0)
 
-  while p.y >= area.y.b:
-    p = p + myv
-    myv = applyDrag(myv)
+func resolveY(a, v, t: int): int =
+  t * v + sum1to(max(t - 1, 0)) * a
 
-    if p in area:
-      return true
+func shoots(area: Area): seq[Point] =
+  for i in intersects(area.x):
+    for vy in area.y.a .. int16.high:
 
-func bestShoot(area: Area): Point =
-  let 
-    minx = reachesBeforeStop area.x.a 
-    maxx = reachesBeforeStop area.x.b + area.y.len
+      template calcY: untyped =
+        resolveY(-1, vy, step)
+      template acc =
+        if y in area.y:
+          # debugecho (i.x, y, vy)
+          result.add (i.x, vy)
 
-  result = (int.low, int.low)
+      var
+        step = i.step
+        y = calcy()
 
-  # debugEcho minx
-  # debugEcho maxx
+      acc()
+      if i.stopped:
+        while y > area.y.b:
+          step.inc
+          y = calcy()
+          acc()
 
-  for x in minx..maxx:
-    var madeForFirstTime = false
-    for y in area.y.a..int16.high:
-      let t  = canMakeIt((x,y), area) 
 
-      if t:
-        # madeForFirstTime = true
-
-        if y > result.y:
-          result = (x,y)
-
-      # elif madeForFirstTime:
-        # break
-
+  result.deduplicate
 
 # go -----------------------------------------
 
-let 
-  test = readFile("./test.txt").parseInput
-  inp = readFile("./input.txt").parseInput
+let
+  data = readFile("./input.txt").parseInput
+  ps = shoots(data)
 
-
-echo test, inp
-echo bestShoot(test).y.sum1to
-echo bestShoot(inp).y.sum1to # 9180
+let res* = ps.mapIt(cast[(int, int)](it)).sorted
+echo res.mapIt(it[1]).max.sum1to # 9180
+echo res.len # 3767
