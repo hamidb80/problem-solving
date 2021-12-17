@@ -68,5 +68,5 @@ let
   data = readFile("./input.txt").parseInput
   vs = findVeclocities(data)
 
-echo vs.mapIt(it[1]).max.sum1to # 9180
+echo vs.mapIt(it.y).max.sum1to # 9180
 echo vs.len # 3767
