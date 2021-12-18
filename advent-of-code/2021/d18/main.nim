@@ -111,21 +111,12 @@ proc addTo(node: SnailNumber, val: int, lastDir, destDir: Direction) =
     getMostLiteral(node[destDir], ^destDir).value += val
 
 proc explode(npair: SnailNumber) =
-  debugecho "exlpode ..."
-
   addto(npair.parent, npair.left.value, npair.getDir, Left)
   addto(npair.parent, npair.right.value, npair.getDir, Right)
   npair.replace ~0
 
-  debugEcho npair.getRoot
-  debugecho "---"
-
 proc split(n: SnailNumber) =
-  debugecho "split ..."
   n.replace splitNumber n.value
-  debugEcho n.getRoot
-  debugecho "---"
-
 
 func getDepth(n: SnailNumber): int =
   var acc = n
@@ -134,78 +125,60 @@ func getDepth(n: SnailNumber): int =
     result.inc
     acc = acc.parent
 
-proc reduceImpl(node: SnailNumber): bool =
-  case node.kind:
-  of SnPair:
-    if node.getDepth == 4:
+proc reduceExplodes(node: SnailNumber): bool =
+  if node.kind == SnPair:
+    let d= node.getDepth
+    if d == 4:
       # for n in node:
       if isPurePair node:
         explode node
-        return true
+        result = true
 
-    for n in node:
-      if reduceImpl n:
-        return true
+    elif d < 4:
+      result = result or node.anyIt(reduceExplodes it)
+
+proc reduceSplits(node: SnailNumber): bool =
+  case node.kind:
+  of SnPair:
+    result = result or node.anyIt(reduceSplits it):
 
   of SnLiteral:
     if node.value >= 10:
       split node
-      return true
+      result = true
 
 proc reduce(root: SnailNumber): SnailNumber =
-  while reduceImpl(root): discard
+  while reduceExplodes(root) or reduceSplits(root): discard
   root
+
+func doReduce(a,b: SnailNumber): SnailNumber=
+  var ac, bc: SnailNumber
+  deepCopy(ac, a)
+  deepCopy(bc, b)
+  (ac.concat bc).reduce
+
+iterator product[T](s: openArray[T]): array[2, T]=
+  for i in s.low .. s.high:
+    for j in s.low .. s.high:
+      if i != j:
+        yield [s[i], s[j]]
 
 # implement ----------------------------------
 
 proc test1(content: seq[SnailNumber]): int =
-  magnitude content.foldl do:
-    debugEcho "  ", a
-    debugEcho "+ ", b
-    debugEcho "> ", a.concat b
-    let r = (a.concat b).reduce
-    debugEcho "= ", r
-    debugEcho "----------------"
-    r
+  magnitude content.foldl doReduce(a,b)
+
+proc test2(content: seq[SnailNumber]): int =
+  max content.product.toseq.mapIt do:
+    magnitude it.foldl doReduce(a,b)
 
 # go -----------------------------------------
 
-suite "dispose":
-  test "1":
-    let
-      n = ~ %* [[5, 6], [[[1, 2], 3], 4]]
-      r = ~ %* [[5, 7], [[0, 5], 4]]
+let rows = lines("./input.txt").toseq.mapit( ~ it.parseJson)
+echo test1(rows) # 3675
+echo test2(rows) # 4650
 
-    n.right.left.left.explode
-    check $n == $r
-
-  test "2":
-    let
-      n = ~ %* [[1, 5], 3]
-      r = ~ %* [0, 8]
-
-    n.left.explode
-    check $n == $r
-
-  test "3":
-    let
-      n = ~ %* [6, [7, 1]]
-      r = ~ %* [13, 0]
-
-    n.right.explode
-    check $n == $r
-
-
-  test "4":
-    let
-      n = ~ %* [[6, 7], [[[1, 2], [3, 4]], 5]]
-      r = ~ %* [[6, 7], [[[1, 5], 0], 9]]
-
-    n.right.left.right.explode
-    check $n == $r
-
-
-
-let rows = lines("./test.txt").toseq.mapit( ~ it.parseJson)
-echo "START +++"
-echo test1(rows)
+# NOTE:
+# finally, after more than 7 freaking hours ... i made it :D
+# now i'm tired, but is was fun
+# and a little frustrating
