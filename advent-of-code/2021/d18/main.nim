@@ -1,5 +1,7 @@
 import sequtils, json, strformat
 
+{.experimental: "strictFuncs".}
+
 # def ------------------------------------
 
 type
@@ -24,7 +26,7 @@ type
 func isOdd(n: int): bool =
   n mod 2 == 1
 
-func `~`(j: JsonNode, parent: SnailNumber = nil): SnailNumber =
+proc `~`(j: JsonNode, parent: SnailNumber = nil): SnailNumber =
   if j.kind == JInt:
     result = SnailNumber(kind: SnLiteral, value: j.getInt, parent: parent)
   else:
@@ -40,15 +42,15 @@ func `^`(dir: Direction): Direction =
   of Left: Right
   of Right: Left
 
-func initSnailNumber(left, right, parent: SnailNumber): SnailNumber =
+proc initSnailNumber(left, right, parent: SnailNumber): SnailNumber =
   result = SnailNumber(kind: SnPair, left: left, right: right, parent: parent)
   result.left.parent = result
   result.right.parent = result
 
-func initSnailNumber(left, right: int, parent: SnailNumber): SnailNumber =
+proc initSnailNumber(left, right: int, parent: SnailNumber): SnailNumber =
   initSnailNumber(~left, ~right, parent)
 
-func splitNumber(n: int): SnailNumber =
+proc splitNumber(n: int): SnailNumber =
   initSnailNumber(n div 2, n div 2 + (isOdd n).int, nil)
 
 iterator items(n: SnailNumber): SnailNumber =
@@ -69,7 +71,7 @@ func `[]`(n: SnailNumber, dir: Direction): SnailNumber =
   of Left: n.left
   of Right: n.right
 
-func `[]=`(n: SnailNumber, dir: Direction, val: SnailNumber) =
+proc `[]=`(n: SnailNumber, dir: Direction, val: SnailNumber) =
   val.parent = n
 
   case dir:
@@ -85,7 +87,7 @@ func magnitude(n: SnailNumber): int =
   of SnLiteral: n.value
   of SnPair: magnitude(n.left) * 3 + magnitude(n.right) * 2
 
-func concat(n1, n2: SnailNumber): SnailNumber =
+proc concat(n1, n2: SnailNumber): SnailNumber =
   initSnailNumber(n1, n2, nil)
 
 proc replace(n, with: SnailNumber) =
@@ -145,7 +147,7 @@ proc reduce(root: SnailNumber): SnailNumber =
   while reduceExplodes(root) or reduceSplits(root): discard
   root
 
-func doReduce(a, b: SnailNumber): SnailNumber =
+proc doReduce(a, b: SnailNumber): SnailNumber =
   var ac, bc: SnailNumber
   deepCopy(ac, a)
   deepCopy(bc, b)
