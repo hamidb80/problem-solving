@@ -1,4 +1,4 @@
-import sequtils, json, strformat, unittest
+import sequtils, json, strformat
 
 # def ------------------------------------
 
@@ -59,11 +59,6 @@ iterator items(n: SnailNumber): SnailNumber =
 
 func isPurePair(n: SnailNumber): bool =
   (n.kind == SnPair) and (n.allIt it.kind == SnLiteral)
-
-func getRoot(n: SnailNumber): SnailNumber =
-  result = n
-  while result.parent != nil:
-    result = result.parent
 
 func `$`(n: SnailNumber): string =
   case n.kind:
@@ -127,7 +122,7 @@ func getDepth(n: SnailNumber): int =
 
 proc reduceExplodes(node: SnailNumber): bool =
   if node.kind == SnPair:
-    let d= node.getDepth
+    let d = node.getDepth
     if d == 4:
       # for n in node:
       if isPurePair node:
@@ -151,13 +146,13 @@ proc reduce(root: SnailNumber): SnailNumber =
   while reduceExplodes(root) or reduceSplits(root): discard
   root
 
-func doReduce(a,b: SnailNumber): SnailNumber=
+func doReduce(a, b: SnailNumber): SnailNumber =
   var ac, bc: SnailNumber
   deepCopy(ac, a)
   deepCopy(bc, b)
   (ac.concat bc).reduce
 
-iterator product[T](s: openArray[T]): array[2, T]=
+iterator product[T](s: openArray[T]): array[2, T] =
   for i in s.low .. s.high:
     for j in s.low .. s.high:
       if i != j:
@@ -166,11 +161,11 @@ iterator product[T](s: openArray[T]): array[2, T]=
 # implement ----------------------------------
 
 proc test1(content: seq[SnailNumber]): int =
-  magnitude content.foldl doReduce(a,b)
+  magnitude content.foldl doReduce(a, b)
 
 proc test2(content: seq[SnailNumber]): int =
   max content.product.toseq.mapIt do:
-    magnitude it.foldl doReduce(a,b)
+    magnitude it.foldl doReduce(a, b)
 
 # go -----------------------------------------
 
