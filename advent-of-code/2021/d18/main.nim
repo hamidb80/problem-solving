@@ -46,9 +46,7 @@ func initSnailNumber(left, right, parent: SnailNumber): SnailNumber =
   result.right.parent = result
 
 func initSnailNumber(left, right: int, parent: SnailNumber): SnailNumber =
-  result = SnailNumber(kind: SnPair, left: ~left, right: ~right, parent: parent)
-  result.left.parent = result
-  result.right.parent = result
+  initSnailNumber(~left, ~right, parent)
 
 func splitNumber(n: int): SnailNumber =
   initSnailNumber(n div 2, n div 2 + (isOdd n).int, nil)
@@ -61,9 +59,15 @@ func isPurePair(n: SnailNumber): bool =
   (n.kind == SnPair) and (n.allIt it.kind == SnLiteral)
 
 func `$`(n: SnailNumber): string =
+  ## debugging purposes
   case n.kind:
   of SnLiteral: $ n.value
   of SnPair: fmt"[{n.left},{n.right}]"
+
+func `[]`(n: SnailNumber, dir: Direction): SnailNumber =
+  case dir:
+  of Left: n.left
+  of Right: n.right
 
 func `[]=`(n: SnailNumber, dir: Direction, val: SnailNumber) =
   val.parent = n
@@ -71,11 +75,6 @@ func `[]=`(n: SnailNumber, dir: Direction, val: SnailNumber) =
   case dir:
   of Left: n.left = val
   of Right: n.right = val
-
-func `[]`(n: SnailNumber, dir: Direction): SnailNumber =
-  case dir:
-  of Left: n.left
-  of Right: n.right
 
 func getDir(n: SnailNumber): Direction =
   if n.parent.left == n: Left
