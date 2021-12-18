@@ -1,4 +1,4 @@
-import sequtils, json, strformat
+import sequtils, json, strformat, unittest
 
 # def ------------------------------------
 
@@ -101,29 +101,27 @@ func concat(n1, n2: SnailNumber): SnailNumber =
 proc replace(n, with: SnailNumber) =
   n.parent[n.getdir] = with >> n.parent
 
-proc addToRecursive(parent: SnailNumber, val: int, dir: Direction) =
-  
+proc getMost(node: SnailNumber, dir: Direction): SnailNumber =
+  result = node
+  while result.kind != SnLiteral:
+    result = result[dir]
 
-proc addTo(npair: SnailNumber, val: int, dir: Direction) =
-  let relativeDir = npair.getdir
-
-  if dir == relativeDir:
-    addToRecursive(npair.parent.parent, npair[dir].value, ^dir)
-
-  else:
-    npair.parent[dir].value += val
+proc addTo(node: SnailNumber, val: int, dir: Direction) =
+  var n = node
 
 proc explode(npair: SnailNumber) =
-  debugecho "exlpode ..."
+  # debugecho "exlpode ..."
+
   addto(npair, npair.left.value, Left)
-  addto(npair, npair.right.value, Right)
+  # addto(npair, npair.right.value, Right)
   npair.replace ~0
-  debugEcho npair.getRoot
+
+  # debugEcho npair.getRoot
 
 proc split(n: SnailNumber) =
-  debugecho "split ..."
+  # debugecho "split ..."
   n.replace splitNumber n.value
-  debugEcho n.getRoot
+  # debugEcho n.getRoot
 
 func getDepth(n: SnailNumber): int =
   var acc = n
@@ -151,18 +149,36 @@ proc reduceImpl(node: SnailNumber): bool =
       return true
 
 proc reduce(root: SnailNumber): SnailNumber =
-  echo root
   while reduceImpl(root): discard
   root
+
+proc printIt[T](t: T): T =
+  echo t
+  t
 
 # implement ----------------------------------
 
 proc test1(content: seq[SnailNumber]): int =
-  let r = content.foldl (a.concat b).reduce
-  echo r
-  r.magnitude
+  magnitude content.foldl (a.concat b).reduce.printIt
 
 # go -----------------------------------------
 
-let rows = lines("./test.txt").toseq.mapit( ~ it.parseJson)
-echo test1(rows)
+suite "dispose":
+  test "1":
+    let
+      n = ~ %* [[5, 6], [[[1, 2], 3], 4]]
+      r = ~ %* [[5, 7], [[0, 5], 4]]
+
+    n.right.left.left.explode
+    check $n == $r
+
+  test "2":
+    let
+      n = ~ %* [[1, 5], 3]
+      r = ~ %* [0, 8]
+
+    n.left.explode
+    check $n == $r
+
+# let rows = lines("./example.txt").toseq.mapit( ~ it.parseJson)
+# echo test1(rows)
