@@ -35,24 +35,20 @@ func `~`(j: JsonNode, parent: SnailNumber = nil): SnailNumber =
 func `~`(n: int): SnailNumber =
   SnailNumber(kind: SnLiteral, value: n)
 
-proc `>>`(n, parent: SnailNumber): SnailNumber =
-  n.parent = parent
-  n
-
 func `^`(dir: Direction): Direction =
   case dir:
   of Left: Right
   of Right: Left
 
 func initSnailNumber(left, right, parent: SnailNumber): SnailNumber =
-  result = SnailNumber(kind: SnPair, parent: parent)
-  result.left = left >> result
-  result.right = right >> result
+  result = SnailNumber(kind: SnPair, left: left, right: right, parent: parent)
+  result.left.parent = result
+  result.right.parent = result
 
 func initSnailNumber(left, right: int, parent: SnailNumber): SnailNumber =
-  result = SnailNumber(kind: SnPair, parent: parent)
-  result.left = ~left >> result
-  result.right = ~right >> result
+  result = SnailNumber(kind: SnPair, left: ~left, right: ~right, parent: parent)
+  result.left.parent = result
+  result.right.parent = result
 
 func splitNumber(n: int): SnailNumber =
   initSnailNumber(n div 2, n div 2 + (isOdd n).int, nil)
@@ -99,29 +95,37 @@ func concat(n1, n2: SnailNumber): SnailNumber =
   initSnailNumber(n1, n2, nil)
 
 proc replace(n, with: SnailNumber) =
-  n.parent[n.getdir] = with >> n.parent
+  n.parent[n.getdir] = with
 
-proc getMost(node: SnailNumber, dir: Direction): SnailNumber =
+proc getMostLiteral(node: SnailNumber, dir: Direction): SnailNumber =
   result = node
   while result.kind != SnLiteral:
     result = result[dir]
 
-proc addTo(node: SnailNumber, val: int, dir: Direction) =
-  var n = node
+proc addTo(node: SnailNumber, val: int, lastDir, destDir: Direction) =
+  if lastDir == destDir:
+    if node.parent != nil:
+      addTo(node.parent, val, node.getDir, destdir)
+
+  else:
+    getMostLiteral(node[destDir], ^destDir).value += val
 
 proc explode(npair: SnailNumber) =
-  # debugecho "exlpode ..."
+  debugecho "exlpode ..."
 
-  addto(npair, npair.left.value, Left)
-  # addto(npair, npair.right.value, Right)
+  addto(npair.parent, npair.left.value, npair.getDir, Left)
+  addto(npair.parent, npair.right.value, npair.getDir, Right)
   npair.replace ~0
 
-  # debugEcho npair.getRoot
+  debugEcho npair.getRoot
+  debugecho "---"
 
 proc split(n: SnailNumber) =
-  # debugecho "split ..."
+  debugecho "split ..."
   n.replace splitNumber n.value
-  # debugEcho n.getRoot
+  debugEcho n.getRoot
+  debugecho "---"
+
 
 func getDepth(n: SnailNumber): int =
   var acc = n
@@ -152,14 +156,17 @@ proc reduce(root: SnailNumber): SnailNumber =
   while reduceImpl(root): discard
   root
 
-proc printIt[T](t: T): T =
-  echo t
-  t
-
 # implement ----------------------------------
 
 proc test1(content: seq[SnailNumber]): int =
-  magnitude content.foldl (a.concat b).reduce.printIt
+  magnitude content.foldl do:
+    debugEcho "  ", a
+    debugEcho "+ ", b
+    debugEcho "> ", a.concat b
+    let r = (a.concat b).reduce
+    debugEcho "= ", r
+    debugEcho "----------------"
+    r
 
 # go -----------------------------------------
 
@@ -180,5 +187,25 @@ suite "dispose":
     n.left.explode
     check $n == $r
 
-# let rows = lines("./example.txt").toseq.mapit( ~ it.parseJson)
-# echo test1(rows)
+  test "3":
+    let
+      n = ~ %* [6, [7, 1]]
+      r = ~ %* [13, 0]
+
+    n.right.explode
+    check $n == $r
+
+
+  test "4":
+    let
+      n = ~ %* [[6, 7], [[[1, 2], [3, 4]], 5]]
+      r = ~ %* [[6, 7], [[[1, 5], 0], 9]]
+
+    n.right.left.right.explode
+    check $n == $r
+
+
+
+let rows = lines("./test.txt").toseq.mapit( ~ it.parseJson)
+echo "START +++"
+echo test1(rows)
