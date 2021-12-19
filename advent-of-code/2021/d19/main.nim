@@ -1,11 +1,12 @@
-import sequtils, strutils, strscans, math
+import std/[sequtils, strutils, strscans, math, tables, intsets]
 
 {.experimental: "strictFuncs".}
 
 # def ------------------------------------
 
 type
-  Point = tuple[x, y, z: int]
+  Point = object
+    x, y, z: int
 
   Axises = enum
     X, Y, Z
@@ -13,7 +14,7 @@ type
   DirectionComparision = tuple[sameSign: bool, axis: Axises]
 
   Rotation = object
-    x,y,z: DirectionComparision
+    x, y, z: DirectionComparision
 
   Transform = tuple
     position: Point
@@ -24,23 +25,13 @@ type
     records: seq[Point]
 
   Relation = tuple
-    i1, i2: int
+    with: int
     transform: Transform
 
+  RelationTable = Table[int, seq[Relation]]
+  TransformTable = seq[seq[Transform]]
+
 # utils --------------------------------------
-
-func `+`(p1, p2: Point): Point =
-  (p1.x + p2.x, p1.y + p2.y, p1.z + p2.z)
-
-func `-`(p: Point): Point =
-  (-p.x, -p.y, -p.z)
-
-func `-`(p1, p2: Point): Point =
-  p1 + -p2
-
-func distance2(p1, p2: Point): Positive =
-  template r(axis): untyped = p1.axis - p2.axis
-  r(x)^2 + r(y)^2 + r(z)^2
 
 func parsePoint(s: sink string): Point =
   discard scanf(s, "$i,$i,$i", result.x, result.y, result.z)
@@ -70,13 +61,42 @@ iterator pairs(p: Point): tuple[axis: Axises, value: int] =
   yield (Y, p.y)
   yield (Z, p.z)
 
-func `[]`(p: Point, axis: Axises): int=
+
+func newPoint(x, y, z: int): Point =
+  Point(x: x, y: y, z: z)
+
+func `+`(p1, p2: Point): Point =
+  newPoint(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z)
+
+func `-`(p: Point): Point =
+  newPoint(-p.x, -p.y, -p.z)
+
+func `-`(p1, p2: Point): Point =
+  p1 + -p2
+
+func distance2(p1, p2: Point): int =
+  template r(axis): untyped = p1.axis - p2.axis
+  r(x)^2 + r(y)^2 + r(z)^2
+
+func `[]`(p: Point, axis: Axises): int =
   case axis:
   of X: p.x
   of Y: p.y
   of Z: p.z
 
-func `[]=`(r: var Rotation, axis: Axises, val: DirectionComparision)=
+func `[]=`(p: var Point, axis: Axises, val: int) =
+  case axis:
+  of X: p.x = val
+  of Y: p.y = val
+  of Z: p.z = val
+
+func `[]`(r: Rotation, axis: Axises): DirectionComparision =
+  case axis:
+  of X: r.x
+  of Y: r.y
+  of Z: r.z
+
+func `[]=`(r: var Rotation, axis: Axises, val: DirectionComparision) =
   case axis:
   of X: r.x = val
   of Y: r.y = val
@@ -84,11 +104,34 @@ func `[]=`(r: var Rotation, axis: Axises, val: DirectionComparision)=
 
 # implement ----------------------------------
 
-func applyRotation(p: Point, r: Rotation): Point =
-  discard
+func resolveSign(sameSign: bool): int =
+  if sameSign: +1
+  else: -1
 
-func applyTransform(p: Point, tr: Transform): Point =
-  tr.position - p.applyRotation(tr.rotation)
+func add(acc: var RelationTable, id: int, rel: Relation) =
+  if id in acc:
+    acc[id].add rel
+  else:
+    acc[id] = @[rel]
+
+func rotate(p: Point, r: Rotation): Point =
+  for ax in [X, Y, Z]:
+    result[ax] = p[r[ax].axis] * resolveSign(r[ax].sameSign)
+
+func `^`(r: Rotation): Rotation =
+  for ax in [X, Y, Z]:
+    result[r[ax].axis] = (r[ax].sameSign, ax)
+
+func `^`(tr: Transform): Transform =
+  (-tr.position, ^tr.rotation)
+
+func transform(p: Point, tr: Transform): Point =
+  (tr.position + p).rotate(tr.rotation)
+
+func transform(p: Point, trs: seq[Transform]): Point =
+  result = p
+  for t in trs:
+    result = transform(p, t)
 
 func findRotation(dp1, dp2: Point): Rotation =
   # TODO asssert uniqness of axises and they not be 0
@@ -97,37 +140,72 @@ func findRotation(dp1, dp2: Point): Rotation =
       if abs(v1) == abs(v2):
         result[ax1] = (sgn(v1) == sgn(v2), ax2)
 
-func findTransformation(dp1, dp2: Point): Transform =
-  discard
+func findTransformation(primary, secondary: Point): Transform =
+  let r = findRotation(secondary, primary)
+  (secondary.rotate(r) - primary, r)
 
+func findTransformationPath(rels: RelationTable, path: seq[int], dest: int,
+    result: var seq[int]
+) =
+  for r in rels[path[^1]]:
+    if r.with == dest:
+      result = path
+      return
 
-func findTransformationMap(rels: seq[Relation]): seq[Transform] =
-  discard
+    elif r.with notin path:
+      findTransformationPath(rels, path & @[r.with], dest, result)
 
-func haveInCommon(r1, r2: Scanner, atLeast: int
+func genTransformTable(rels: RelationTable, `from`: int): TransformTable =
+  result = newSeqWith(rels.len, newseq[Transform]())
+  for id in 0 ..< rels.len:
+    if id == `from`: continue
+    var path: seq[int]
+    findTransformationPath(rels, @[`from`], id, path)
+    result[id] = @[]
+    var rel = rels[0]
+    for i in path[1..^1]:
+      for r in rel:
+        if r.with == i:
+          result[id].add r.transform
+          break
+
+func relDistance(pin: Point, sp: seq[Point]): IntSet =
+  toIntSet sp.mapIt distance2(pin, it)
+
+func haveInCommon(s1, s2: Scanner, atLeast: int
 ): tuple[result: bool, transform: Transform] =
+  for p1 in s1.records:
+    let sp1 = relDistance(p1, s1.records)
 
-  discard
+    for p2 in s2.records:
+      let sp2 = relDistance(p2, s2.records)
+
+      let l = intersection(sp1, sp2).len
+      if l >= atleast:
+        debugEcho l
+        result.result = true
+        return
 
 func howManyBeacons(reports: seq[Scanner]): int =
   var
-    relations: seq[Relation]
+    relations: RelationTable
     acc: seq[Point]
 
   for r1, r2 in reports.combinations:
-    let cm = haveInCommon(r1, r2, 12)
+    let cm = haveInCommon(r1, r2, 6)
     if cm.result:
-      relations.add (r1.id, r2.id, cm.transform)
+      relations.add r1.id, (r2.id, cm.transform)
+      relations.add r2.id, (r1.id, ^cm.transform)
 
   assert relations.len >= reports.len
 
   for p in reports[0].records:
     acc.add p
 
-  let transformMap = findTransformationMap(relations) # transform map from id[0] => id[N]
+  let trTable = genTransformTable(relations, 0)
 
   for id in 1..reports.high:
-    acc.add reports[id].records.mapIt(applyTransform(it, transformMap[id]))
+    acc.add reports[id].records.mapIt(transform(it, trTable[id]))
 
   acc.deduplicate.len
 
