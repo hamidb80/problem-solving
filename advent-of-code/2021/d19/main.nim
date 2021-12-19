@@ -5,7 +5,7 @@ import std/[sequtils, strutils, strscans, math, tables, intsets]
 # def ------------------------------------
 
 type
-  Point = object
+  Point* = object
     x, y, z: int
 
   Axises = enum
@@ -44,7 +44,7 @@ func parseInput(s: sink string): seq[Scanner] =
     var acc: Scanner
 
     for l in sc.splitLines:
-      if l.startsWith "-":
+      if l.startsWith "---":
         acc.id = parseHeader l
       else:
         acc.records.add parsePoint l
@@ -62,7 +62,7 @@ iterator pairs(p: Point): tuple[axis: Axises, value: int] =
   yield (Z, p.z)
 
 
-func newPoint(x, y, z: int): Point =
+func newPoint*(x, y, z: int): Point =
   Point(x: x, y: y, z: z)
 
 func `+`(p1, p2: Point): Point =
@@ -74,9 +74,9 @@ func `-`(p: Point): Point =
 func `-`(p1, p2: Point): Point =
   p1 + -p2
 
-func distance2(p1, p2: Point): int =
-  template r(axis): untyped = p1.axis - p2.axis
-  r(x)^2 + r(y)^2 + r(z)^2
+func distance2*(p1, p2: Point): int =
+  template op(axis): untyped = (p1.axis - p2.axis)^2
+  op(x) + op(y) + op(z)
 
 func `[]`(p: Point, axis: Axises): int =
   case axis:
@@ -169,22 +169,23 @@ func genTransformTable(rels: RelationTable, `from`: int): TransformTable =
           result[id].add r.transform
           break
 
-func relDistance(pin: Point, sp: seq[Point]): IntSet =
+func relDistance*(pin: Point, sp: seq[Point]): IntSet =
   toIntSet sp.mapIt distance2(pin, it)
 
 func haveInCommon(s1, s2: Scanner, atLeast: int
 ): tuple[result: bool, transform: Transform] =
+
   for p1 in s1.records:
     let sp1 = relDistance(p1, s1.records)
 
     for p2 in s2.records:
-      let sp2 = relDistance(p2, s2.records)
+      let 
+        sp2 = relDistance(p2, s2.records)
+        ins = intersection(sp1, sp2)
 
-      let l = intersection(sp1, sp2).len
-      if l >= atleast:
-        debugEcho l
-        result.result = true
-        return
+      if ins.len >= atleast:
+        # for 
+        debugEcho (s1.id, s2.id)
 
 func howManyBeacons(reports: seq[Scanner]): int =
   var
@@ -192,7 +193,7 @@ func howManyBeacons(reports: seq[Scanner]): int =
     acc: seq[Point]
 
   for r1, r2 in reports.combinations:
-    let cm = haveInCommon(r1, r2, 6)
+    let cm = haveInCommon(r1, r2, 12)
     if cm.result:
       relations.add r1.id, (r2.id, cm.transform)
       relations.add r2.id, (r1.id, ^cm.transform)
