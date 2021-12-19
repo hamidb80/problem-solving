@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, strscans, math, tables, intsets]
+import std/[sequtils, strutils, strscans, math, tables, intsets, unittest]
 
 {.experimental: "strictFuncs".}
 
@@ -61,6 +61,10 @@ iterator pairs(p: Point): tuple[axis: Axises, value: int] =
   yield (Y, p.y)
   yield (Z, p.z)
 
+iterator items(p: Point): int =
+  yield p.x
+  yield p.y
+  yield p.z
 
 func newPoint*(x, y, z: int): Point =
   Point(x: x, y: y, z: z)
@@ -133,41 +137,58 @@ func transform(p: Point, trs: seq[Transform]): Point =
   for t in trs:
     result = transform(p, t)
 
+func validCond(p: Point): bool =
+  let s = p.toSeq
+  s.allIt(it != 0) and s.deduplicate.len == 3
+
 func findRotation(dp1, dp2: Point): Rotation =
-  # TODO asssert uniqness of axises and they not be 0
+  # debugEcho "{{{{{{{{"
+  # debugEcho dp1, dp2
+
+  assert validCond(dp1) and validCond(dp2)
+
   for ax1, v1 in dp1.pairs:
     for ax2, v2 in dp2.pairs:
       if abs(v1) == abs(v2):
         result[ax1] = (sgn(v1) == sgn(v2), ax2)
 
-func findTransformation(primary, secondary: Point): Transform =
-  let r = findRotation(secondary, primary)
-  (secondary.rotate(r) - primary, r)
+  # debugEcho result
+  # debugEcho "}}}}}}}}"
+
+  assert [result.x.axis, result.y.axis, result.z.axis].deduplicate.len == 3
 
 func findTransformationPath(rels: RelationTable, path: seq[int], dest: int,
     result: var seq[int]
 ) =
   for r in rels[path[^1]]:
+    let newp = path & @[r.with]
+
     if r.with == dest:
-      result = path
+      result = newp
       return
 
     elif r.with notin path:
-      findTransformationPath(rels, path & @[r.with], dest, result)
+      findTransformationPath(rels, newp, dest, result)
 
-func genTransformTable(rels: RelationTable, `from`: int): TransformTable =
-  result = newSeqWith(rels.len, newseq[Transform]())
-  for id in 0 ..< rels.len:
+func genTransformTable(relTable: RelationTable, `from`: int): TransformTable =
+  result = newSeqWith(relTable.len, newseq[Transform]())
+
+  for id in 0 ..< relTable.len:
     if id == `from`: continue
+
     var path: seq[int]
-    findTransformationPath(rels, @[`from`], id, path)
-    result[id] = @[]
-    var rel = rels[0]
+    findTransformationPath(relTable, @[`from`], id, path)
+
+    var rels = relTable[0]
     for i in path[1..^1]:
-      for r in rel:
+      for r in rels:
         if r.with == i:
           result[id].add r.transform
           break
+
+      rels = relTable[i]
+
+    assert result[id].len == (path.len - 1)
 
 func relDistance*(pin: Point, sp: seq[Point]): IntSet =
   toIntSet sp.mapIt distance2(pin, it)
@@ -175,17 +196,29 @@ func relDistance*(pin: Point, sp: seq[Point]): IntSet =
 func haveInCommon(s1, s2: Scanner, atLeast: int
 ): tuple[result: bool, transform: Transform] =
 
-  for p1 in s1.records:
-    let sp1 = relDistance(p1, s1.records)
+  for pin1 in s1.records:
+    let sp1 = relDistance(pin1, s1.records)
 
-    for p2 in s2.records:
-      let 
-        sp2 = relDistance(p2, s2.records)
+    for pin2 in s2.records:
+      let
+        sp2 = relDistance(pin2, s2.records)
         ins = intersection(sp1, sp2)
 
       if ins.len >= atleast:
-        # for 
-        debugEcho (s1.id, s2.id)
+
+        for p1 in s1.records:
+          for p2 in s2.records:
+            let
+              d1 = distance2(pin1, p1)
+              d2 = distance2(pin2, p2)
+
+            if d1 == d2 and d1 != 0:
+              # debugEcho s1.id, " <-> ", s2.id
+              let 
+                dp1 = pin1 - p1
+                dp2 = pin2 - p2
+              
+              return (true, (pin1 - pin2 , findRotation(dp1, dp2)))
 
 func howManyBeacons(reports: seq[Scanner]): int =
   var
@@ -204,6 +237,7 @@ func howManyBeacons(reports: seq[Scanner]): int =
     acc.add p
 
   let trTable = genTransformTable(relations, 0)
+  # debugEcho "\n<< ", trTable.join "\n<< "
 
   for id in 1..reports.high:
     acc.add reports[id].records.mapIt(transform(it, trTable[id]))
@@ -214,3 +248,24 @@ func howManyBeacons(reports: seq[Scanner]): int =
 
 let data = readfile("./test.txt").parseInput
 echo howManyBeacons(data)
+
+
+# echo "++++++++++++++++++="
+# suite "transform":
+#   test "1":
+#     let
+#       p1 = newPoint(1, 2, 3)
+#       p2 = newPoint(2, 1, -3)
+#       dp = newPoint(1, 0, 0)
+#       ro = findRotation(p1, p2)
+#       tr = (dp, ro)
+#       p3 = p2 + dp
+#       p4 = p1.transform tr
+
+#     echo "1. ", p1
+#     echo "2. ", p2
+#     echo "3. ", p3
+#     echo "4. ", p4
+#     echo "<> ", tr
+
+#     check p4.transform(^tr) == p1
