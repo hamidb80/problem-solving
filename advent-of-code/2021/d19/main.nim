@@ -80,6 +80,12 @@ iterator combinations[T](s: openArray[T]): (T, T) =
     for j in (i+1) .. s.high:
       yield (s[i], s[j])
 
+iterator combinations[K, V](t: Table[K, V]): (V, V) =
+  let vs = t.keys.toseq
+  for i in vs.low ..< vs.high:
+    for j in (i+1) .. vs.high:
+      yield (t[vs[i]], t[vs[j]])
+
 iterator pairs(p: Point): tuple[axis: Axises, value: int] =
   yield (X, p.x)
   yield (Y, p.y)
@@ -174,7 +180,7 @@ func findRotation(dp1, dp2: Point): Rotation =
       if abs(v1) == abs(v2):
         result[ax1] = (sgn(v1) == sgn(v2), ax2)
 
-  assert [result.x.axis, result.y.axis, result.z.axis].deduplicate.len == 3
+  # assert [result.x.axis, result.y.axis, result.z.axis].deduplicate.len == 3
 
 func findTransformationPathImpl(rels: RelationTable, path: seq[int], dest: int,
     result: var seq[int]
@@ -206,7 +212,7 @@ func genTransformTable(relTable: RelationTable, `from`: int): TransformTable =
       result.addto id, (relTable[head].findIt it.with == i).transform
       head = i
 
-    assert result[id].len == path.len
+    # assert result[id].len == path.len
 
 func relDistance*(pin: Point, sp: seq[Point]): IntSet =
   toIntSet sp.mapIt distance2(pin, it)
@@ -241,34 +247,53 @@ func haveInCommon(s1, s2: Scanner, atLeast: int
             if d1 == d2 and d1 != 0 and [pin1-p1, pin2-p2].allIt(it.validCond):
               return (true, buildTransform(pin1, p1, pin2, p2))
 
-func howManyBeacons(reports: seq[Scanner]): int =
+func genTransformTable(scanners: seq[Scanner]): TransformTable =
   var
     relations: RelationTable
     acc: seq[Point]
 
-  for r1, r2 in reports.combinations:
+  for r1, r2 in scanners.combinations:
     let cm = haveInCommon(r1, r2, 12)
     if cm.result:
       relations.addto r1.id, (r2.id, cm.transform)
       relations.addto r2.id, (r1.id, ^cm.transform)
 
-  assert relations.len >= reports.len
-
-  for p in reports[0].records:
+  # assert relations.len >= scanners.len
+  for p in scanners[0].records:
     acc.add p
 
-  let trTable = genTransformTable(relations, 0)
+  genTransformTable(relations, 0)
 
-  for id in 1..reports.high:
-    acc.add reports[id].records.mapIt(transform(it, trTable[id]))
+func howManyBeacons(scanners: seq[Scanner], trTable: TransformTable): int =
+  var acc: seq[Point]
+  for id in 1..scanners.high:
+    acc.add scanners[id].records.mapIt(transform(it, trTable[id]))
 
-  let ps = acc.deduplicate
-  ps.len
+  acc.deduplicate.len
+
+func manhattanDistance(p1, p2: Point): int =
+  for ax in [X, Y, Z]:
+    result.inc abs(p1[ax] - p2[ax])
+
+const p0 = newPoint(0, 0, 0)
+
+proc highesDistance(trTable: TransformTable): int =
+  var scannersPoistion: Table[int, Point] = {0: p0}.toTable
+
+  for id in trTable.keys:
+    scannersPoistion[id] = -p0.transform(trTable[id])
+
+  for p1, p2 in scannersPoistion.combinations:
+    result = max(result, manhattanDistance(p1, p2))
 
 # go -----------------------------------------
 
-let data = readfile("./input.txt").parseInput
-echo howManyBeacons(data)
+let
+  scanners = readfile("./input.txt").parseInput
+  transformTable = genTransformTable(scanners)
+
+echo howManyBeacons(scanners, transformTable) # 308
+echo highesDistance(transformTable)
 
 # test ------------------------------
 
