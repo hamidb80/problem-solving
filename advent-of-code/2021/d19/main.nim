@@ -1,4 +1,5 @@
-import std/[sequtils, strutils, strscans, math, tables, intsets, unittest, strformat]
+import std/[sequtils, strutils, strscans, math, tables, intsets, unittest]
+# import strformat ## debugging purposes
 
 {.experimental: "strictFuncs".}
 
@@ -265,7 +266,7 @@ func genTransformTable(scanners: seq[Scanner]): TransformTable =
   genTransformTable(relations, 0)
 
 func howManyBeacons(scanners: seq[Scanner], trTable: TransformTable): int =
-  var acc: seq[Point]
+  var acc = scanners[0].records
   for id in 1..scanners.high:
     acc.add scanners[id].records.mapIt(transform(it, trTable[id]))
 
@@ -293,7 +294,7 @@ let
   transformTable = genTransformTable(scanners)
 
 echo howManyBeacons(scanners, transformTable) # 308
-echo highesDistance(transformTable)
+echo highesDistance(transformTable) # 12124
 
 # test ------------------------------
 
