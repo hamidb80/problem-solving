@@ -4,10 +4,13 @@ import std/[sequtils, strutils, strformat, unittest, math]
 
 # def ----------------------------------------
 
+const trackLimit = 10
+
 # utils --------------------------------------
 
 func parseStartingPosition(l: string): int =
   l.split(':')[1].strip.parseInt
+
 
 # implement ----------------------------------
 
@@ -16,7 +19,7 @@ func applyLimit(n, limit: int): int =
   if m == 0: 10
   else: m
 
-func test1(p1, p2, winScore, diceLimit, trackLimit: int): int =
+func test1(p1, p2, winScore, diceLimit: int): int =
   var
     scores = [0, 0]
     positions = [p1, p2]
@@ -42,35 +45,37 @@ func test1(p1, p2, winScore, diceLimit, trackLimit: int): int =
   scores.filterIt(it < winScore)[0] * counter
 
 func test2Impl(
-  scores, positions: array[2, int], 
-  winScore, diceLimit, trackLimit: int, 
-  result: var array[2, int] 
-)=
-  for i, s in scores.pairs:
-    for n in 1..3:
-      for u in 1..3:
-        applyLimit(die + 1, diceLimit)
+  scores, positions: array[2, int],
+  winScore, diceLimit: int,
+  result: var array[2, int]
+) =
+  # for i, s in scores.pairs:
+  #   for n in 1..3:
+  #     for u in 1..3:
+  #       applyLimit(die + 1, diceLimit)
 
-    positions[i] = applyLimit(positions[i] + m, trackLimit)
-    s += positions[i]
+  #   positions[i] = applyLimit(positions[i] + m)
+  #   s += positions[i]
 
-    if s >= winScore:
-      return 
+  #   if s >= winScore:
+  #     return
 
-func test2(p1, p2, winScore, diceLimit, trackLimit: int): int =
+  discard
+
+func test2(p1, p2, winScore, diceLimit, : int): int =
   var wins = [0, 0]
-  test2Impl([0, 0], [p1, p2], winScore, diceLimit, trackLimit, wins)
+  test2Impl([0, 0], [p1, p2], winScore, diceLimit, wins)
 
 # tests --------------------------------------
 
 test "apply limit":
   check:
-    applyLimit(11, 10) == 1 
+    applyLimit(11, 10) == 1
     applyLimit(10, 10) == 10
     applyLimit(20, 10) == 10
 
 # go -----------------------------------------
 
 let data = ("./input.txt").lines.toseq.map(parseStartingPosition)
-echo test(data[0], data[1], 1000, 100, 10) # 412344
-echo test2(data[0], data[1], 1000, 3, 10)
+echo test1(data[0], data[1], 1000, 100) # 412344
+echo test2(data[0], data[1], 21, 3)
