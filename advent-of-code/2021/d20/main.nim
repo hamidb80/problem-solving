@@ -108,8 +108,8 @@ func enhance(img: Image, algo: EnhanceAlgo, isOutSideLit: bool): Image =
     for y in size.yrange.moveBorders(chunkSideRange):
       let p = (x, y)
 
-      if algo[chunkCode(img, size, (x, y), isOutSideLit)]:
-        result.add (x, y)
+      if algo[chunkCode(img, size, p, isOutSideLit)]:
+        result.add p
 
 func howManyAreLit(content: Data, times: Positive): int =
   var acc = content.image
