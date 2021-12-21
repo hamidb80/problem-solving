@@ -4,13 +4,21 @@ import std/[sequtils, strutils, strformat, unittest, math]
 
 # def ----------------------------------------
 
+type
+  Pair = array[2, int]
+
 const trackLimit = 10
+
+func `+`(p1, p2: Pair): Pair =
+  [
+    p1[0] + p2[0],
+    p1[1] + p2[1],
+  ]
 
 # utils --------------------------------------
 
 func parseStartingPosition(l: string): int =
   l.split(':')[1].strip.parseInt
-
 
 # implement ----------------------------------
 
@@ -45,26 +53,30 @@ func test1(p1, p2, winScore, diceLimit: int): int =
   scores.filterIt(it < winScore)[0] * counter
 
 func test2Impl(
-  scores, positions: array[2, int],
-  winScore, diceLimit: int,
-  result: var array[2, int]
+  scores, positions: array[2, int], universesBefore: int,
+  winScore: int, result: var array[2, int]
 ) =
-  # for i, s in scores.pairs:
-  #   for n in 1..3:
-  #     for u in 1..3:
-  #       applyLimit(die + 1, diceLimit)
+  for i, s in scores.pairs:
+    if s >= winScore:
+      result[i].inc universesBefore
+      return
 
-  #   positions[i] = applyLimit(positions[i] + m)
-  #   s += positions[i]
+  for sum1 in 3..9:
+    for sum2 in 3..9:
+      let
+        newps = [
+          applyLimit(positions[0] + sum1, trackLimit),
+          applyLimit(positions[1] + sum2, trackLimit)
+        ]
+        newscs = scores + newps
 
-  #   if s >= winScore:
-  #     return
+      test2Impl(newscs, newps, universesBefore+1, winScore, result)
 
-  discard
-
-func test2(p1, p2, winScore, diceLimit, : int): int =
+func test2(p1, p2, winScore: int): int =
   var wins = [0, 0]
-  test2Impl([0, 0], [p1, p2], winScore, diceLimit, wins)
+  test2Impl([0, 0], [p1, p2], 0, winScore, wins)
+  debugEcho wins
+  max wins
 
 # tests --------------------------------------
 
@@ -76,6 +88,6 @@ test "apply limit":
 
 # go -----------------------------------------
 
-let data = ("./input.txt").lines.toseq.map(parseStartingPosition)
+let data = ("./test.txt").lines.toseq.map(parseStartingPosition)
 echo test1(data[0], data[1], 1000, 100) # 412344
-echo test2(data[0], data[1], 21, 3)
+echo test2(data[0], data[1], 21) # i dont have mind to think what the hell the problem is
