@@ -89,7 +89,7 @@ func isEven(n: int): bool =
 func toInt(s: seq[bool]): int =
   parseBinInt s.mapIt(if it: '1' else: '0') ~ string
 
-func chunkCode(img: Image, size: Size, target: Point, isOutSideLit: bool): int =
+func chunkCode(img: Image, size: Size, target: Point, isOutsideLit: bool): int =
   var acc = newSeqOfCap[bool](chunkSize)
 
   for dy in chunkSideRange:
@@ -97,26 +97,26 @@ func chunkCode(img: Image, size: Size, target: Point, isOutSideLit: bool): int =
       let p = target + (dx, dy)
       acc.add:
         if p in size: img[p]
-        else: isOutSideLit
+        else: isOutsideLit
 
   acc.toInt
 
-func enhance(img: Image, algo: EnhanceAlgo, isOutSideLit: bool): Image =
+func enhance(img: Image, algo: EnhanceAlgo, isOutsideLit: bool): Image =
   let size = img.getSize
 
   for x in size.xrange.moveBorders(chunkSideRange):
     for y in size.yrange.moveBorders(chunkSideRange):
       let p = (x, y)
 
-      if algo[chunkCode(img, size, p, isOutSideLit)]:
+      if algo[chunkCode(img, size, p, isOutsideLit)]:
         result.add p
 
 func howManyAreLit(content: Data, times: Positive): int =
   var acc = content.image
-  let isOutSideBlinking = content.enhancementAlgorithm[0]
+  let isOutsideBlinking = content.enhancementAlgorithm[0]
 
   for i in 1..times:
-    acc = enhance(acc, content.enhancementAlgorithm, isOutSideBlinking and i.isEven)
+    acc = enhance(acc, content.enhancementAlgorithm, isOutsideBlinking and i.isEven)
 
   sum acc.keys.toseq.mapIt acc[it].len
 
