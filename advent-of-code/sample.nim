@@ -16,7 +16,7 @@ func test(content: string): int =
 let content = readFile("./test.txt")
 echo test(content)
 
+# tests --------------------------------------
 
-suite "e2e":
-  test "t1":
-    check true
+test "t1":
+  check true
