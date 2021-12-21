@@ -8,13 +8,13 @@ import std/[sequtils, strutils, unittest]
 
 # implement ----------------------------------
 
-func test(content: string): int =
+func test(data: string): int =
   discard
 
 # go -----------------------------------------
 
-let content = readFile("./test.txt")
-echo test(content)
+let data = readFile("./test.txt")
+echo test(data)
 
 # tests --------------------------------------
 

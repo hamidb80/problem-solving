@@ -127,6 +127,6 @@ test "move borders":
 
 # go -----------------------------------------
 
-let content = parseInput("./input.txt")
-echo howManyAreLit(content, 2) # 5291
-echo howManyAreLit(content, 50) # 16665
+let data = parseInput("./input.txt")
+echo howManyAreLit(data, 2) # 5291
+echo howManyAreLit(data, 50) # 16665
