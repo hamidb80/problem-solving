@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, unittest]
+import std/[sequtils, strutils, strformat, unittest]
 
 {.experimental: "strictFuncs".}
 
@@ -11,12 +11,12 @@ import std/[sequtils, strutils, unittest]
 func test(data: string): int =
   discard
 
+# tests --------------------------------------
+
+test "":
+  check true
+
 # go -----------------------------------------
 
 let data = readFile("./test.txt")
 echo test(data)
-
-# tests --------------------------------------
-
-test "t1":
-  check true
