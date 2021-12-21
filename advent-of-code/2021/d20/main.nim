@@ -129,4 +129,4 @@ test "move borders":
 
 let content = parseInput("./input.txt")
 echo howManyAreLit(content, 2) # 5291
-echo howManyAreLit(content, 50) # 5291
+echo howManyAreLit(content, 50) # 16665
