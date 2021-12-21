@@ -1,6 +1,8 @@
-import sequtils, strutils
+import std/[sequtils, strutils, unittest]
 
-# prepare ------------------------------------
+{.experimental: "strictFuncs".}
+
+# def ------------------------------------
 
 # utils --------------------------------------
 
@@ -12,5 +14,9 @@ func test(content: string): int =
 # go -----------------------------------------
 
 let content = readFile("./test.txt")
+echo test(content)
 
-echo test(content) 
+
+suite "e2e":
+  test "t1":
+    check true
