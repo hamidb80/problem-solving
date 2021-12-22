@@ -1,4 +1,4 @@
-import std/[sequtils, strscans, tables, unittest, intsets, math]
+import std/[sequtils, strscans, unittest, math]
 
 {.experimental: "strictFuncs".}
 
@@ -63,12 +63,6 @@ func parseCommand(line: string): Command =
 func skipEmpties(s: seq[Range]): seq[Range] =
   s.filterIt it.len != 0
 
-# func moveBorders(r: Range, a, b: int): Range =
-#   (r.a + a) .. (r.b + b)
-
-# func expand(r: Range, by: int): Range =
-#   moveBorders r, -1, +1
-
 func calcSpace(sr: SpaceRange): int =
   dimensions.mapIt(sr[it].len).prod
 
@@ -128,43 +122,59 @@ func difference(s1, s2: SpaceRange): seq[SpaceRange] =
     newspace(ins.x, ins.y.b+1 .. s1.y.b, ins.z),
   ]
 
+func `xor`(s1, s2:SpaceRange): tuple[p1, p2: seq[SpaceRange]] =
+  (s1.difference s2, s2.difference s1)
+
 # implement ----------------------------------
 
-func toIdealShapesImpl(world: World, sr: SpaceRange): seq[SpaceRange] =
-  var acc = @[sr]
+func fitShape(box, limit: SpaceRange): seq[SpaceRange] =
+  if box.intersectsWith limit:
+    difference box, limit
+  else:
+    @[box]
 
+func toIdealShapes(world: World, box: SpaceRange): seq[SpaceRange] =
+  var acc = @[box]
   for ws in world:
-    for sh in acc:
-      if sh.intersectsWith ws:
-        let newSlices = difference(sr, ws)
-        
-        if newSlices.len == 0: 
-          return @[]
-        
-        acc = newSlices
+    var i = 0
+    while i <= acc.high:
+      let slices = fitShape(acc[i], ws)
+      
+      if slices.len == 1 and acc[i] == slices[0]:
+        i.inc
 
-func toIdealShapes(world: World, sr: SpaceRange): seq[SpaceRange] =
-  var acc = @[sr]
+      else:
+        acc.del i
+        acc.add slices
 
-  for ws in world:
-    var currentSpaces: seq[SpaceRange]
-    for sh in acc:
-      if sh.intersectsWith ws:
-        currentSpaces.add difference(sh, ws)
-        break
+  acc
 
 func turnOn(world: var World, sr: SpaceRange) =
-  var acc = @[sr]
+  world.add toIdealShapes(world, sr)
 
-  for ws in world:
-    var currentSpaces: seq[SpaceRange]
-    for sh in acc:
-      if sh.intersectsWith ws:
-        currentSpaces.add difference(sh, ws)
-        break
+func turnOff(world: var World, sr: SpaceRange) =
+  var 
+    iw = 0
+    parts = @[sr]
+  
+  while iw <= world.high:
+    let ws = world[iw]
+    var pi = 0
 
-func turnOff(w: var World, s: SpaceRange) =
-  discard
+    while pi <= parts.high and iw <= world.high:
+      let p = parts[pi]
+
+      if ws.intersectsWith p:
+        let (wSlices, pSlices) = ws xor p
+
+        world.del iw
+        world.add wSlices
+
+        parts.del pi
+        parts.add pSlices
+
+      pi.inc
+    iw.inc
 
 func howManyCubesAreOn(commands: seq[Command], targetArea: SpaceRange): int =
   var world: World
@@ -227,4 +237,4 @@ suite "intersection":
 
 let data = lines("./test.txt").toseq.map(parseCommand)
 echo howManyCubesAreOn(data, newSpace(-50..50)) # 602574
-echo howManyCubesAreOn(data, newSpace(infRange)) #
+echo howManyCubesAreOn(data, newSpace(infRange)) # 2758514936282235
