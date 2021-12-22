@@ -1,4 +1,4 @@
-import std/[sequtils, strscans, tables, unittest, intsets]
+import std/[sequtils, strscans, tables, unittest, intsets, math]
 
 {.experimental: "strictFuncs".}
 
@@ -20,13 +20,19 @@ type
     state: CubeState
     space: SpaceRange
 
-  World = Table[int, Table[int, IntSet]] # { x => {y => [zs]} }
+  World = seq[SpaceRange] # separated cubic space ranges
 
 
-const 
+const
   dimensions = [X, Y, Z]
   infRange = int.low .. int.high
-  infSpace = SpaceRange(x: infRange, y: infRange, z: infRange)
+
+
+func newSpace(rx, ry, rz: Range): SpaceRange =
+  SpaceRange(x: rx, y: ry, z: rz)
+
+func newSpace(rng: Range): SpaceRange =
+  SpaceRange(x: rng, y: rng, z: rng)
 
 func `[]`(sr: SpaceRange, d: Dimensions): Range =
   case d:
@@ -39,22 +45,6 @@ func `[]=`(sr: var SpaceRange, d: Dimensions, r: Range) =
   of X: sr.x = r
   of Y: sr.y = r
   of Z: sr.z = r
-
-func turnOn(w: var World, x, y: int, zr: Range) =
-  let zs = zr.toseq.toIntSet
-
-  if x notin w:
-    w[x] = {y: zs}.toTable
-
-  elif y notin w[x]:
-    w[x][y] = zs
-
-  else:
-    w[x][y] = union(w[x][y], zs)
-
-func turnOff(w: var World, x, y: int, zr: Range) =
-  if (x in w) and (y in w[x]):
-    w[x][y] = difference(w[x][y], zr.toseq.toIntSet)
 
 # utils --------------------------------------
 
@@ -70,49 +60,171 @@ func parseCommand(line: string): Command =
     if t == "on": On
     else: Off
 
-func applyLimit(rng, limit: Range): Range =
+func skipEmpties(s: seq[Range]): seq[Range] =
+  s.filterIt it.len != 0
+
+# func moveBorders(r: Range, a, b: int): Range =
+#   (r.a + a) .. (r.b + b)
+
+# func expand(r: Range, by: int): Range =
+#   moveBorders r, -1, +1
+
+func calcSpace(sr: SpaceRange): int =
+  dimensions.mapIt(sr[it].len).prod
+
+func skipEmpties(s: seq[SpaceRange]): seq[SpaceRange] =
+  s.filterIt it.calcSpace != 0
+
+func contains(main, sub: Range): bool =
+  [sub.a, sub.b].allit it in main
+
+func intersectsWith(r1, r2: Range): bool =
+  (r1.a >= r2.a and r1.a <= r2.b) or
+  (r1.b >= r2.a and r1.b <= r2.b) or
+  (r2 in r1) or (r1 in r2)
+
+func intersectsWith(s1, s2: SpaceRange): bool =
+  for d in dimensions:
+    if not intersectsWith(s1[d], s2[d]):
+      return false
+  true
+
+func intersection(rng, limit: Range): Range =
   max(rng.a, limit.a) .. min(rng.b, limit.b)
 
-func applyLimit(area, limit: SpaceRange): SpaceRange =
+func intersection(space, limit: SpaceRange): SpaceRange =
   for d in dimensions:
-    result[d] = applyLimit(area[d], limit[d])
+    result[d] = intersection(space[d], limit[d])
+
+func difference(s1, s2: Range): seq[Range] =
+  assert s1.intersectsWith(s2)
+  skipEmpties:
+    if s2.a <= s1.a:
+      if s2.b >= s1.b:
+        @[]
+      else:
+        @[s2.b+1 .. s1.b]
+
+    else:
+      if s2.b >= s1.b:
+        @[s1.a .. s2.a-1]
+      else:
+        @[s1.a .. s2.a-1, s2.b+1 .. s1.b]
+
+func difference(s1, s2: SpaceRange): seq[SpaceRange] =
+  assert s1.intersectsWith(s2)
+
+  let
+    ins = intersection(s1, s2)
+    zr1 = s1.z.a .. ins.z.a-1
+    zr2 = ins.z.b+1 .. s1.z.b
+
+  skipEmpties @[
+    newSpace(s1.x, s1.y, zr1),
+    newSpace(s1.x, s1.y, zr2),
+    newspace(s1.x.a .. ins.x.a-1, s1.y, ins.z),
+    newspace(ins.x.b+1 .. s1.x.b, s1.y, ins.z),
+    newspace(ins.x, s1.y.a .. ins.y.a-1, ins.z),
+    newspace(ins.x, ins.y.b+1 .. s1.y.b, ins.z),
+  ]
 
 # implement ----------------------------------
+
+func toIdealShapesImpl(world: World, sr: SpaceRange): seq[SpaceRange] =
+  var acc = @[sr]
+
+  for ws in world:
+    for sh in acc:
+      if sh.intersectsWith ws:
+        let newSlices = difference(sr, ws)
+        
+        if newSlices.len == 0: 
+          return @[]
+        
+        acc = newSlices
+
+func toIdealShapes(world: World, sr: SpaceRange): seq[SpaceRange] =
+  var acc = @[sr]
+
+  for ws in world:
+    var currentSpaces: seq[SpaceRange]
+    for sh in acc:
+      if sh.intersectsWith ws:
+        currentSpaces.add difference(sh, ws)
+        break
+
+func turnOn(world: var World, sr: SpaceRange) =
+  var acc = @[sr]
+
+  for ws in world:
+    var currentSpaces: seq[SpaceRange]
+    for sh in acc:
+      if sh.intersectsWith ws:
+        currentSpaces.add difference(sh, ws)
+        break
+
+func turnOff(w: var World, s: SpaceRange) =
+  discard
 
 func howManyCubesAreOn(commands: seq[Command], targetArea: SpaceRange): int =
   var world: World
 
   for c in commands:
-    let area = applyLimit(c.space, targetArea)
+    let area = intersection(c.space, targetArea)
 
-    for x in area.x:
-      for y in area.y:
-        case c.state:
-        of On: world.turnOn(x, y, area.z)
-        of Off: world.turnOff(x, y, area.z)
+    case c.state:
+    of On: world.turnOn(area)
+    of Off: world.turnOff(area)
 
-  for x, yt in world:
-    for zs in yt.values:
-      result.inc zs.len
+  sum world.map calcSpace
 
 # tests --------------------------------------
 
 test "apply limit range":
   check:
-    applyLimit(-4 .. 10, -1 .. 8) == -1 .. 8
-    applyLimit(-4 .. 10, -1 .. 12) == -1 .. 10
-    applyLimit(-4 .. 10, -6 .. 4) == -4 .. 4
+    intersection(-4 .. 10, -1 .. 8) == -1 .. 8
+    intersection(-4 .. 10, -1 .. 12) == -1 .. 10
+    intersection(-4 .. 10, -6 .. 4) == -4 .. 4
 
-test "parse command":
-  let c = parseCommand("on x=1..2,y=3..4,z=5..6")
+let
+  b1 = newSpace(-5 .. 5, -4 .. 4, -3 .. 3)
+  b2 = newSpace(-2 .. 2, 1 .. 3, 0 .. 7)
+
+suite "diff":
+  test "range":
+    check:
+      difference(1..5, 2..3) == @[1..1, 4..5]
+      difference(1..5, 4..8) == @[1..3]
+      difference(1..5, -3 .. 3) == @[4..5]
+      difference(1..5, 1..5) == newseq[Range]()
+      difference(1..5, -3 .. 10) == newseq[Range]()
+
+  test "space":
+    let diff = difference(b1, b2)
+    check:
+      newSpace(b1.x, b1.y, -3 .. -1) in diff
+      newSpace(-5 .. -3, b1.y, 0 .. 3) in diff
+      newSpace(3 .. 5, b1.y, 0 .. 3) in diff
+      newSpace(b2.x, -4 .. 0, 0 .. 3) in diff
+      newSpace(b2.x, 4..4, 0 .. 3) in diff
+      diff.len == 5
+
+test "intersect with":
   check:
-    c.state == On
-    c.space.x == 1 .. 2
-    c.space.y == 3 .. 4
-    c.space.z == 5 .. 6
+    intersectsWith 1 .. 4, 2..5
+    intersectsWith 1 .. 4, 0..5
+    not intersectsWith(1 .. 4, 6..9)
+    intersectsWith 1 .. 4, -1 .. 3
+
+suite "intersection":
+  test "space":
+    check intersection(b1, b2) == newSpace(-2 .. 2, 1 .. 3, 0 .. 3)
+
+  test "range":
+    check true
 
 # go -----------------------------------------
 
 let data = lines("./test.txt").toseq.map(parseCommand)
-echo howManyCubesAreOn(data, SpaceRange(x: -50..50, y: -50..50, z: -50..50))
-echo howManyCubesAreOn(data, infSpace)
+echo howManyCubesAreOn(data, newSpace(-50..50)) # 602574
+echo howManyCubesAreOn(data, newSpace(infRange)) #
