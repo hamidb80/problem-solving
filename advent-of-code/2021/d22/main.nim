@@ -92,6 +92,7 @@ func intersection(space, limit: SpaceRange): SpaceRange =
 
 func difference(s1, s2: Range): seq[Range] =
   assert s1.intersectsWith(s2)
+
   skipEmpties:
     if s2.a <= s1.a:
       if s2.b >= s1.b:
@@ -122,7 +123,7 @@ func difference(s1, s2: SpaceRange): seq[SpaceRange] =
     newspace(ins.x, ins.y.b+1 .. s1.y.b, ins.z),
   ]
 
-func `xor`(s1, s2:SpaceRange): tuple[p1, p2: seq[SpaceRange]] =
+func `xor`(s1, s2: SpaceRange): tuple[p1, p2: seq[SpaceRange]] =
   (s1.difference s2, s2.difference s1)
 
 # implement ----------------------------------
@@ -139,7 +140,7 @@ func toIdealShapes(world: World, box: SpaceRange): seq[SpaceRange] =
     var i = 0
     while i <= acc.high:
       let slices = fitShape(acc[i], ws)
-      
+
       if slices.len == 1 and acc[i] == slices[0]:
         i.inc
 
@@ -153,10 +154,10 @@ func turnOn(world: var World, sr: SpaceRange) =
   world.add toIdealShapes(world, sr)
 
 func turnOff(world: var World, sr: SpaceRange) =
-  var 
+  var
     iw = 0
     parts = @[sr]
-  
+
   while iw <= world.high:
     let ws = world[iw]
     var pi = 0
@@ -176,7 +177,10 @@ func turnOff(world: var World, sr: SpaceRange) =
       pi.inc
     iw.inc
 
-func howManyCubesAreOn(commands: seq[Command], targetArea: SpaceRange): int =
+func howManyCubesAreOn(
+  commands: seq[Command],
+  targetArea: SpaceRange = newSpace(infRange)
+): int =
   var world: World
 
   for c in commands:
@@ -219,22 +223,54 @@ suite "diff":
       newSpace(b2.x, 4..4, 0 .. 3) in diff
       diff.len == 5
 
-test "intersect with":
-  check:
-    intersectsWith 1 .. 4, 2..5
-    intersectsWith 1 .. 4, 0..5
-    not intersectsWith(1 .. 4, 6..9)
-    intersectsWith 1 .. 4, -1 .. 3
+suite "intersect with":
+  test "range":
+    check:
+      intersectsWith 1 .. 4, 2..5
+      intersectsWith 1 .. 4, 0..5
+      not intersectsWith(1 .. 4, 6..9)
+      intersectsWith 1 .. 4, -1 .. 3
+
+  test "space":
+    check:
+      intersectsWith newSpace(-2 .. 2), newSpace(1 .. 1)
+      intersectsWith newSpace(-2 .. 2), newSpace(-2 .. 1)
+      not intersectsWith(newSpace(-2 .. 2), newSpace(2..2, 2..2, 3 .. 4))
 
 suite "intersection":
+  test "range":
+    check:
+      intersection(1 .. 4, 2..5) == 2..4
+      intersection(1 .. 4, 0..5) == 1..4
+      intersection(1 .. 4, -1 .. 3) == 1..3
+
   test "space":
     check intersection(b1, b2) == newSpace(-2 .. 2, 1 .. 3, 0 .. 3)
 
-  test "range":
-    check true
+suite "e2e":
+  test "1.":
+    let 
+      baseCommands = @[
+        (On, newSpace(1 .. 10)),
+        (On, newSpace(14 .. 16)),
+        (On, newSpace(-10 .. -4, -6 .. -2, -4 .. -3)), #
+      ]
+      baseSum = (10^3) + (3^3) + (7*5*2)
+
+    check:
+      howManyCubesAreOn(baseCommands & @[
+        (Off, newSpace(2 .. 2))
+      ]) == baseSum - (1)
+
+      howManyCubesAreOn(baseCommands & @[
+        (Off, newSpace(7 .. 12)),
+        (Off, newSpace(6 .. 12)),
+        # (Off, newSpace(13 .. 14)),
+      ]) == baseSum - (5^3)
+
 
 # go -----------------------------------------
 
 let data = lines("./test.txt").toseq.map(parseCommand)
 echo howManyCubesAreOn(data, newSpace(-50..50)) # 602574
-echo howManyCubesAreOn(data, newSpace(infRange)) # 2758514936282235
+echo howManyCubesAreOn(data) # 2758514936282235
