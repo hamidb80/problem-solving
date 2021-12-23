@@ -217,15 +217,15 @@ suite "diff":
       newSpace(b2.x, 4..4, 0 .. 3) in diff
       diff.len == 5
 
-suite "on":
-  test "intersection":
+suite "turn on":
+  test "intersect":
     check:
       howManyCubesAreOn(@[
         (On, newSpace(2..2)),
         (On, newSpace(2..3)),
       ]) == 8
 
-suite "off":
+suite "turn off":
   test "basic":
     check:
       howManyCubesAreOn(@[
