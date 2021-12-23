@@ -10,10 +10,7 @@ type
 const trackLimit = 10
 
 func `+`(p1, p2: Pair): Pair =
-  [
-    p1[0] + p2[0],
-    p1[1] + p2[1],
-  ]
+  [p1[0] + p2[0], p1[1] + p2[1]]
 
 # utils --------------------------------------
 
@@ -58,7 +55,7 @@ func test2Impl(
 ) =
   for i, s in scores.pairs:
     if s >= winScore:
-      result[i].inc universesBefore
+      result[i].inc universesBefore * 3
       return
 
   for sum1 in 3..9:
