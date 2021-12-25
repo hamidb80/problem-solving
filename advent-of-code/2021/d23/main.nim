@@ -47,15 +47,27 @@ func render(b: Burrow, h: Highway): string =
   "  #" & b.mapIt(it[1]).join"#" & "#\n" &
   "  #########"
 
-func leastEnergyToArrangeImpl(burrow: Burrow, highway: Highway)=
+func isFinished(burrow: Burrow, highway: Highway): bool=
+  if highway.allIt it == Empty:
+    for i, a in amphipodOrder.pairs:
+      if not burrow[i].allIt(it == a):
+        return false
+
+    true
+  else: false
+
+const notFound = -1
+func leastEnergyToArrangeImpl(burrow: Burrow, highway: Highway, result: var int)=
   var 
     mb = burrow
     mh  = highway
 
-  debugEcho render(mb, mh)
+  for room in burrow:
+    for hi in 0 .. highway.high:
+      discard
   
 func leastEnergyToArrange(burrow: Burrow): int =
-  leastEnergyToArrangeImpl(burrow, toHighway())
+  leastEnergyToArrangeImpl(burrow, toHighway(), result)
 
 # tests --------------------------------------
 
