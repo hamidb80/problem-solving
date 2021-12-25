@@ -6,11 +6,11 @@ import std/[sequtils, strutils, strformat, unittest, tables]
 
 type
   CellState = enum
-    Empty = '.'
-    A = 'A'
-    B = 'B'
-    C = 'C'
-    D = 'D'
+    Empty = "."
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
 
   Highway = array[11, CellState]
   Room = array[2, CellState]
@@ -34,18 +34,36 @@ func parseInput(s: sink string): Burrow =
     for r in 0 ..< 2:
       result[c][r] = rows[r][c]
 
+func toHighway(s: string = ""): Highway=
+  for (i,c ) in s.pairs:
+    result[i] = parseEnum[CellState]($c)
+
 # implement ----------------------------------
 
+func render(b: Burrow, h: Highway): string =
+  "#############\n" &
+  "#" & h.join & "#\n" &
+  "###" & b.mapIt(it[0]).join"#" & "###\n" &
+  "  #" & b.mapIt(it[1]).join"#" & "#\n" &
+  "  #########"
+
+func leastEnergyToArrangeImpl(burrow: Burrow, highway: Highway)=
+  var 
+    mb = burrow
+    mh  = highway
+
+  debugEcho render(mb, mh)
+  
 func leastEnergyToArrange(burrow: Burrow): int =
-  discard
+  leastEnergyToArrangeImpl(burrow, toHighway())
 
 # tests --------------------------------------
 
-test "":
-  check true
+# test "":
+#   check true
 
 # go -----------------------------------------
 
 let data = readFile("./test.txt").parseInput
 echo data
-# echo test(data)
+echo leastEnergyToArrange(data)
