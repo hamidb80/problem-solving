@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, unittest, tables]
+import std/[sequtils, strutils, unittest]
 
 {.experimental: "strictFuncs".}
 
@@ -247,4 +247,4 @@ suite "move":
 # go -----------------------------------------
 
 let data = readFile("./input.txt").parseInput
-echo leastEnergy(data.burrow, data.highway)
+echo leastEnergy(data.burrow, data.highway) # 15358
