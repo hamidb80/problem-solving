@@ -13,7 +13,7 @@ type
     D = "D"
 
   Highway = array[11, CellState]
-  Room = array[2, CellState]
+  Room = seq[CellState]
   Burrow = array[4, Room]
 
   Data = tuple[highway: Highway, burrow: Burrow]
@@ -26,20 +26,29 @@ const
 
 # utils --------------------------------------
 
-func parseHighway(s: sink string): Highway =
+func parseHighway(s: string): Highway =
   for i, c in s.pairs:
     result[i] = parseEnum[CellState]($c)
 
-func parseInput(s: sink string): Data =
+func unfoldMap(s: string): string =
+  let rows = s.splitLines()
+  join(
+    rows[0..2] &
+    ["#D#C#B#A#", "#D#B#A#C#"].mapIt(it.indent 2) &
+    rows[3..4],
+    "\n"
+  )
+
+func parseInput(s: string): Data =
   let rows =
-    s.splitLines[2..3].mapit do:
+    s.splitLines[2..^2].mapit do:
       it[3..9]
       .split('#')
       .mapIt parseEnum[CellState](it)
 
   for c in 0 ..< 4:
-    for r in 0 ..< 2:
-      result.burrow[c][r] = rows[r][c]
+    for r in 0 ..< rows.len:
+      result.burrow[c].add rows[r][c]
 
   result.highway = parseHighway s.splitLines[1][1 .. ^2]
 
@@ -54,11 +63,16 @@ func replace(b: Burrow, roomIndex, level: int, value: CellState): Burrow =
 # implement ----------------------------------
 
 func render(b: Burrow, h: Highway): string =
+  ## debugging purposes
+
+  var rows: seq[string]
+  for i in 0..b[0].high:
+    rows.add "  #" & b.mapIt(it[i]).join"#" & "#"
+
   "#############\n" &
   "#" & h.join & "#\n" &
-  "###" & b.mapIt(it[0]).join"#" & "###\n" &
-  "  #" & b.mapIt(it[1]).join"#" & "#\n" &
-  "  #########"
+  rows.join("\n") &
+  "\n  #########"
 
 func isSolved(burrow: Burrow): bool =
   result = true
@@ -76,44 +90,37 @@ func isRoadFree(head, tail: int, h: Highway): bool =
   let road = correctOrder(head .. tail, 1)
   h[road].allIt it == Empty
 
-func canEnterInRoom(r: Room, owner: CellState): tuple[can: bool, depth: int] =
-  if r[0] == Empty:
-    result =
-      if r[1] == Empty: (true, 2)
-      elif r[1] == owner: (true, 1)
-      else: (false, 0)
-
 func isEmpty(r: Room): bool =
   r.allit it == Empty
 
+func canEnterInRoom(r: Room, owner: CellState): tuple[can: bool, depth: int] =
+  if r.allIt it in [Empty, owner]:
+    let i = r.find(owner)
+
+    result =
+      if i == -1:
+        (true, r.len)
+      else:
+        (true, i)
+
 func exportMember(r: Room, owner: CellState): tuple[should: bool, index: int] =
-  assert not r.isEmpty
-  assert owner != Empty
   # [A][ ][D][ ]
   # [B][ ][C][A]
-
-  if r[1] != owner:
-    if r[0] == Empty:
-      result = (true, 1)
-    else:
-      result = (true, 0)
-
-  else:
-    if r[0] != Empty and r[0] != owner:
-      result = (true, 0)
+  if not r.allIt it in [Empty, owner]:
+    result.should = true
+    for i, c in r.pairs:
+      if c != Empty:
+        result.index = i
+        break
 
 func leastEnergyImpl(
-  burrow: Burrow, highway: Highway, costYet: int
-): tuple[solved: bool, totalCost: int] =
-  result.totalCost = int.high
+  burrow: Burrow, highway: Highway,
+  costYet: int, minCost: var int
+) =
+  if costYet > minCost: return
 
   var didSomeOperation = false
-  template wellDone: untyped =
-    didSomeOperation = true
-
-  template reCalculate(res): untyped =
-    if res.solved:
-      result = (true, min(result.totalCost, res.totalCost))
+  template wellDone: untyped = didSomeOperation = true
 
   for i, cell in highway.pairs:
     if cell != Empty:
@@ -130,13 +137,13 @@ func leastEnergyImpl(
 
           let
             distance = abs(i - roomEntries[ri]) + depth
-            res = leastEnergyImpl(
-              burrow.replace(ri, depth - 1, cell),
-              highway.replace(i, Empty),
-              costyet + distance * energyCost[ri]
-            )
 
-          reCalculate res
+          leastEnergyImpl(
+            burrow.replace(ri, depth - 1, cell),
+            highway.replace(i, Empty),
+            costyet + distance * energyCost[ri],
+            minCost
+          )
 
   for stp in allowedStops:
     if highway[stp] == Empty:
@@ -153,33 +160,49 @@ func leastEnergyImpl(
             # debugEcho render(burrow, highway)
             # debugEcho costYet
 
-            let res = leastEnergyImpl(
+            leastEnergyImpl(
               burrow.replace(ri, i, Empty),
               highway.replace(stp, room[i]),
-              costyet + (i + 1 + xdistance) * energyCost[amphipodOrder.find room[i]]
+              costyet + (i + 1 + xdistance) * energyCost[
+                  amphipodOrder.find room[i]],
+              minCost
             )
 
-            reCalculate res
-
   if not didSomeOperation:
-    result = (isSolved(burrow), costyet)
+    if isSolved burrow:
+      minCost = costYet
 
 func leastEnergy(burrow: Burrow, highway: Highway): int =
-  let r = leastEnergyImpl(burrow, highway, 0)
-  assert r.solved
-  r.totalCost
+  result = int.high
+  leastEnergyImpl(burrow, highway, 0, result)
 
 # tests --------------------------------------
 
 test "correctOrder":
-  check correctOrder(2 .. 5) == 2..5
-  check correctOrder(5 .. 2) == 2..5
-  check correctOrder(2 .. 5, 1) == 3..5
-  check correctOrder(5 .. 2, 1) == 2..4
+  check:
+    correctOrder(2 .. 5) == 2..5
+    correctOrder(5 .. 2) == 2..5
+    correctOrder(2 .. 5, 1) == 3..5
+    correctOrder(5 .. 2, 1) == 2..4
 
 test "isSolved":
-  check isSolved([ [A, A], [B, B], [C, C], [D, D]])
-  check not isSolved([ [B, A], [A, B], [C, C], [D, D]])
+  check:
+    isSolved([ @[A, A, A], @[B, B, B], @[C, C, C], @[D, D, D]])
+    not isSolved([ @[B, A], @[A, B], @[C, C], @[D, D]])
+
+test "exportMember":
+  check:
+    exportMember(@[Empty, Empty], A) == (false, 0)
+    exportMember(@[Empty, Empty, A], A) == (false, 0)
+    exportMember(@[Empty, A, B], A) == (true, 1)
+    exportMember(@[Empty, B, A], A) == (true, 1)
+    exportMember(@[A, B, C], A) == (true, 0)
+
+test "canEnterInRoom":
+  check:
+    canEnterInRoom(@[A, B], A) == (false, 0)
+    canEnterInRoom(@[Empty, Empty, Empty], A) == (true, 3)
+    canEnterInRoom(@[Empty, Empty, C], A) == (false, 0)
 
 test "is road free":
   block no:
@@ -194,7 +217,7 @@ test "is road free":
     check isRoadFree(4, 2, hw)
 
 suite "move":
-  test "1 steps to win":
+  test "1 steps left - 2x4":
     let d = """
       #############
       #.........A.#
@@ -203,8 +226,8 @@ suite "move":
         #########
     """.strip.unindent(6).parseInput
     check leastEnergy(d.burrow, d.highway) == 8
-    
-  test "2 steps to win":
+
+  test "2 steps left - 2x4":
     let d = """
       #############
       #...B.....A.#
@@ -214,7 +237,7 @@ suite "move":
     """.strip.unindent(6).parseInput
     check leastEnergy(d.burrow, d.highway) == 28
 
-  test "3 steps to win":
+  test "3 steps left - 2x4":
     let d = """
       #############
       #.....D.D.A.#
@@ -224,7 +247,7 @@ suite "move":
     """.strip.unindent(6).parseInput
     check leastEnergy(d.burrow, d.highway) == (3 + 4) * 1000 + 8
 
-  test "5 steps to win":
+  test "5 steps left - 2x4":
     let d = """
       #############
       #.....D.....#
@@ -234,7 +257,7 @@ suite "move":
     """.strip.unindent(6).parseInput
     check leastEnergy(d.burrow, d.highway) == 9011 + 40
 
-  test "8 steps to win":
+  test "8 steps left - 2x4":
     let d = """
       #############
       #...B.......#
@@ -244,7 +267,36 @@ suite "move":
     """.strip.unindent(6).parseInput
     check leastEnergy(d.burrow, d.highway) == 12081 + 400
 
+  test "1 steps left - 4x4":
+    let d = """
+      #############
+      #..........D#
+      ###A#B#C#.###
+        #A#B#C#D#
+        #A#B#C#D#
+        #A#B#C#D#
+        #########
+    """.strip.unindent(6).parseInput
+    check leastEnergy(d.burrow, d.highway) == 3*1000
+
+  test "2 steps left - 4x4":
+    let d = """
+      #############
+      #.........AD#
+      ###.#B#C#.###
+        #A#B#C#D#
+        #A#B#C#D#
+        #A#B#C#D#
+        #########
+    """.strip.unindent(6).parseInput
+    check leastEnergy(d.burrow, d.highway) == 3000 + 8
+
 # go -----------------------------------------
 
-let data = readFile("./input.txt").parseInput
-echo leastEnergy(data.burrow, data.highway) # 15358
+let
+  content = readFile("./input.txt")
+  d1 = content.parseInput
+  d2 = content.unfoldMap.parseInput
+
+echo leastEnergy(d1.burrow, d1.highway) # 15358
+echo leastEnergy(d2.burrow, d2.highway) #
