@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, strformat, unittest, tables]
+import std/[sequtils, strutils, strformat, unittest, tables, math]
 
 {.experimental: "strictFuncs".}
 
@@ -20,7 +20,7 @@ const
   roomEntries = [2, 4, 6, 8]
   allowedStops = (0..<11).toseq.filterit it notin roomEntries
   amphipodOrder = [A, B, C, D]
-  energyCost = {A: 1, B: 10, C: 100, D: 1000}.toTable
+  energyCost = [1, 10, 100, 1000]
 
 # utils --------------------------------------
 
@@ -35,7 +35,7 @@ func parseInput(s: sink string): Burrow =
     for r in 0 ..< 2:
       result[c][r] = rows[r][c]
 
-func initHighway(s: string = ""): Highway =
+func initHighway(s: string): Highway =
   for (i, c) in s.pairs:
     result[i] = parseEnum[CellState]($c)
 
@@ -54,44 +54,49 @@ func render(b: Burrow, h: Highway): string =
 
 func isFinished(burrow: Burrow, highway: Highway): bool =
   if highway.allIt it == Empty:
+    result = true
+
     for i, a in amphipodOrder.pairs:
       if not burrow[i].allIt(it == a):
         return false
 
-    true
-  else: false
-
-func canGotoRoom(r: Room, amphipodType: CellState): tuple[can: bool, depth: int] =
-  if r[0] == Empty:
-    if r[1] == Empty:
-      (true, 2)
-    elif r[1] == amphipodType:
-      (true, 1)
+func isRoadFree(`from`, to: int, h: Highway): bool =
+  let road =
+    if `from` <= to:
+      h[`from` .. to]
     else:
-      (false, 0)
+      h[to .. `from`]
 
-  else:
-    (false, 0)
+  road.allIt it == Empty
 
-func leastEnergyToArrange(burrow: Burrow): int =
-  var highway = initHighway()
+func canEnterInRoom(r: Room, amphipodType: CellState): tuple[can: bool, depth: int] =
+  if r[0] == Empty:
+    result =
+      if r[1] == Empty: (true, 2)
+      elif r[1] == amphipodType: (true, 1)
+      else: (false, 0)
 
-  # check any of them can goto the home
+func leastEnergyImpl(burrow: Burrow, highway: Highway): int =
   for i, cell in highway.pairs:
     if cell != Empty:
-      # check inside it's destination room
-      let 
-        ri = amphipodOrder.find(cell) # room index
-        (can, depth) = canGotoRoom(burrow[ri], cell)
-      
-      if can:
-        discard
+      let ri = amphipodOrder.find(cell) # room index
+
+      if isRoadFree(i, roomEntries[ri], highway):
+        let (can, depth) = canEnterInRoom(burrow[ri], cell)
+        if can:
+          let distance = abs(i - ri) + depth
+          result += distance * energyCost[ri]
+          ## call new recursion with replace or ignore
 
   for room in burrow:
+    ## if ground was not type
     for stp in allowedStops:
       if highway[stp] == Empty:
         discard
-       
+
+func leastEnergy(burrow: Burrow, highway = Highway.default): int =
+  0
+
 # tests --------------------------------------
 
 # test "":
@@ -100,5 +105,4 @@ func leastEnergyToArrange(burrow: Burrow): int =
 # go -----------------------------------------
 
 let data = readFile("./test.txt").parseInput
-echo data
-echo leastEnergyToArrange(data)
+echo leastEnergy(data)
