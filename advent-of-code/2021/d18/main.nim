@@ -131,12 +131,12 @@ proc reduceExplodes(node: SnailNumber): bool =
         result = true
 
     elif d < 4:
-      result = result or node.anyIt(reduceExplodes it)
+      result = node.anyIt(reduceExplodes it)
 
 proc reduceSplits(node: SnailNumber): bool =
   case node.kind:
   of SnPair:
-    result = result or node.anyIt(reduceSplits it):
+    result = node.anyIt(reduceSplits it)
 
   of SnLiteral:
     if node.value >= 10:
@@ -148,10 +148,7 @@ proc reduce(root: SnailNumber): SnailNumber =
   root
 
 proc doReduce(a, b: SnailNumber): SnailNumber =
-  var ac, bc: SnailNumber
-  deepCopy(ac, a)
-  deepCopy(bc, b)
-  (ac.concat bc).reduce
+  reduce concat(a.deepCopy, b.deepCopy)
 
 iterator product[T](s: openArray[T]): array[2, T] =
   for i in s.low .. s.high:
@@ -176,5 +173,4 @@ echo test2(rows) # 4650
 
 # NOTE:
 # finally, after more than 7 freaking hours ... i made it :D
-# now i'm tired, but is was fun
-# and a little frustrating
+# now i'm tired, but is was fun [and a little frustrating]
