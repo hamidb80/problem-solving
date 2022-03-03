@@ -299,4 +299,4 @@ let
   d2 = content.unfoldMap.parseInput
 
 echo leastEnergy(d1.burrow, d1.highway) # 15358
-echo leastEnergy(d2.burrow, d2.highway) #
+echo leastEnergy(d2.burrow, d2.highway) # too slow
