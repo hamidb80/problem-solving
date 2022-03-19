@@ -1,56 +1,87 @@
-"""
-7151 => 7.1.5.1
+def possible_distributions(size):
+    """
+    possible_distributions(5)
+    >> [
+      [1, 1, 1, 2],
+      [1, 1, 2, 1],
+      [1, 2, 1, 1],
+      [2, 1, 1, 1],
+    ]
+    """
 
-55011859 => :8
-  5.50.118.59
-  55.0.118.59
+    result = []
 
-0 .. 255  =[len]=>  1 .. 3
-len: 4 .. 12
-"""
+    for n1 in range(1, 4):
+        for n2 in range(1, 4):
+            for n3 in range(1, 4):
+                for n4 in range(1, 4):
+                    if n1 + n2 + n3 + n4 == size:
+                        result.append([n1, n2, n3, n4])
 
-# list_i: int "last index"
-# IP: list[int]
-# ip_n: nth index of IP [starts from 1]
-# returns list[rest of IP]
-
-
-def possible_ips_impl(ambiguous_ip, last_i, ip_n):
-    acc = []
-
-    for c in range(1, 4):  # stupic exclusive range :-/
-        cut_i = last_i + c
-
-        if cut_i <= len(ambiguous_ip):
-            octet = ambiguous_ip[last_i:cut_i]
-
-            # print(f"{ip_n} >>", (octet, last_i))
-            if int(octet) in range(0, 256):
-                if ip_n == 4:
-                    if cut_i >= len(ambiguous_ip):
-                        acc.append([octet])
-                        break
-
-                else:
-                    results = possible_ips_impl(ambiguous_ip, cut_i, ip_n + 1)
-
-                    for r in results:
-                        acc.append([octet, *r])
-
-            if octet == '0':
-                break
-
-    return acc
+    return result
 
 
-def possible_ips(ambiguous_ip):
-    return ['.'.join(ip) for ip in possible_ips_impl(ambiguous_ip, 0, 1)]
+def genIp(ambiguous_ip, distro):
+    """
+    genIp("55011859", [2, 1, 3, 2])
+    >> ["55" , "0" , "118" , "59"]
+    """
 
-# ---------------------------
+    result = []  # list of octet
+    last = 0
+
+    for n in distro:
+        result.append(ambiguous_ip[last:last+n])
+        last += n
+
+    return result
 
 
-if __name__ == "__main__":
-    ambiguous_ip = input()
+def isValidIp(ip):
+    """
+    isValid(["55", "01", "18", "59"])
+    >> false
+    
+    isValid(["55", "0", "118", "59"])
+    >> true
+    """
 
-    for ip in possible_ips(ambiguous_ip):
-        print(ip)
+    for octet in ip:
+        number = int(octet)
+
+        if octet[0] == "0" and octet != "0":
+            return False
+
+        if not(number >= 0 and number <= 255):
+            return False
+
+    return True
+
+
+def ipToString(ip):
+    """
+    ipToString(["55", "0", "118", "59"])
+    >> "55.0.118.59"
+    """
+
+    return ip[0] + "." + ip[1] + "." + ip[2] + "." + ip[3]
+
+
+def possibleIps(ambiguous_ip):
+    result = []
+    distros = possible_distributions(len(ambiguous_ip))
+
+    for d in distros:
+        ip = genIp(ambiguous_ip, d)
+        if isValidIp(ip):
+            result.append(ipToString(ip))
+
+    
+    return result
+
+
+# run ---------------------
+
+
+for s in possibleIps(input()):
+    print(s)
