@@ -1,12 +1,15 @@
 import std/algorithm except sort
 import std/unittest
 
+## iterative merge sort:
+## uses a temporary sequence of length `a.len div 2`
 
-template `<-`(a, b) = shallowCopy(a, b)
+type CmpFn[T] = proc (x, y: T): int
 
-proc mergeAlt[T](a, b: var openArray[T], lo, m, hi: int,
-  cmp: proc (x, y: T): int {.closure.}) {.effectsOf: cmp.} =
+template `<-`(a, b) = 
+  shallowCopy(a, b)
 
+proc mergeAlt[T](a, b: var openArray[T], lo, m, hi: int, cmp: CmpFn[T]) =
   if cmp(a[m], a[m+1]) <= 0:
     return
 
@@ -39,8 +42,7 @@ proc mergeAlt[T](a, b: var openArray[T], lo, m, hi: int,
     inc k
     inc i
 
-func sortImpl[T](a: var openArray[T],
-              cmp: proc (x, y: T): int {.closure.}) {.effectsOf: cmp.} =
+func sort[T](a: var openArray[T], cmp: CmpFn[T]) =
   var
     n = a.len
     b = newSeq[T](n div 2)
@@ -53,13 +55,9 @@ func sortImpl[T](a: var openArray[T],
       m.dec s*2
     s = s*2
 
-proc sort[T](a: var openArray[T]) =
-  sortImpl[T](a, system.cmp[T])
-
-
 # ----------------------------------------
 
 test "t":
   var s = @[4, 5, 7, 3, 1, 6, 3]
-  s.sort
+  s.sort system.cmp[int]
   check s == @[1, 3, 3, 4, 5, 6, 7]
