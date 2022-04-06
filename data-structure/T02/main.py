@@ -3,6 +3,7 @@ class Term:
         self.degree = degree
         self.coef = coef
 
+
 class Polynomial:
     def __init__(self, polynomial=None):  # "2x2+4x6+-3"
         self.terms = []
@@ -17,7 +18,7 @@ class Polynomial:
             else:
                 coef, degree = int(term), 0
             self.terms.append(Term(coef=coef, degree=degree))
-        self.terms.sort(key= lambda x:x.degree, reverse=True)
+        self.terms.sort(key=lambda x: x.degree, reverse=True)
 
     def __str__(self):
         poly = ""
@@ -31,6 +32,7 @@ class Polynomial:
 
     def __add__(self):  # theta(n^2) --> theta(nlog(n)) --> theta(n)
         pass
+
 
 p = Polynomial("2x2+4x6+-3x1")
 print(p)
