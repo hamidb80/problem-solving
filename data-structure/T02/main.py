@@ -30,10 +30,55 @@ class Polynomial:
             poly += f"{self.terms[-1].coef}"
         return poly
 
-    def __add__(self):  # theta(n^2) --> theta(nlog(n)) --> theta(n)
-        pass
+    def __repr__(self):
+        return [(t.degree, t.coef) for t in self.terms]
+
+    def __add__(p1, p2):
+        i1, i2 = 0, 0
+        new_p = Polynomial()
+
+        while True:
+            e1 = i1 in range(len(p1.terms))
+            e2 = i2 in range(len(p2.terms))
+
+            try:
+                c1 = p1.terms[i1].coef
+                c2 = p2.terms[i2].coef
+            except:
+                ...
+
+            if e1 and e2:
+                d1 = p1.terms[i1].degree
+                d2 = p2.terms[i2].degree
+
+                if d1 == d2:
+                    new_p.terms.append(Term(d1, c1 + c2))
+                    i1 += 1
+                    i2 += 1
+
+                elif d1 > d2:
+                    new_p.terms.append(Term(d1, c1))
+                    i1 += 1
+
+                else:
+                    new_p.terms.append(Term(d2, c2))
+                    i2 += 1
+
+            elif e1:
+                new_p.terms.append(Term(d1, c1))
+                i1 += 1
+
+            elif e2:
+                new_p.terms.append(Term(d2, c2))
+                i2 += 1
+
+            else:
+                return new_p
 
 
-p = Polynomial("2x2+4x6+-3x1")
-print(p)
+p1 = Polynomial("1x5+1x2")
+p2 = Polynomial("1x3+3x2")
+print(p1.__repr__())
+print(p2.__repr__())
+print((p1 + p2).__repr__())
 # 4x6+2x2+-3x1 4x6+2x2+-3x1
