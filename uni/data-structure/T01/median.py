@@ -1,6 +1,5 @@
 def getNumberList():
-    return [int(n) for n in input().split(" ")]
-
+    list(map(int, input().split()))
 
 size = int(input())
 n1 = getNumberList()

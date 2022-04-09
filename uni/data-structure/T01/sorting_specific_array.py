@@ -2,7 +2,7 @@ limit = 200000
 
 
 def getNumbers():
-    return [int(n) for n in input().split(" ")]
+    list(map(int, input().split()))
 
 
 (mn, mx) = getNumbers()
