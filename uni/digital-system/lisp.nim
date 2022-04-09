@@ -95,14 +95,6 @@ func parseLisp*(code: string): LispNode =
   result = LispNode(kind: lnkList)
   discard parseLisp(addr code, 0, result.children)
 
-func `%`*(n: LispNode): JsonNode =
-  case n.kind:
-  of lnkInt: %n.vint
-  of lnkFloat: %n.vfloat
-  of lnkString: %n.vstr
-  of lnkSymbol: % n.name
-  of lnkList: % n.children.mapit %it
-
 
 func `$`*(n: LispNode): string =
   case n.kind:
@@ -125,3 +117,27 @@ func pretty*(n: LispNode, nestLevel = 0, indentSize = 2): string =
       acc & ")\n"
 
   else: $n
+
+
+func `%`*(n: LispNode): JsonNode =
+  case n.kind:
+  of lnkInt: %n.vint
+  of lnkFloat: %n.vfloat
+  of lnkString: %n.vstr
+  of lnkSymbol: % n.name
+  of lnkList:
+    if n.children.len == 0:
+      newJArray()
+
+    elif n.children[0].kind == lnkSymbol:
+      var acc = newJObject()
+      
+      for ch in n.children:
+        assert ch.kind == lnkSymbol, $ch
+        acc[ch.name] = %ch
+
+      acc
+
+    else:
+      % n.children.mapIt %it
+
