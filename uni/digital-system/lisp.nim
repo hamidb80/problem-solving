@@ -104,7 +104,7 @@ func `$`*(n: LispNode): string =
   of lnkSymbol: n.name
   of lnkList: '(' & n.children.join(" ") & ')'
 
-func pretty*(n: LispNode, nestLevel = 0, indentSize = 2): string =
+func pretty*(n: LispNode, indentSize = 2): string =
   case n.kind:
   of lnkList:
     if n.children.len == 0: "()"
@@ -112,7 +112,7 @@ func pretty*(n: LispNode, nestLevel = 0, indentSize = 2): string =
       var acc = "(" & $n.children[0]
 
       for c in n.children[1..^1]:
-        acc &= "\n" & pretty(c, nestLevel + 1, indentSize).indent indentSize
+        acc &= "\n" & pretty(c, indentSize).indent indentSize
 
       acc & ")\n"
 
@@ -129,7 +129,7 @@ func `%`*(n: LispNode): JsonNode =
     if n.children.len == 0:
       newJArray()
 
-    elif n.children[0].kind == lnkSymbol and:
+    elif n.children[0].kind == lnkSymbol:
       var acc = newJObject()
       
       for ch in n.children:
