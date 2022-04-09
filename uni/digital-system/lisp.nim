@@ -129,7 +129,7 @@ func `%`*(n: LispNode): JsonNode =
     if n.children.len == 0:
       newJArray()
 
-    elif n.children[0].kind == lnkSymbol:
+    elif n.children[0].kind == lnkSymbol and:
       var acc = newJObject()
       
       for ch in n.children:
