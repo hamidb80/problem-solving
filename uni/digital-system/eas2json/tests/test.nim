@@ -13,16 +13,16 @@ let rules = parseRules:
   "DATABASE_VERSION":
     parent["DATABASE_VERSION"] = %args[0]
 
-  "ENTITY_FILE" / "...":
+  "ENTITY_FILE" / "$":
     newjObjRet parent["ENTITY_FILE"]
 
-  "ENTITY_FILE" / "ENTITY" / "...":
+  "ENTITY_FILE" / "ENTITY" / "$":
     newjObjRet parent["ENTITY"]
 
   "ENTITY_FILE" / "ENTITY" / "OBID":
     parent["OBID"] = %args[0]
 
-  "..." / "PROPERTIES" / "...":
+  "..." / "PROPERTIES" / "$":
     newjObjRet parent["PROPERTIES"]
 
   "..." / "PROPERTIES" / "PROPERTY":

@@ -61,7 +61,7 @@ func extractRule(n: NimNode): RulePathIR =
     delete result.path, 0
     result.headMatch = false
 
-  if result.path[^1] == "...":
+  if result.path[^1] == "$":
     result.tailMatch = false
     del result.path, result.path.high
 
