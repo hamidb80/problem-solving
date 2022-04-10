@@ -23,7 +23,11 @@ func `%`*(n: LispNode): JsonNode =
   of lnkInt: %n.vint
   of lnkFloat: %n.vfloat
   of lnkString: %n.vstr
-  of lnkSymbol: %n.name
+  of lnkSymbol:
+    case n.name:
+    of "true": %true
+    of "false": %false
+    else: %n.name
   else: err "nklList is not serilized this way"
 
 
@@ -106,7 +110,7 @@ func matchRule(path: seq[string], rule: RulePath): bool {.inline.} =
 
   elif path.len < rule.path.len:
     false
-  
+
   else:
     for i in 1 .. rule.path.len:
       if path[^i] != rule.path[^i]:

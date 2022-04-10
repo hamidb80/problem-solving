@@ -6,7 +6,7 @@
       (PROPERTY "STAMP_PLATFORM" "PC")
       (PROPERTY "STAMP_REVISION" "Revision 4")
       (PROPERTY "STAMP_TIME" "Sun Apr 10 01:30:39 2022")
-      (PROPERTY "STAMP_TOOL" "Ease")
+      (PROPERTY "STAMP_TOOL" false)
       (PROPERTY "STAMP_VERSION" "8.0")
     )
   ))
