@@ -31,6 +31,6 @@ let rules = parseRules:
 
 # -----------------------------
 
-let nodes = parseLisp readFile "./examples/simple.rkt"
+let nodes = parseLisp readFile "./examples/simple.cl"
 # writeFile "out.rkt", pretty nodes
 writefile "./temp/out.json", pretty toJson(nodes, rules)
