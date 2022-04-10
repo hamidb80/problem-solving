@@ -23,11 +23,7 @@ func `%`*(n: LispNode): JsonNode =
   of lnkInt: %n.vint
   of lnkFloat: %n.vfloat
   of lnkString: %n.vstr
-  of lnkSymbol:
-    case n.name:
-    of "true": %true
-    of "false": %false
-    else: %n.name
+  of lnkSymbol: %n.name
   else: err "nklList is not serilized this way"
 
 
