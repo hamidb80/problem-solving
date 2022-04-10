@@ -82,7 +82,7 @@ func parseLisp(s: ptr string, startI: int, acc: var seq[LispNode]): int =
       of ')': done()
       of Whitespace: discard
 
-      of {'0' .. '9', '.'}:
+      of {'0' .. '9', '.', '-'}:
         state = psNumber
         temp = i
 
@@ -98,7 +98,7 @@ func parseLisp(s: ptr string, startI: int, acc: var seq[LispNode]): int =
 
 func parseLisp*(code: string): LispNode =
   result = LispNode(kind: lnkList)
-  discard parseLisp(addr code, 0, result.children)
+  discard parseLisp(unsafeAddr code, 0, result.children)
 
 
 func `$`*(n: LispNode): string =
@@ -140,12 +140,18 @@ func `%`(n: LispNode): JsonNode =
 
 
 type
+  RulePathIR = object
+    headMatch: bool
+    tailMatch: bool
+    path: seq[string]
+    fn: NimNode
+
   RulePath = object
     headMatch: bool
+    tailMatch: bool
     path: seq[string]
     fn: proc(parent: JsonNode, args: seq[LispNode])
-    parentIndex: int
-  
+
 
 const
   InfixOp = 0
@@ -165,31 +171,72 @@ func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
 
 func extractPath(n: NimNode): seq[NimNode] =
   extractPathImpl n, result
+  result.reverse
 
-func extractRule(n: NimNode): RulePath =
-  let ss = extractPath n
+func extractRule(n: NimNode): RulePathIR =
+  let pp = extractPath n
+
   result.headMatch = true
+  result.tailMatch = true
 
-  if result.path[^1] == "*":
-    discard pop result.path
+  result.path = pp.mapIt:
+    if it.kind == nnkPrefix:
+      it[1].strval
+    else:
+      it.strVal
+
+  if result.path[0] == "...":
+    delete result.path, 0
     result.headMatch = false
 
-  result.path.reverse
+  if result.path[^1] == "...":
+    result.tailMatch = false
+    del result.path, result.path.high
 
 
-macro parseRules(parentIdent, argsIdent, body: untyped): untyped =
-  result = newStmtList()
+  let
+    parentIdent = ident "parent"
+    argsIdent = ident "args"
+    code = n[^1]
+
+  result.fn = quote:
+    (proc(`parentIdent`: `JsonNode`, `argsIdent`: seq[`LispNode`]) = `code`)
+
+func toCode(rp: RulePathIR): NimNode =
+  let
+    hm = rp.headMatch
+    tm = rp.tailMatch
+    p = rp.path
+    fn = rp.fn[0]
+
+  quote:
+    RulePath(
+      headMatch: `hm` == 1,
+      tailMatch: `tm` == 1,
+      path: @`p`,
+      fn: `fn`)
+
+
+macro parseRules(body: untyped): untyped =
+  var rulesList = newTree(nnkBracket)
 
   for rule in body:
     expectKind rule, nnkInfix
-    assert rule.len == 3
+    assert rule.len == 4
+    rulesList.add toCode extractRule rule
 
-    echo extractPath rule
+  let rulesIdent = ident "rules"
+  result = quote:
+    let `rulesIdent` = `rulesList`
 
+  # echo repr result
 
-parseRules parent, args:
-  "ENTITY_FILE" / ^"ENTITY" / "OBID":
-    args[0]
-
-  "ENTITY_FILE" / "ENTITY" / ^"PROPERTIES" / "PROPERTY":
+parseRules:
+  "ENTITY_FILE" / "ENTITY" / "...":
     discard
+
+  "ENTITY_FILE" / "ENTITY" / "OBID":
+    discard
+
+  # "ENTITY_FILE" / "ENTITY" / ^"PROPERTIES" / "PROPERTY":
+  #   discard
