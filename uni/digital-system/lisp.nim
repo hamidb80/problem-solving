@@ -1,4 +1,9 @@
-import std/[strutils, sequtils, json]
+import std/[strutils, sequtils, json, algorithm]
+import macros
+
+
+template err(msg: string): untyped =
+  raise newException(ValueError, msg)
 
 
 type
@@ -119,25 +124,72 @@ func pretty*(n: LispNode, indentSize = 2): string =
   else: $n
 
 
-func `%`*(n: LispNode): JsonNode =
+func ident(n: LispNode): string =
+  assert n.kind == lnkList
+  assert n.children.len > 0
+  assert n.children[0].kind == lnkSymbol
+  n.children[0].name
+
+func `%`(n: LispNode): JsonNode =
   case n.kind:
   of lnkInt: %n.vint
   of lnkFloat: %n.vfloat
   of lnkString: %n.vstr
-  of lnkSymbol: % n.name
-  of lnkList:
-    if n.children.len == 0:
-      newJArray()
+  of lnkSymbol: %n.name
+  else: err "nklList is not serilized that way"
 
-    elif n.children[0].kind == lnkSymbol:
-      var acc = newJObject()
-      
-      for ch in n.children:
-        assert ch.kind == lnkSymbol, $ch
-        acc[ch.name] = %ch
 
-      acc
+type
+  RulePath = object
+    headMatch: bool
+    path: seq[string]
+    fn: proc(parent: JsonNode, args: seq[LispNode])
+    parentIndex: int
+  
 
-    else:
-      % n.children.mapIt %it
+const
+  InfixOp = 0
+  InfixLeft = 1
+  InfixRight = 2
 
+func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
+  expectKind n, nnkInfix
+  assert n[InfixOp].strVal == "/"
+
+  result.add n[InfixRight]
+
+  if n[InfixLeft].kind == nnkInfix:
+    extractPathImpl n[InfixLeft], result
+  else:
+    result.add n[InfixLeft]
+
+func extractPath(n: NimNode): seq[NimNode] =
+  extractPathImpl n, result
+
+func extractRule(n: NimNode): RulePath =
+  let ss = extractPath n
+  result.headMatch = true
+
+  if result.path[^1] == "*":
+    discard pop result.path
+    result.headMatch = false
+
+  result.path.reverse
+
+
+macro parseRules(parentIdent, argsIdent, body: untyped): untyped =
+  result = newStmtList()
+
+  for rule in body:
+    expectKind rule, nnkInfix
+    assert rule.len == 3
+
+    echo extractPath rule
+
+
+parseRules parent, args:
+  "ENTITY_FILE" / ^"ENTITY" / "OBID":
+    args[0]
+
+  "ENTITY_FILE" / "ENTITY" / ^"PROPERTIES" / "PROPERTY":
+    discard
