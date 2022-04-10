@@ -1,4 +1,4 @@
-import std/[strutils, sequtils, json, algorithm, options]
+import std/[strutils, sequtils, json, algorithm, options, strformat]
 import macros
 
 
@@ -251,15 +251,8 @@ func matchPath(path: seq[string], rule: RulePath): bool {.inline.} =
       true
 
   elif hm:
-    if rule.path.len > path.len: 
-      false
-
-    else:
-      for i in 0 .. rule.path.high:
-        if path[i] != rule.path[i]:
-          return false
-      true
-
+    rule.path == path
+    
   else:
     err "this kind of pattern matching is not implmeneted yet"
 
@@ -268,6 +261,9 @@ func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
     if path.matchPath r:
       return some r
 
+func `$`(r: RulePath): string =
+  ## debuging purposes
+  fmt"{r.path} {r.headMatch} .. {r.tailMatch}"
 
 proc toJsonImpl(
   lnodes: seq[LispNode],
@@ -285,8 +281,9 @@ proc toJsonImpl(
     if issome r:
       if not r.get.tailMatch:
         var newParent = r.get.fn(parent, ln.args, newpath)
-        debugecho ">>> ", path, " --> ", newpath
-        debugecho "||| ", $ln.children, " ///"
+        # echo "^^^^^^^^^6 ", r.get
+        # debugecho ">>> ", path, " --> ", newpath
+        # debugecho "||| ", $ln.children, " ///"
         toJsonImpl ln.children[1..^1], rules, newParent, newpath
 
       else:

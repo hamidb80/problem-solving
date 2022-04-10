@@ -27,6 +27,6 @@ let rules = parseRules:
     parent[args[0].vstr] = %args[1]
 
 
-let nodes = parseLisp readFile "./simple.rkt"
+let nodes = parseLisp readFile "./examples/simple.rkt"
 # writeFile "out.rkt", pretty nodes
-writefile "out.json", pretty toJson(nodes, rules)
+writefile "./temp/out.json", pretty toJson(nodes, rules)
