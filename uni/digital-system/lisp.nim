@@ -1,4 +1,4 @@
-import std/[strutils, sequtils, json, algorithm]
+import std/[strutils, sequtils, json, algorithm, options]
 import macros
 
 
@@ -123,20 +123,19 @@ func pretty*(n: LispNode, indentSize = 2): string =
 
   else: $n
 
-
-func ident(n: LispNode): string =
-  assert n.kind == lnkList
-  assert n.children.len > 0
-  assert n.children[0].kind == lnkSymbol
-  n.children[0].name
-
 func `%`(n: LispNode): JsonNode =
   case n.kind:
   of lnkInt: %n.vint
   of lnkFloat: %n.vfloat
   of lnkString: %n.vstr
   of lnkSymbol: %n.name
-  else: err "nklList is not serilized that way"
+  else: err "nklList is not serilized this way"
+
+func ident(n: LispNode): string =
+  assert n.kind == lnkList
+  assert n.children.len > 0
+  assert n.children[0].kind == lnkSymbol
+  n.children[0].name
 
 
 type
@@ -150,7 +149,7 @@ type
     headMatch: bool
     tailMatch: bool
     path: seq[string]
-    fn: proc(parent: JsonNode, args: seq[LispNode])
+    fn: proc(parent: JsonNode, args: seq[LispNode], path: seq[string])
 
 
 const
@@ -197,10 +196,15 @@ func extractRule(n: NimNode): RulePathIR =
   let
     parentIdent = ident "parent"
     argsIdent = ident "args"
+    pathIdent = ident "path"
     code = n[^1]
 
   result.fn = quote:
-    (proc(`parentIdent`: `JsonNode`, `argsIdent`: seq[`LispNode`]) = `code`)
+    (proc(
+      `parentIdent`: `JsonNode`,
+      `argsIdent`: seq[`LispNode`],
+      `pathIdent`: seq[string]) =
+      `code`)
 
 func toCode(rp: RulePathIR): NimNode =
   let
@@ -218,20 +222,45 @@ func toCode(rp: RulePathIR): NimNode =
 
 
 macro parseRules(body: untyped): untyped =
-  var rulesList = newTree(nnkBracket)
+  result = prefix(newTree(nnkBracket), "@")
 
   for rule in body:
     expectKind rule, nnkInfix
     assert rule.len == 4
-    rulesList.add toCode extractRule rule
+    result[1].add toCode extractRule rule
 
-  let rulesIdent = ident "rules"
-  result = quote:
-    let `rulesIdent` = `rulesList`
+func matchPath(path: seq[string], rule: RulePath): bool {.inline.} =
+  false
 
-  # echo repr result
+func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
+  for r in rules:
+    if path.matchPath r:
+      return some r
 
-parseRules:
+
+func toJsonImpl(
+  lnodes: seq[LispNode],
+  rules: seq[RulePath],
+  parent: var JsonNode,
+  path: seq[string]) =
+
+  for ln in lnodes:
+    assert ln.kind == lnkList
+
+    if (let r = findRule(path, rules); issome r):
+      discard
+
+    else:
+      discard
+
+
+
+func toJson(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
+  result = %*{}
+  toJsonImpl lnodes, rules, result, @[]
+
+
+let rules = parseRules:
   "ENTITY_FILE" / "ENTITY" / "...":
     discard
 
