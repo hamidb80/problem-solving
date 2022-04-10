@@ -96,9 +96,8 @@ func parseLisp(s: ptr string, startI: int, acc: var seq[LispNode]): int =
 
     i.inc
 
-func parseLisp*(code: string): LispNode =
-  result = LispNode(kind: lnkList)
-  discard parseLisp(unsafeAddr code, 0, result.children)
+func parseLisp*(code: string): seq[LispNode] =
+  discard parseLisp(unsafeAddr code, 0, result)
 
 
 func `$`*(n: LispNode): string =
@@ -221,16 +220,39 @@ func toCode(rp: RulePathIR): NimNode =
       fn: `fn`)
 
 
-macro parseRules(body: untyped): untyped =
+macro parseRules*(body: untyped): untyped =
   result = prefix(newTree(nnkBracket), "@")
 
   for rule in body:
     expectKind rule, nnkInfix
     assert rule.len == 4
     result[1].add toCode extractRule rule
-
+  
 func matchPath(path: seq[string], rule: RulePath): bool {.inline.} =
-  false
+  let
+    hm = rule.headMatch
+    tm = rule.tailMatch
+
+  if path.len < rule.path.len:
+    false
+  
+  elif hm and tm:
+    path == rule.path
+
+  elif tm:
+    for i in 1 .. path.len:
+      if path[^i] != rule.path[^i]:
+        return false
+    true
+    
+  elif hm:
+    for i in 0 .. path.high:
+      if path[i] != rule.path[i]:
+        return false
+    true
+
+  else:
+    err "this kind of pattern matching is not implmeneted yet"
 
 func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
   for r in rules:
@@ -247,25 +269,18 @@ func toJsonImpl(
   for ln in lnodes:
     assert ln.kind == lnkList
 
-    if (let r = findRule(path, rules); issome r):
-      discard
+    let
+      newPath = path & ln.ident
+      r = findRule(newPath, rules)
+
+    if issome r:
+      if not r.get.tailMatch:
+        discard
 
     else:
-      discard
+      err "cannot match ident '" & ln.ident & "'"
 
 
-
-func toJson(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
+func toJson*(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
   result = %*{}
   toJsonImpl lnodes, rules, result, @[]
-
-
-let rules = parseRules:
-  "ENTITY_FILE" / "ENTITY" / "...":
-    discard
-
-  "ENTITY_FILE" / "ENTITY" / "OBID":
-    discard
-
-  # "ENTITY_FILE" / "ENTITY" / ^"PROPERTIES" / "PROPERTY":
-  #   discard

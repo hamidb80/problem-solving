@@ -2,7 +2,14 @@ import std/[json]
 import lisp
 
 
-let nodes = parseLisp readFile "./sample.eas"
+let rules = parseRules:
+  "ENTITY_FILE" / "ENTITY" / "...":
+    discard
 
+  "ENTITY_FILE" / "ENTITY" / "OBID":
+    discard
+
+
+let nodes = parseLisp readFile "./sample.eas"
 # writeFile "out.rkt", pretty nodes
-echo pretty toJson nodes.children
+writefile "out.json", pretty toJson(nodes, rules)
