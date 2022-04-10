@@ -252,7 +252,7 @@ func matchPath(path: seq[string], rule: RulePath): bool {.inline.} =
 
   elif hm:
     rule.path == path
-    
+
   else:
     err "this kind of pattern matching is not implmeneted yet"
 
