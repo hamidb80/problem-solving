@@ -122,7 +122,7 @@ func pretty*(n: LispNode, indentSize = 2): string =
 
   else: $n
 
-func `%`(n: LispNode): JsonNode =
+func `%`*(n: LispNode): JsonNode =
   case n.kind:
   of lnkInt: %n.vint
   of lnkFloat: %n.vfloat
@@ -136,6 +136,11 @@ func ident(n: LispNode): string =
   assert n.children[0].kind == lnkSymbol
   n.children[0].name
 
+func args(n: LispNode): seq[LispNode] =
+  assert n.kind == lnkList
+  assert n.children.len > 0
+  n.children[1..^1]
+
 
 type
   RulePathIR = object
@@ -148,7 +153,7 @@ type
     headMatch: bool
     tailMatch: bool
     path: seq[string]
-    fn: proc(parent: JsonNode, args: seq[LispNode], path: seq[string])
+    fn: proc(parent: JsonNode, args: seq[LispNode], path: seq[string]): JsonNode
 
 
 const
@@ -157,9 +162,7 @@ const
   InfixRight = 2
 
 func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
-  expectKind n, nnkInfix
   assert n[InfixOp].strVal == "/"
-
   result.add n[InfixRight]
 
   if n[InfixLeft].kind == nnkInfix:
@@ -168,8 +171,12 @@ func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
     result.add n[InfixLeft]
 
 func extractPath(n: NimNode): seq[NimNode] =
-  extractPathImpl n, result
-  result.reverse
+  case n.kind:
+  of nnkInfix:
+    extractPathImpl n, result
+    result.reversed
+  of nnkCall: @[n[0]]
+  else: err "how? " & n.repr & " ::: " & $n.kind
 
 func extractRule(n: NimNode): RulePathIR =
   let pp = extractPath n
@@ -202,7 +209,7 @@ func extractRule(n: NimNode): RulePathIR =
     (proc(
       `parentIdent`: `JsonNode`,
       `argsIdent`: seq[`LispNode`],
-      `pathIdent`: seq[string]) =
+      `pathIdent`: seq[string]): `JsonNode` =
       `code`)
 
 func toCode(rp: RulePathIR): NimNode =
@@ -224,32 +231,34 @@ macro parseRules*(body: untyped): untyped =
   result = prefix(newTree(nnkBracket), "@")
 
   for rule in body:
-    expectKind rule, nnkInfix
-    assert rule.len == 4
     result[1].add toCode extractRule rule
-  
+
 func matchPath(path: seq[string], rule: RulePath): bool {.inline.} =
   let
     hm = rule.headMatch
     tm = rule.tailMatch
 
-  if path.len < rule.path.len:
-    false
-  
-  elif hm and tm:
+  if hm and tm:
     path == rule.path
 
   elif tm:
-    for i in 1 .. path.len:
-      if path[^i] != rule.path[^i]:
-        return false
-    true
-    
+    if path.len < rule.path.len:
+      false
+    else:
+      for i in 1 .. rule.path.len:
+        if path[^i] != rule.path[^i]:
+          return false
+      true
+
   elif hm:
-    for i in 0 .. path.high:
-      if path[i] != rule.path[i]:
-        return false
-    true
+    if rule.path.len > path.len: 
+      false
+
+    else:
+      for i in 0 .. rule.path.high:
+        if path[i] != rule.path[i]:
+          return false
+      true
 
   else:
     err "this kind of pattern matching is not implmeneted yet"
@@ -260,14 +269,14 @@ func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
       return some r
 
 
-func toJsonImpl(
+proc toJsonImpl(
   lnodes: seq[LispNode],
   rules: seq[RulePath],
   parent: var JsonNode,
   path: seq[string]) =
 
   for ln in lnodes:
-    assert ln.kind == lnkList
+    assert ln.kind == lnkList, $ln & " ::: " & $ln.kind
 
     let
       newPath = path & ln.ident
@@ -275,12 +284,18 @@ func toJsonImpl(
 
     if issome r:
       if not r.get.tailMatch:
-        discard
+        var newParent = r.get.fn(parent, ln.args, newpath)
+        debugecho ">>> ", path, " --> ", newpath
+        debugecho "||| ", $ln.children, " ///"
+        toJsonImpl ln.children[1..^1], rules, newParent, newpath
+
+      else:
+        discard r.get.fn(parent, ln.args, newpath)
 
     else:
       err "cannot match ident '" & ln.ident & "'"
 
 
-func toJson*(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
+proc toJson*(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
   result = %*{}
   toJsonImpl lnodes, rules, result, @[]
