@@ -101,27 +101,18 @@ macro parseRules*(body: untyped): untyped =
     result[1].add genCode extractRule rule
 
 func matchRule(path: seq[string], rule: RulePath): bool {.inline.} =
-  let
-    hm = rule.headMatch
-    tm = rule.tailMatch
-
-  if hm and tm:
+  if rule.headMatch:
     path == rule.path
 
-  elif tm:
-    if path.len < rule.path.len:
-      false
-    else:
-      for i in 1 .. rule.path.len:
-        if path[^i] != rule.path[^i]:
-          return false
-      true
-
-  elif hm:
-    rule.path == path
-
+  elif path.len < rule.path.len:
+    false
+  
   else:
-    err "this kind of pattern matching is not implmeneted yet"
+    for i in 1 .. rule.path.len:
+      if path[^i] != rule.path[^i]:
+        return false
+    true
+
 
 func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
   for r in rules:

@@ -22,10 +22,10 @@ let rules = parseRules:
   "ENTITY_FILE" / "ENTITY" / "OBID":
     parent["OBID"] = %args[0]
 
-  "ENTITY_FILE" / "ENTITY" / "PROPERTIES" / "...":
+  "..." / "PROPERTIES" / "...":
     newjObjRet parent["PROPERTIES"]
 
-  "ENTITY_FILE" / "ENTITY" / "PROPERTIES" / "PROPERTY":
+  "..." / "PROPERTIES" / "PROPERTY":
     parent[args[0].vstr] = %args[1]
 
 
