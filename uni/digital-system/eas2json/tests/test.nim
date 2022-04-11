@@ -9,20 +9,10 @@ template newjObjRet(wrapper): untyped =
 
 # -----------------------------
 
+func genTimeObj(args: seq[LispNode]): JsonNode =
+  %*{"unix": args[0], "formated": args[1]}
+
 let rules = parseRules:
-  "DATABASE_VERSION":
-    parent["DATABASE_VERSION"] = %args[0]
-
-  "..." / "PORT" / "$":
-    if args[0].kind == lnkList:
-      newjObjRet parent["PORT"]
-    else:
-      parent["PORT"] = %args[0]
-      nil
-
-  "..." / "GEOMETRY":
-    parent["GEOMETRY"] = %args
-
   "..." / "LABEL" / "POSITION":
     parent["POSITION"] = %*{"x": args[0], "y": args[1]}
 
@@ -32,14 +22,21 @@ let rules = parseRules:
   "..." / "PROPERTIES" / "PROPERTY":
     parent[args[0].vstr] = %args[1]
 
+  "..." / "OBJSTAMP" / "MODIFIED": 
+    parent[path[^1]] = genTimeObj args
+  
+  "..." / "OBJSTAMP" / "CREATED": 
+    parent[path[^1]] = genTimeObj args
+
   "..." / "*" / "$":
-    if args.len == 0:
-      nil
-    else:
-      newjObjRet parent[path[^1]]
+    if args.len == 0: nil
+    else: newjObjRet parent[path[^1]]
 
   "..." / "*":
-    parent[path[^1]] = %args[0]
+    parent[path[^1]] =
+      if args.len == 1: %args[0]
+      else: %args
+
 
 # -----------------------------
 
