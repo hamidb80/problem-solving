@@ -24,7 +24,7 @@ func `%`*(n: LispNode): JsonNode =
   of lnkFloat: %n.vfloat
   of lnkString: %n.vstr
   of lnkSymbol: %n.name
-  else: err "nklList is not serilized this way"
+  else: err "nklList is not serilized this way ::: " & $n
 
 
 func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
@@ -94,43 +94,48 @@ func genCode(rp: RulePathIR): NimNode =
       fn: `fn`)
 
 
+func `$`(r: RulePath): string {.used.} =
+  ## debuging purposes
+  fmt"{r.path} {r.headMatch} .. {r.tailMatch}"
+
 macro parseRules*(body: untyped): untyped =
   result = prefix(newTree(nnkBracket), "@")
 
   for rule in body:
     result[1].add genCode extractRule rule
 
-func matchPathStep(step, pattern: string): bool =
+func matchPathStep(step, pattern: string): bool {.inline.} =
   if pattern == "*": true
   else: step == pattern
 
-func matchRule(path: seq[string], rule: RulePath): bool {.inline.} =
-  if rule.headMatch:
-    if path.len != rule.path.len: false
+func matchRule(
+  path: seq[string],
+  rule: RulePath,
+  isCall: bool): bool {.inline.} =
+
+  let r = 
+    if rule.headMatch:
+      if path.len != rule.path.len: false
+      else:
+        for i in 0..path.high:
+          if not matchPathStep(path[i], rule.path[i]):
+            return false
+        true
+
+    elif path.len < rule.path.len: false
+
     else:
-      for i in 0..path.high:
-        if not matchPathStep(path[i], rule.path[i]):
+      for i in 1 .. rule.path.len:
+        if not matchPathStep(path[^i], rule.path[^i]):
           return false
       true
 
-  elif path.len < rule.path.len:
-    false
+  r and (isCall == not rule.tailMatch)
 
-  else:
-    for i in 1 .. rule.path.len:
-      if not matchPathStep(path[^i], rule.path[^i]):
-        return false
-    true
-
-
-func findRule(path: seq[string], rules: seq[RulePath]): Option[RulePath] =
+func findRule(path: seq[string], rules: seq[RulePath], isCall: bool): Option[RulePath] =
   for r in rules:
-    if path.matchRule r:
+    if matchRule(path, r, isCall):
       return some r
-
-func `$`(r: RulePath): string {.used.} =
-  ## debuging purposes
-  fmt"{r.path} {r.headMatch} .. {r.tailMatch}"
 
 
 proc toJsonImpl(
@@ -144,15 +149,17 @@ proc toJsonImpl(
 
     let
       newPath = path & ln.ident
-      r = findRule(newPath, rules)
+      isCall = ln.args.allIt it.kind == lnkList
+      r = findRule(newPath, rules, isCall)
 
     if issome r:
+      # echo "^^^^^^^^ ", r.get
+
       if not r.get.tailMatch:
         var newParent = r.get.fn(parent, ln.args, newpath)
-        # echo "^^^^^^^^^6 ", r.get
-        # debugecho ">>> ", path, " --> ", newpath
-        # debugecho "||| ", $ln.children, " ///"
-        if newParent != nil: ## IMPORTANT
+        # echo ">>> ", path, " --> ", newpath
+        # echo "||| ", $ln.children, " ///\n\n"
+        if newParent != nil:
           toJsonImpl ln.children[1..^1], rules, newParent, newpath
 
       else:
