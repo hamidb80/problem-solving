@@ -6,7 +6,7 @@ description   = "eas to json"
 license       = "MIT"
 srcDir        = "src"
 installExt    = @["nim"]
-bin           = @["digital_system"]
+bin           = @["ews2json"]
 
 
 # Dependencies
