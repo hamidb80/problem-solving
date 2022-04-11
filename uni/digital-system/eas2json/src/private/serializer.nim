@@ -113,7 +113,7 @@ func matchRule(
   rule: RulePath,
   isCall: bool): bool {.inline.} =
 
-  let r = 
+  let r =
     if rule.headMatch:
       if path.len != rule.path.len: false
       else:

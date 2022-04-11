@@ -16,16 +16,13 @@ let rules = parseRules:
   "..." / "LABEL" / "POSITION":
     parent["POSITION"] = %*{"x": args[0], "y": args[1]}
 
-  "..." / "PROPERTIES" / "$":
-    newjObjRet parent["PROPERTIES"]
-
   "..." / "PROPERTIES" / "PROPERTY":
     parent[args[0].vstr] = %args[1]
 
-  "..." / "OBJSTAMP" / "MODIFIED": 
+  "..." / "OBJSTAMP" / "MODIFIED":
     parent[path[^1]] = genTimeObj args
-  
-  "..." / "OBJSTAMP" / "CREATED": 
+
+  "..." / "OBJSTAMP" / "CREATED":
     parent[path[^1]] = genTimeObj args
 
   "..." / "*" / "$":
