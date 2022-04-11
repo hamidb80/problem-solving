@@ -100,16 +100,25 @@ macro parseRules*(body: untyped): untyped =
   for rule in body:
     result[1].add genCode extractRule rule
 
+func matchPathStep(step, pattern: string): bool =
+  if pattern == "*": true
+  else: step == pattern
+
 func matchRule(path: seq[string], rule: RulePath): bool {.inline.} =
   if rule.headMatch:
-    path == rule.path
+    if path.len != rule.path.len: false
+    else:
+      for i in 0..path.high:
+        if not matchPathStep(path[i], rule.path[i]):
+          return false
+      true
 
   elif path.len < rule.path.len:
     false
 
   else:
     for i in 1 .. rule.path.len:
-      if path[^i] != rule.path[^i]:
+      if not matchPathStep(path[^i], rule.path[^i]):
         return false
     true
 
@@ -143,7 +152,8 @@ proc toJsonImpl(
         # echo "^^^^^^^^^6 ", r.get
         # debugecho ">>> ", path, " --> ", newpath
         # debugecho "||| ", $ln.children, " ///"
-        toJsonImpl ln.children[1..^1], rules, newParent, newpath
+        if newParent != nil: ## IMPORTANT
+          toJsonImpl ln.children[1..^1], rules, newParent, newpath
 
       else:
         discard r.get.fn(parent, ln.args, newpath)

@@ -1,4 +1,4 @@
-import std/[json]
+import std/[json, sequtils]
 import eas2json
 
 
@@ -19,8 +19,36 @@ let rules = parseRules:
   "ENTITY_FILE" / "ENTITY" / "$":
     newjObjRet parent["ENTITY"]
 
-  "ENTITY_FILE" / "ENTITY" / "OBID":
+  "..." / "OBID":
     parent["OBID"] = %args[0]
+
+  "..." / "PORT" / "$":
+    if args[0].kind == lnkList:
+      newjObjRet parent["PORT"]
+    else:
+      parent["PORT"] = %args[0]
+      nil
+
+  "..." / "GEOMETRY":
+    parent["GEOMETRY"] = %args
+
+  "..." / "SIDE":
+    parent["SIDE"] = %args[0]
+
+  "..." / "LABEL" / "$":
+    newjObjRet parent["LABEL"]
+
+  "..." / "LABEL" / "POSITION":
+    parent["POSITION"] = %*{"x": args[0], "y": args[1]}
+
+  "..." / "LABEL" / "$":
+    newjObjRet parent["LABEL"]
+
+  "..." / "HDL_IDENT" / "$":
+    newjObjRet parent["HDL_IDENT"]
+
+  "..." / "HDL_IDENT" / "ATTRIBUTES" / "$":
+    newjObjRet parent["ATTRIBUTES"]
 
   "..." / "PROPERTIES" / "$":
     newjObjRet parent["PROPERTIES"]
@@ -28,6 +56,11 @@ let rules = parseRules:
   "..." / "PROPERTIES" / "PROPERTY":
     parent[args[0].vstr] = %args[1]
 
+  "..." / "*":
+    # if 
+    # else:
+
+    parent[path[^1]] = %args[0]
 
 # -----------------------------
 
