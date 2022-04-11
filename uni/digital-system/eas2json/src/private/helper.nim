@@ -1,4 +1,3 @@
-
 const
   InfixOp* = 0
   InfixLeft* = 1

@@ -2,7 +2,7 @@ import std/[sequtils, json, algorithm, options, strformat]
 import macros
 import lisp, helper
 
-# -------------------------
+# ------------------------------
 
 type
   RulePathIR = object
@@ -16,15 +16,6 @@ type
     tailMatch: bool
     path: seq[string]
     fn: proc(parent: JsonNode, args: seq[LispNode], path: seq[string]): JsonNode
-
-
-func `%`*(n: LispNode): JsonNode =
-  case n.kind:
-  of lnkInt: %n.vint
-  of lnkFloat: %n.vfloat
-  of lnkString: %n.vstr
-  of lnkSymbol: %n.name
-  else: err "nklList is not serilized this way ::: " & $n
 
 
 func extractPathImpl(n: NimNode, result: var seq[NimNode]) =
@@ -171,3 +162,13 @@ proc toJsonImpl(
 proc toJson*(lnodes: seq[LispNode], rules: seq[RulePath]): JsonNode =
   result = %*{}
   toJsonImpl lnodes, rules, result, @[]
+
+# -------------------------------------
+
+func `%`*(n: LispNode): JsonNode =
+  case n.kind:
+  of lnkInt: %n.vint
+  of lnkFloat: %n.vfloat
+  of lnkString: %n.vstr
+  of lnkSymbol: %n.name
+  else: err "nklList is not serilized this way ::: " & $n

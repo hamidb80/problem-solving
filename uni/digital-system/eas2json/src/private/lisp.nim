@@ -1,5 +1,6 @@
 import std/[strutils, json]
 
+
 type
   LispNodeKinds* = enum
     lnkSymbol
@@ -93,6 +94,7 @@ func parseLisp(s: ptr string, startI: int, acc: var seq[LispNode]): int =
 func parseLisp*(code: string): seq[LispNode] =
   discard parseLisp(unsafeAddr code, 0, result)
 
+
 func `$`*(n: LispNode): string =
   case n.kind:
   of lnkInt: $n.vint
@@ -114,6 +116,7 @@ func pretty*(n: LispNode, indentSize = 2): string =
       acc & ")\n"
 
   else: $n
+
 
 func ident*(n: LispNode): string =
   assert n.kind == lnkList
