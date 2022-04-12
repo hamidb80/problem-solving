@@ -12,3 +12,6 @@ bin           = @["ews2json"]
 # Dependencies
 
 requires "nim >= 1.6.4"
+
+task make, "make exectuable file":
+  exec "nim -o:ews2json.exe c --mm:arc -d:release ./src/ews2json.nim"
