@@ -8,16 +8,19 @@ template newjObjRet(wrapper): untyped =
   r
 
 func genTimeObj(args: seq[LispNode]): JsonNode =
-  %*{"unix": args[0], "formated": args[1]}
+  %*{"unix": args[0], "readable": args[1]}
 
 # defs -------------------------------------
 
 let easRules* = parseRules:
-  "..." / "LABEL" / "POSITION":
+  "..." / "POSITION":
     parent["POSITION"] = %*{"x": args[0], "y": args[1]}
 
-  "..." / "ENTITY":
-    parent[args[0].vstr] = %args[1]
+  "..." / "GEOMETRY":
+    parent["GEOMETRY"] = %*{
+      "x": args[0], "y": args[1],
+      "width": args[2], "height": args[3],
+    }
 
   "..." / "*" / "PROPERTY":
     parent[args[0].vstr] = %args[1]

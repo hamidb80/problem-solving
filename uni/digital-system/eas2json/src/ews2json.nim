@@ -1,7 +1,7 @@
 import std/[os, json]
 import private/[lisp, serializer, eas]
 
-export lisp, serializer
+export lisp, serializer, eas
 
 # --------------------------
 
