@@ -27,6 +27,7 @@ proc convertProbe(projectDir, dest: string) =
 template check(cond, msg): untyped =
   if not cond:
     echo msg
+    quit 1
 
 proc ews2json*(projectDir, dest: string) =
   check dirExists projectDir, "failed access to project folder"
