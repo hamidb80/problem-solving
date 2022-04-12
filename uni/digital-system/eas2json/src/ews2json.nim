@@ -22,6 +22,8 @@ proc convertProbe(projectDir, dest: string) =
       else:
         copyFileToDir projectDir / rpath, dest
 
+
+
 template check(cond, msg): untyped =
   if not cond:
     echo msg
@@ -30,7 +32,6 @@ proc ews2json*(projectDir, dest: string) =
   check dirExists projectDir, "failed access to project folder"
   check dirExists dest, "failed access to destination folder"
   convertProbe projectDir, dest
-
 
 when isMainModule:
   let cmnds = commandLineParams()
