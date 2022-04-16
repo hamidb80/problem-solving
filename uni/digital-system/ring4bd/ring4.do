@@ -39,4 +39,4 @@ add wave -noupdate count
 #force a 1 30
 
 # 7) Run the simulation for 1800 ns
-run 1800
+run 2100

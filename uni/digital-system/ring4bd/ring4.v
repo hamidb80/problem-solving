@@ -2,6 +2,7 @@ module ring4(clock, reset, count);
 	input clock, reset;
 	output [3:0] count;
 	reg [3:0] count;
+
 	always @(posedge clock or posedge reset)
 	begin
 		if(reset)
