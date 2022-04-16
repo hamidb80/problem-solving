@@ -2,14 +2,14 @@
 vlib work
 
 # 2) Compile the half adder
-vlog ring4.v
-vlog ring4_test.v
+vlog ring4bd.v
+vlog ring4bd_test.v
 
 # 3) optimize
-vopt +acc ring4_test -o ring4_test_opt
+vopt +acc ring4bd_test -o ring4bd_test_opt
 
 # 4) Load it for simulation
-vsim ring4_test_opt
+vsim ring4bd_test_opt
 
 # 5) Open some selected windows for viewing
 view structure
@@ -39,4 +39,4 @@ add wave -noupdate count
 #force a 1 30
 
 # 7) Run the simulation for 1800 ns
-run 2100
+run 4000
