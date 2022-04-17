@@ -8,13 +8,13 @@ template reversedMapIt(iter, expr): untyped =
     temp.add expr
   temp
 
-func merge(s: seq[int], neg, pos: HSlice[int, int]): seq[int] =
+func merge(s: seq[int], diffIndex: int): seq[int] =
   var
-    i = neg.b
-    j = 0
+    i = diffIndex
+    j = diffIndex + 1
 
-  template n1: untyped = s[neg.a + i] ^ 2
-  template n2: untyped = s[pos.a + j] ^ 2
+  template n1: untyped = s[i] * s[i]
+  template n2: untyped = s[j] * s[j]
 
   template do1: untyped =
     result.add n1()
@@ -27,7 +27,7 @@ func merge(s: seq[int], neg, pos: HSlice[int, int]): seq[int] =
   while true:
     let
       c1 = i > -1
-      c2 = j < pos.len
+      c2 = j < s.len
 
     if c1 and c2:
       case cmp(n1, n2):
@@ -56,11 +56,11 @@ func sortedSq(nums: seq[int]): seq[int] =
     else:
       nums.mapIt it ^ 2
   else:
-    merge nums, 0 .. foolIndex, foolIndex+1 .. nums.high
+    merge nums, foolIndex
 
 
 echo sortedSq @[-7, -3, -1, 2, 3, 11, 14] # @[1, 4, 9, 9, 49, 121, 196]
-echo sortedSq @[-7, -3, -1] # @[1, 9, 49]
-echo sortedSq @[2, 3, 11, 14] # @[4, 9, 121, 196]
-echo sortedSq @[-1] # @[1]
-echo sortedSq @[2] # @[4]
+# echo sortedSq @[-7, -3, -1] # @[1, 9, 49]
+# echo sortedSq @[2, 3, 11, 14] # @[4, 9, 121, 196]
+# echo sortedSq @[-1] # @[1]
+# echo sortedSq @[2] # @[4]
