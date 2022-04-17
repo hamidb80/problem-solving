@@ -1,5 +1,12 @@
 # https://leetcode.com/problems/squares-of-a-sorted-array/
-import std/[sequtils, math, algorithm]
+import std/[sequtils, math]
+
+template reversedMapIt(iter, expr): untyped =
+  var temp = newSeqOfCap[typeof iter[0]](iter.len)
+  for i in countdown(iter.high, 0):
+    let it {.inject.} = iter[i]
+    temp.add expr
+  temp
 
 func merge(neg, pos: seq[int]): seq[int] =
   var
@@ -45,14 +52,13 @@ func sortedSq(nums: seq[int]): seq[int] =
 
   if foolIndex == -1:
     if nums[0] < 0:
-      nums.reversed.mapIt it ^ 2
+      nums.reversedMapIt it ^ 2
     else:
       nums.mapIt it ^ 2
   else:
     merge nums[0 .. foolIndex], nums[foolIndex+1 .. ^1]
 
 
-# echo main stdin.readLine.split.map(parse)
 echo sortedSq @[-7, -3, -1, 2, 3, 11, 14] # @[1, 4, 9, 9, 49, 121, 196]
 echo sortedSq @[-7, -3, -1] # @[1, 9, 49]
 echo sortedSq @[2, 3, 11, 14] # @[4, 9, 121, 196]
