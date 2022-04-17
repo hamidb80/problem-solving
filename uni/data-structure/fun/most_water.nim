@@ -17,6 +17,7 @@ func maxArea(heights: seq[int]): int =
   let
     mis = sorted heights.maxIndexStack 2 # min indexes
     h = min mis.over heights
+
   var
     lefti = mis[0]
     righti = mis[1]
@@ -40,6 +41,7 @@ func maxArea(heights: seq[int]): int =
 
   for i in countup(righti+1, heights.high):
     job i, righti, lefti
+
 
 # --------------------------
 
