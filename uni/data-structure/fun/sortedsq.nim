@@ -13,8 +13,8 @@ func merge(s: seq[int], diffIndex: int): seq[int] =
     i = diffIndex
     j = diffIndex + 1
 
-  template n1: untyped = s[i] * s[i]
-  template n2: untyped = s[j] * s[j]
+  template n1: untyped = s[i] ^ 2
+  template n2: untyped = s[j] ^ 2
 
   template do1: untyped =
     result.add n1()
