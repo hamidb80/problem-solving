@@ -8,13 +8,13 @@ template reversedMapIt(iter, expr): untyped =
     temp.add expr
   temp
 
-func merge(neg, pos: seq[int]): seq[int] =
+func merge(s: seq[int], neg, pos: HSlice[int, int]): seq[int] =
   var
-    i = neg.high
+    i = neg.b
     j = 0
 
-  template n1: untyped = neg[i] ^ 2
-  template n2: untyped = pos[j] ^ 2
+  template n1: untyped = s[neg.a + i] ^ 2
+  template n2: untyped = s[pos.a + j] ^ 2
 
   template do1: untyped =
     result.add n1()
@@ -56,7 +56,7 @@ func sortedSq(nums: seq[int]): seq[int] =
     else:
       nums.mapIt it ^ 2
   else:
-    merge nums[0 .. foolIndex], nums[foolIndex+1 .. ^1]
+    merge nums, 0 .. foolIndex, foolIndex+1 .. nums.high
 
 
 echo sortedSq @[-7, -3, -1, 2, 3, 11, 14] # @[1, 4, 9, 9, 49, 121, 196]
