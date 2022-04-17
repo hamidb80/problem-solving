@@ -60,7 +60,7 @@ func sortedSq(nums: seq[int]): seq[int] =
 
 
 echo sortedSq @[-7, -3, -1, 2, 3, 11, 14] # @[1, 4, 9, 9, 49, 121, 196]
-# echo sortedSq @[-7, -3, -1] # @[1, 9, 49]
-# echo sortedSq @[2, 3, 11, 14] # @[4, 9, 121, 196]
-# echo sortedSq @[-1] # @[1]
-# echo sortedSq @[2] # @[4]
+echo sortedSq @[-7, -3, -1] # @[1, 9, 49]
+echo sortedSq @[2, 3, 11, 14] # @[4, 9, 121, 196]
+echo sortedSq @[-1] # @[1]
+echo sortedSq @[2] # @[4]
