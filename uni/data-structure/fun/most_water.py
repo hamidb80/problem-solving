@@ -3,17 +3,18 @@ def maxArea(h):
     area = min(h[i], h[j]) * (j-i)
 
     while j > i:
-      if h[i] < h[j]:
-        i += 1
+        if h[i] < h[j]:
+            i += 1
 
-      else:
-        j -= 1
+        else:
+            j -= 1
 
-      newArea = min(h[i], h[j]) * (j-i)
-      if area < newArea:
-        area = newArea
+        newArea = min(h[i], h[j]) * (j-i)
+        if area < newArea:
+            area = newArea
 
     return area
+
 
 print(maxArea([1, 1]), " == ",  1)
 print(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]), " == ", 49)
