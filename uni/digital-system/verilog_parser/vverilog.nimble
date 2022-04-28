@@ -2,7 +2,7 @@
 
 version       = "0.0.1"
 author        = "hamidb80"
-description   = "vvverilog"
+description   = "vverilog"
 license       = "MIT"
 srcDir        = "src"
 
