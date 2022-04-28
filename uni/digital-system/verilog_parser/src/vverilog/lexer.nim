@@ -1,4 +1,5 @@
 import std/[strutils]
+import ./conventions
 
 type
   VTokenKinds* = enum
@@ -56,22 +57,19 @@ iterator vlex*(content: string): VToken =
     i = 0
     start = 0
 
-  template reset: untyped =
-    lxState = lsInit
-  template fetchChar(i: int): untyped =
-    if i in 0 ..< content.len:
-      content[i]
-    else:
-      EoC
-  template append(newToken): untyped =
+  def fetchChar(i):
+    if i in 0 ..< content.len: content[i]
+    else: EoC
+  def lc: fetchChar(i-1) # last char
+  def fc: fetchChar(i+1) # forward char
+  def reset: lxState = lsInit
+  def push(newToken):
     yield newToken
     reset()
 
+
   while true:
-    let
-      lc = fetchChar i-1 # last char
-      cc = fetchChar i   # current char
-      fc = fetchChar i+1 # forward char
+    let cc = fetchChar i # current char
 
     case lxState:
     of lsInit:
@@ -92,7 +90,7 @@ iterator vlex*(content: string): VToken =
         start = i
 
       of '.', ',', ':', ';':
-        append VToken(kind: vtkSeparator, sign: cc)
+        push VToken(kind: vtkSeparator, sign: cc)
         inc i
 
       of '/':
@@ -113,7 +111,7 @@ iterator vlex*(content: string): VToken =
           inc i
 
       of '(', ')', '[', ']', '{', '}':
-        append VToken(kind: vtkScope, scope: cc)
+        push VToken(kind: vtkScope, scope: cc)
         inc i
 
       of Stoppers:
@@ -126,21 +124,21 @@ iterator vlex*(content: string): VToken =
 
     of lsKeyword:
       case cc:
-      of IdentChars: 
+      of IdentChars:
         inc i
       else:
-        append VToken(kind: vtkKeyword, keyword: content[start ..< i])
+        push VToken(kind: vtkKeyword, keyword: content[start ..< i])
 
     of lsNumber:
       case cc:
-      of '.', '_',  '\'', 'b', 'h', Digits, 'A' .. 'F', 'x', 'Z': 
+      of '.', '_', '\'', 'b', 'h', Digits, 'A' .. 'F', 'x', 'Z':
         inc i
       else:
-        append VToken(kind: vtkNumber, digits: content[start ..< i])
+        push VToken(kind: vtkNumber, digits: content[start ..< i])
 
     of lsString:
       if cc == '"' and lc != '\\':
-        append VToken(kind: vtkString, content: content[start ..< i])
+        push VToken(kind: vtkString, content: content[start ..< i])
 
       inc i
 
@@ -148,20 +146,19 @@ iterator vlex*(content: string): VToken =
       if cc in "/&!:?~+-%<=>^|":
         inc i
       else:
-        append VToken(kind: vtkOperator, operator: content[start ..< i])
+        push VToken(kind: vtkOperator, operator: content[start ..< i])
 
     of lsInlineComment:
       if cc in Newlines:
-        append VToken(kind: vtkComment, comment: content[start ..< i], inline: true)
+        push VToken(kind: vtkComment, comment: content[start ..< i], inline: true)
 
       inc i
 
     of lsMultiLineComment:
       if cc == '/' and lc == '*':
-        append VToken(kind: vtkComment, comment: content[start ..< i-1], inline: false)
+        push VToken(kind: vtkComment, comment: content[start ..< i-1], inline: false)
 
       inc i
 
     if cc == EoC:
       break
-
