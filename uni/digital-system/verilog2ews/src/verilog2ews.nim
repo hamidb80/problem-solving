@@ -1,6 +1,6 @@
-import std/[os, strutils, json, tables, options, sequtils]
+import std/[os, strutils, json, tables, options, sequtils, strformat]
 
-# import mathexpr
+import mathexpr
 # import ews
 import vverilog
 
@@ -48,7 +48,21 @@ func `%`(gate: Internal): JsonNode=
     "args": gate.args 
   }
 
+let calc = newEvaluator()
+
+func toVNumber(n: SomeNumber): VNode =
+  VNode(kind: vnkNumber, digits: $n)
+
+func rng2str(vn: VNode, lookup: LookUp): VNode=
+  {.cast(nosideEffect).}:
+    let 
+      h = calc.eval(resolveAliasses($vn.head, lookup)).toInt.toVNumber
+      t = calc.eval(resolveAliasses($vn.tail, lookup)).toInt.toVNumber
+
+    VNode(kind: vnkRange, head: h, tail: t)
+    
 func genJson(m: VNode, definedLookups: LookUp): JsonNode =
+
   var
     lookup = definedLookups
 
@@ -67,9 +81,11 @@ func genJson(m: VNode, definedLookups: LookUp): JsonNode =
           '[' & $vn.bus.get & ']'
         else:
           ""
-
       for id in vn.idents:
-        let pp = resolveAliasses(bus & $id, lookup)
+        if id.kind == vnkBracketExpr:
+          id.index = rng2str(id.index, lookup)
+
+        let pp = bus & $id
 
         case vn.dkind:
         of vdkInput:
