@@ -1,10 +1,42 @@
-import std/[os, strutils, json, tables, options, sequtils, strformat]
+import std/[os, strutils, json, tables, options, sequtils]
 
 import mathexpr
 # import ews
 import vverilog
 
-type LookUp = Table[string, VNode]
+
+type
+  LookUp = Table[string, VNode]
+  Internal = tuple
+    module, instance: string
+    args: seq[string]
+
+
+func `%`(gate: Internal): JsonNode =
+  %*{
+    "module": gate.module,
+    "instance": gate.instance,
+    "args": gate.args
+  }
+
+func toVNumber(n: SomeNumber): VNode =
+  VNode(kind: vnkNumber, digits: $n)
+
+proc resolveAliasses(s: string, lkp: LookUp): string =
+  for k, v in lkp:
+    let repl = '`' & k
+    if repl in s:
+      return s.replace(repl, $v)
+  s
+
+let calc = newEvaluator()
+func rng2str(vn: VNode, lookup: LookUp): VNode =
+  {.cast(nosideEffect).}:
+    let
+      h = calc.eval(resolveAliasses($vn.head, lookup)).toInt.toVNumber
+      t = calc.eval(resolveAliasses($vn.tail, lookup)).toInt.toVNumber
+
+    VNode(kind: vnkRange, head: h, tail: t)
 
 
 proc allModules(filePaths: seq[string]): tuple[modules: seq[VNode],
@@ -20,47 +52,12 @@ proc allModules(filePaths: seq[string]): tuple[modules: seq[VNode],
       else:
         discard
 
-
 proc getVfiles(dir: string): seq[string] =
   for p in walkDirRec dir:
     let (_, name, ext) = splitFile p
     if ext == ".v" and not name.startsWith "config":
       result.add p
 
-proc resolveAliasses(s: string, lkp: LookUp): string =
-  # FIXME math thingyyyyy uhhhhhh
-
-  for k, v in lkp:
-    let repl = '`' & k
-    if repl in s:
-      return s.replace(repl, $v)
-  s
-
-
-type Internal = tuple
-  module, instance: string
-  args: seq[string]
-
-func `%`(gate: Internal): JsonNode= 
-  %*{
-    "module": gate.module,
-    "instance": gate.instance,
-    "args": gate.args 
-  }
-
-let calc = newEvaluator()
-
-func toVNumber(n: SomeNumber): VNode =
-  VNode(kind: vnkNumber, digits: $n)
-
-func rng2str(vn: VNode, lookup: LookUp): VNode=
-  {.cast(nosideEffect).}:
-    let 
-      h = calc.eval(resolveAliasses($vn.head, lookup)).toInt.toVNumber
-      t = calc.eval(resolveAliasses($vn.tail, lookup)).toInt.toVNumber
-
-    VNode(kind: vnkRange, head: h, tail: t)
-    
 func genJson(m: VNode, definedLookups: LookUp): JsonNode =
 
   var
@@ -118,7 +115,6 @@ func genJson(m: VNode, definedLookups: LookUp): JsonNode =
     "registers": registers,
     "internals": internals
   }
-
 
 proc genJsonFrom(dir: string): JsonNode =
   result = %*[]
