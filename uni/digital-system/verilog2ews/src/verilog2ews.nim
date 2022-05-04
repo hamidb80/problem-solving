@@ -1,128 +1,110 @@
-import std/[os, strutils, json, tables, options, sequtils]
+import std/[os, strutils, tables, options, sequtils, sets]
 
 import mathexpr
 # import ews
 import vverilog
+import print
+
+# ----------------------------------------------
+
+template err(msg): untyped =
+  raise newException(ValueError, msg)
+
+# let calc = newEvaluator()
+
+# func rng2str(vn: VNode, lookup: LookUp): VNode =
+#   {.cast(nosideEffect).}:
+#     let
+#       h = calc.eval(resolveAliasses($vn.head, lookup)).toInt.toVNumber
+#       t = calc.eval(resolveAliasses($vn.tail, lookup)).toInt.toVNumber
+
+#     VNode(kind: vnkRange, head: h, tail: t)
+
+
+# proc getVfiles(dir: string): seq[string] =
+#   for p in walkDirRec dir:
+#     let (_, name, ext) = splitFile p
+#     if ext == ".v" and not name.startsWith "config":
+#       result.add p
 
 
 type
   LookUp = Table[string, VNode]
-  Internal = tuple
-    module, instance: string
+  
+  PortDir = enum
+    pdInput, pdOutput
+
+  Instantiation = object
+    name, module: string
     args: seq[string]
 
+  VModule = object
+    name: string
+    ports: seq[tuple[kind: PortDir, name: string]]
+    inputs, outputs: HashSet[string]
+    registers: seq[string]
+    internals: seq[Instantiation]
+    defines: LookUp
 
-func `%`(gate: Internal): JsonNode =
-  %*{
-    "module": gate.module,
-    "instance": gate.instance,
-    "args": gate.args
-  }
-
-func toVNumber(n: SomeNumber): VNode =
-  VNode(kind: vnkNumber, digits: $n)
-
-proc resolveAliasses(s: string, lkp: LookUp): string =
-  for k, v in lkp:
-    let repl = '`' & k
-    if repl in s:
-      return s.replace(repl, $v)
-  s
-
-let calc = newEvaluator()
-func rng2str(vn: VNode, lookup: LookUp): VNode =
-  {.cast(nosideEffect).}:
-    let
-      h = calc.eval(resolveAliasses($vn.head, lookup)).toInt.toVNumber
-      t = calc.eval(resolveAliasses($vn.tail, lookup)).toInt.toVNumber
-
-    VNode(kind: vnkRange, head: h, tail: t)
-
-
-proc allModules(filePaths: seq[string]): tuple[modules: seq[VNode],
-    lookup: LookUp] =
-  for fp in filePaths:
-    let nodes = parseVerilog readfile fp
-    for n in nodes:
-      case n.kind
-      of vnkModule:
-        result.modules.add n
-      of vnkDefine:
-        result.lookup[$n.ident] = n.value
-      else:
-        discard
-
-proc getVfiles(dir: string): seq[string] =
-  for p in walkDirRec dir:
-    let (_, name, ext) = splitFile p
-    if ext == ".v" and not name.startsWith "config":
-      result.add p
-
-func genJson(m: VNode, definedLookups: LookUp): JsonNode =
-
-  var
-    lookup = definedLookups
-
-    inputs, outputs, registers: seq[string]
-    params: seq[string]
-    internals: seq[Internal]
-
-  for p in m.params:
-    params.add $p
+func extractModule(m: VNode): VModule =
+  let params = m.params.mapIt $it
+  result.name = $m.name
 
   for vn in m.children[^1].children:
+    result.ports.setLen params.len
+
     case vn.kind:
     of vnkDeclare:
-      let bus =
-        if issome vn.bus:
-          '[' & $vn.bus.get & ']'
-        else:
-          ""
       for id in vn.idents:
-        if id.kind == vnkBracketExpr:
-          id.index = rng2str(id.index, lookup)
+        let name = $id
 
-        let pp = bus & $id
+        template addPort(kind, label): untyped =
+          result.ports[params.find label] = (kind, label)
 
         case vn.dkind:
         of vdkInput:
-          inputs.add pp
+          addPort pdInput, name
+          result.inputs.incl name
 
         of vdkOutput:
-          outputs.add pp
+          addPort pdOutput, name
+          result.outputs.incl name
 
         of vdkInOut:
-          inputs.add pp
-          outputs.add pp
+          err "'inout' is not supported"
 
         else:
-          registers.add pp
+          result.registers.add name
 
     of vnkDefine:
-      lookup[$vn.ident] = vn.value
+      result.defines[$vn.ident] = vn.value
 
     of vnkInstanciate:
-      internals.add ($vn.module, $vn.instanceIdent, vn.children.mapit($it))
+      result.internals.add Instantiation(
+        module: $vn.module,
+        name: $vn.instanceIdent,
+        args: vn.children.mapit $it)
 
     else:
       discard
 
-  %*{
-    "name": $m.name,
-    "params": params,
-    "inputs": inputs,
-    "outputs": outputs,
-    "registers": registers,
-    "internals": internals
-  }
 
-proc genJsonFrom(dir: string): JsonNode =
-  result = %*[]
-  let (modules, lookup) = allModules getVfiles dir
+proc allModules(filePaths: openArray[string]):
+  tuple[modules: seq[VModule], lookup: LookUp] =
 
-  for m in modules:
-    result.add genJson(m, lookup)
+  for fp in filePaths:
+    let nodes = parseVerilog readfile fp
+    for n in nodes:
+      case n.kind
+      of vnkDefine:
+        result.lookup[$n.ident] = n.value
+      of vnkModule:
+        result.modules.add extractModule n
+      else:
+        discard
 
+
+# ------------------------------------------
 
 when isMainModule:
-  echo pretty genJsonFrom "./temp"
+  print allModules ["./temp/sample.v"]
