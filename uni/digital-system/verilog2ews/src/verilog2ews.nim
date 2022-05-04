@@ -27,7 +27,6 @@ type
 
   LookUp = Table[string, VNode]
 
-
 type
   InputDepth = seq[Option[int]]
 
@@ -180,23 +179,28 @@ func genWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
 # ------------------------------------------
 
 template s(thing): untyped = toLispSymbol thing
-template l(thing): untyped = toLispNode thing
+template `~`(thing): untyped = toLispNode thing
 
 template toLines(seqOfSomething): untyped =
   seqOfSomething.join "\n"
 
+# ------------------------------------------
 
-proc `project.eas`(designs: seq[tuple[name, libid: string]]): string =
+const
+  `toolflow.xml` = readFile "./assets/toolflow.xml"
+  `workspace.eas` = readfile "./assets/workspace.eas"
+
+proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
   let
-    id = $ genoid()
-    ds = designs.
-      mapIt(newLispList(s "DESIGN", l it.name, l it.libid)).
+    obid = $ genoid()
+    libraries = designs.
+      mapIt(newLispList(s"DESIGN", ~it.name, ~it.obid)).
       toLines
 
   fmt"""
   (DATABASE_VERSION 17)
   (PROJECT_FILE
-    (OBID "proj{id}")
+    (OBID "proj{obid}")
       (PROPERTIES
       (PROPERTY "ArchFileFormatSpec" "%e_%a.%x")
       (PROPERTY "BodyFileFormatSpec" "%e_%a.%x")
@@ -224,9 +228,9 @@ proc `project.eas`(designs: seq[tuple[name, libid: string]]): string =
       (PROPERTY "VhdlExt" "vhd")
       (PROPERTY "VhdlFileFormatCase" "As is")
     )
-    {ds}
+    {libraries}
     (PACKAGE
-      (OBID "pack{id}")
+      (OBID "pack{obid}")
       (LIBRARY "ieee")
       (NAME "std_logic_1164")
     )
@@ -234,19 +238,14 @@ proc `project.eas`(designs: seq[tuple[name, libid: string]]): string =
   (END_OF_FILE)
   """
 
-const
-  `toolflow.xml` = readFile "./assets/toolflow.xml"
-  `workspace.eas` = readfile "./assets/workspace.eas"
-
-
-func `library.eas`(components: seq[tuple[name, id: string]]): string =
-  let cps = components.
-    mapIt(newLispList(s"ENTITY", l it.name, l it.id)).
+func `library.eas`(obid: string, entities: seq[tuple[name, obid: string]]): string =
+  let es = entities.
+    mapIt(newLispList(s"ENTITY", ~it.name, ~it.obid)).
     toLines
 
   fmt"""(DATABASE_VERSION 17)
   (DESIGN_FILE
-    (OBID "libf7000010414227260c80b4d258651712")
+    (OBID "{obid}")
     (PROPERTIES
       (PROPERTY "OUTPUT_DIR" "design.hdl")
       (PROPERTY "OUTPUT_FILE" "design.vhd")
@@ -258,10 +257,11 @@ func `library.eas`(components: seq[tuple[name, id: string]]): string =
     )
     (COMPONENT_LIB 0)
     (NAME "design")
-    {cps}
+    {es}
   )
   (END_OF_FILE)
   """
+
 
 proc genComponent(name: string, sheetWidth, sheetHeight: int): string =
   let fileId = $genoid()
