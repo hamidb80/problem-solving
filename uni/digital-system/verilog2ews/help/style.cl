@@ -1,20 +1,24 @@
-(GEOMETRY crop-x crop-y width height) ;; the "thing" IS placned in the center of cropped rectangle
+(GEOMETRY offset-x offset-y width height) ;; the "thing" IS placned in the center of rectangle
 (POSITION x y)
 (SCALE n)
-(SIDE
-  0 ;; down to up
-  1 ;; left to right
-  2 ;; up to down
-  3 ;; right to left
+(SIDE 
+  ;; for INPUT
+  0 ;; top to bottom
+  1 ;; right to left
+  2 ;; bottom to top
+  3 ;; left to right
   
-    2
-  1   3
     0
+  3   1
+    2
 ) 
 (ALIGNMENT 
   8 7 6
   5 4 3 
-  2 1 0 
+  2 1 0
+
+  ;; 8 -> top left
+  ;; 4 -> center
 )
 
 ;; (FORMAT ???)
@@ -27,4 +31,7 @@
     4 ;; [] buffer
     5 ;; <> ???
   )
+
+  (COLOR_LINE 0..71)
+  
 )
