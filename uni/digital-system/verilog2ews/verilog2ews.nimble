@@ -12,5 +12,5 @@ bin           = @["verilog2ews"]
 
 requires "nim >= 1.6.4"
 requires "mathexpr == 1.3.2"
-requires "https://github.com/hamidb80/ews == 0.1.2"
+requires "https://github.com/hamidb80/ews == 0.2.1"
 requires "https://github.com/hamidb80/vverilog == 0.0.2"

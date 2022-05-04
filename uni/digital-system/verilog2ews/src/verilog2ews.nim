@@ -192,7 +192,7 @@ const
 
 proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
   let
-    obid = $ genoid()
+    obid = $genoid()
     libraries = designs.
       mapIt(newLispList(s"DESIGN", ~it.name, ~it.obid)).
       toLines
@@ -238,7 +238,9 @@ proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
   (END_OF_FILE)
   """
 
-func `library.eas`(obid: string, entities: seq[tuple[name, obid: string]]): string =
+func `library.eas`(obid: string,
+  entities: seq[tuple[name, obid: string]]): string =
+  
   let es = entities.
     mapIt(newLispList(s"ENTITY", ~it.name, ~it.obid)).
     toLines
@@ -263,219 +265,102 @@ func `library.eas`(obid: string, entities: seq[tuple[name, obid: string]]): stri
   """
 
 
-proc genComponent(name: string, sheetWidth, sheetHeight: int): string =
-  let fileId = $genoid()
+proc genComponent(name, lib, entity: string, label: string,
+  x, y, width, height: int): string =
 
-  fmt"""(DATABASE_VERSION 17)
+  let
+    obid = $genOid() 
+    fileId = $genoid()
+    ports = ""
+
+  fmt"""(COMPONENT
+    (OBID "{obid}") 
+    (ENTITY "{lib}" "{entity}")
+
+    (HDL_IDENT 
+      (NAME "{name}")
+      (USERNAME 1)
+    )
+
+    (GEOMETRY {x} {y} {x + width} {y + height})
+    (SIDE 0)
+    (LABEL
+      (POSITION {x + width div 2} {y})
+      (SCALE 100)
+      (COLOR_LINE 0)
+      (SIDE 3)
+      (ALIGNMENT 7)
+      (FORMAT 13)
+      (TEXT {label})
+    )
+    
+    { ports }
+  )"""
+
+proc genEntity(entryId, name: string, width, height, sheetWidth, sheetHeight: int): string =
+  let 
+    archId = $genOid()  
+    archTag = "structure"
+    schemaId = $genOid()
+
+    portsDef = ""
+    portsImpl = ""
+    components = ""
+    nets = ""
+  
+  fmt"""
+  (DATABASE_VERSION 17)
   (ENTITY_FILE
     (ENTITY
-      (OBID "entf7000010835227260c80b4d289651712")
+      (OBID "{entryId}")
       (PROPERTIES
         (PROPERTY "STAMP_PLATFORM" "PC")
         (PROPERTY "STAMP_REVISION" "Revision 4")
-        (PROPERTY "STAMP_TIME" "Wed May 04 11:33:23 2022")
+        (PROPERTY "STAMP_TIME" "Wed May 04 16:34:31 2022")
         (PROPERTY "STAMP_TOOL" "Ease")
         (PROPERTY "STAMP_VERSION" "8.0")
       )
+      
       (HDL_IDENT
-        (NAME {name})
+        (NAME "{name}")
         (USERNAME 1)
       )
-      (SIDE 0)
+      
+      (GEOMETRY 0 0 {width} {height})
       (HDL 1)
       (EXTERNAL 0)
       (OBJSTAMP
-        (DESIGNER "HamidB80")
-        (CREATED 1651647800 "Wed May 04 11:33:20 2022")
-        (MODIFIED 1651647800 "Wed May 04 11:33:20 2022")
+        (DESIGNER "hamidb80")
+        (CREATED 1651677890 "Wed May 04 19:54:50 2022")
+        (MODIFIED 1651677907 "Wed May 04 19:55:07 2022")
       )
-      (PORT
-        (OBID "eprtf700001065a527260c80b4d2fb651712")
-        (PROPERTIES
-          (PROPERTY "SensitivityList" "Yes")
-        )
-        (HDL_IDENT
-          (NAME "INP1")
-          (USERNAME 1)
-          (ATTRIBUTES
-            (MODE 1)
-          )
-        )
-        (GEOMETRY -40 88 40 168)
-        (SIDE 3)
-        (LABEL
-          (POSITION 64 128)
-          (SCALE 96)
-          (COLOR_LINE 0)
-          (SIDE 3)
-          (ALIGNMENT 3)
-          (FORMAT 35)
-          (TEXT "INP1")
-        )
-      )
-      (ARCH_DECLARATION 1 "arch{fileId}" "structure")
+
+      { portsDef }
+
+      (ARCH_DECLARATION 1 "{archId}" "{archTag}")
     )
     (ARCH_DEFINITION
-      (OBID "arch{fileId}")
+      (OBID "{archId}")
       (HDL_IDENT
-        (NAME "structure")
+        (NAME "{archTag}")
         (USERNAME 1)
       )
+
       (TYPE 1)
       (SCHEMATIC
-        (OBID "diag{fileid}")
+        (OBID "{schemaId}")
         (PROPERTIES
           (PROPERTY "SheetInfoFontSize" "8")
         )
         (SHEETSIZE 0 0 {sheetWidth} {sheetHeight})
-        (PORT
-          (OBID "aprtf700001065a527260c80b4d22c651712")
-          (HDL_IDENT
-            (NAME "INP1")
-            (USERNAME 1)
-            (ATTRIBUTES
-              (MODE 1)
-            )
-          )
-          (GEOMETRY 664 792 744 872)
-          (SIDE 1)
-          (LABEL
-            (POSITION 640 832)
-            (SCALE 96)
-            (COLOR_LINE 0)
-            (SIDE 3)
-            (ALIGNMENT 5)
-            (FORMAT 35)
-            (TEXT "INP1")
-          )
-          (PORT "eprtf700001065a527260c80b4d2fb651712")
-          (CONNECTION
-            (OBID "nconf700001065a527260c80b4d23c651712")
-            (GEOMETRY 768 832 768 832)
-            (SIDE 2)
-            (LABEL
-              (POSITION 768 864)
-              (SCALE 96)
-              (COLOR_LINE 0)
-              (SIDE 1)
-              (ALIGNMENT 0)
-              (FORMAT 128)
-            )
-          )
-        )
-      )
-    )
-
-  )
-  (END_OF_FILE)
-  """
-
-proc genTopLevel(): string =
-  let cmpnts = """
-    (COMPONENT
-      (OBID "compf7000010835227260c80b4d2a9651712")
-      (HDL_IDENT
-        (NAME "comp")
-        (USERNAME 1)
-      )
-      (GEOMETRY 1344 768 3008 2624)
-      (SIDE 0)
-      (LABEL
-        (POSITION 1344 704)
-        (SCALE 128)
-        (COLOR_LINE 0)
-        (SIDE 3)
-        (ALIGNMENT 6)
-        (FORMAT 13)
-        (TEXT "comp:c1:structure(B)")
-      )
-      (ENTITY "libf7000010414227260c80b4d258651712" "entf7000010835227260c80b4d289651712")
-      (PORT
-        (OBID "cprtf700001065a527260c80b4d20c651712")
-        (HDL_IDENT
-          (NAME "INP1")
-          (USERNAME 1)
-          (ATTRIBUTES
-            (MODE 1)
-          )
-        )
-        (GEOMETRY 1304 856 1384 936)
-        (SIDE 3)
-        (LABEL
-          (POSITION 1408 896)
-          (SCALE 96)
-          (COLOR_LINE 0)
-          (SIDE 3)
-          (ALIGNMENT 3)
-          (FORMAT 35)
-          (TEXT "INP1")
-        )
-        (PORT "eprtf700001065a527260c80b4d2fb651712")
-        (CONNECTION
-          (OBID "nconf700001065a527260c80b4d21c651712")
-          (GEOMETRY 1280 896 1280 896)
-          (SIDE 0)
-          (LABEL
-            (POSITION 1280 864)
-            (SCALE 96)
-            (COLOR_LINE 0)
-            (SIDE 3)
-            (ALIGNMENT 8)
-            (FORMAT 128)
-          )
-        )
-      )
-    )
-  """
-
-  fmt"""(DATABASE_VERSION 17)
-  (ENTITY_FILE
-    (ENTITY
-      (OBID "entf7000010414227260c80b4d278651712")
-      (PROPERTIES
-        (PROPERTY "STAMP_PLATFORM" "PC")
-        (PROPERTY "STAMP_REVISION" "Revision 4")
-        (PROPERTY "STAMP_TIME" "Wed May 04 11:33:23 2022")
-        (PROPERTY "STAMP_TOOL" "Ease")
-        (PROPERTY "STAMP_VERSION" "8.0")
-      )
-      (HDL_IDENT
-        (NAME "Toplevel")
-        (USERNAME 1)
-      )
-      (GEOMETRY 0 0 576 576)
-      (SIDE 0)
-      (HDL 1)
-      (EXTERNAL 0)
-      (OBJSTAMP
-        (DESIGNER "HamidB80")
-        (CREATED 1651647508 "Wed May 04 11:28:28 2022")
-        (MODIFIED 1651647800 "Wed May 04 11:33:20 2022")
-      )
-      (ARCH_DECLARATION 1 "archf7000010414227260c80b4d288651712" "structure")
-    )
-    (ARCH_DEFINITION
-      (OBID "archf7000010414227260c80b4d288651712")
-      (HDL_IDENT
-        (NAME "structure")
-        (USERNAME 1)
-      )
-      (TYPE 1)
-      (SCHEMATIC
-        (OBID "diagf7000010414227260c80b4d268651712")
-        (PROPERTIES
-          (PROPERTY "SheetInfoFontSize" "8")
-        )
-        (SHEETSIZE 0 0 6400 4266)
-        {cmpnts}
+        { portsImpl }
+        { components }
+        { nets }
       )
     )
   )
   (END_OF_FILE)
-
   """
-
-
 
 proc genProject(path, projectName: string) =
   let
@@ -487,7 +372,7 @@ proc genProject(path, projectName: string) =
   writeFile dirPath / "workspace.eas", `workspace.eas`
 
   createDir dbPath
-  writeFile dbPath / "project.eas", ""
+  writeFile dbPath / "project.eas", `project.eas`(@[])
 
 
 proc getVfiles(dirPath: string): seq[string] =
