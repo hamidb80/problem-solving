@@ -1,4 +1,4 @@
-import std/[os, strutils, tables, options, sequtils, sets, options]
+import std/[os, strutils, tables, sequtils, sets, options, lenientops]
 
 # import mathexpr
 # import ews
@@ -49,13 +49,21 @@ type
   ModulesTable = Table[string, VModule]
 
 
-  # Point = tuple[x,y: int]
-  # Line = HSlice[Point, Point]
-  # Wire = seq[Line]
-
-  BluePrint = object
-    map: seq[seq[Instance]]
+  BluePrint = seq[seq[string]]
     # connections: seq[Wire]
+
+
+  Point = tuple[x, y: int]
+  Line = HSlice[Point, Point]
+  Wire = seq[Line]
+
+  # Component = ref object
+  #   width, height: int
+  #   inputs, outputs: seq[string]
+
+
+  Schematic = object
+    wires: seq[Wire]
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
@@ -70,7 +78,7 @@ iterator outputs(m: VModule): lent string =
   searchPort m, pdOutput
 
 
-template safe(body): untyped =
+template safe(body): untyped {.used.} =
   {.cast(gcsafe).}:
     {.cast(nosideEffect).}:
       body
@@ -129,6 +137,9 @@ proc extractModulesFrom(filePaths: openArray[string]):
 
 func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]] =
   ## input -> instance names
+  for o in m.outputs:
+    result[o] = @[]
+
   for name, component in m.internals:
     for i, arg in component.args:
       if modules[component.module].ports[i].kind == pdInput:
@@ -136,6 +147,7 @@ func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]
           result[arg] = @[]
 
         result[arg].add name
+
 
 func initConnDepth(instances: Table[string, Instance],
     modules: ModulesTable): Table[string, InputDepth] =
@@ -145,34 +157,70 @@ func initConnDepth(instances: Table[string, Instance],
 
 
 func genBlueprintImpl(
-  inputs: seq[string], conns: Table[string, seq[string]],
+  inp: string, conns: Table[string, seq[string]],
   m: VModule, modules: ModulesTable,
   depth: int, result: var Table[string, InputDepth]) =
 
-  for inp in inputs:
-    for insName in conns[inp]:
-      result[insName][m.internals[insName].args.find inp] = some depth
-      
-      for i, o in m.internals[insName].args:
-        if modules[m.internals[insName].module].ports[i].kind == pdOutput:
-          genBlueprintImpl conns[o], conns, m, modules, depth+1, result
+  for insName in conns[inp]:
+    ## FIXME set max for loop styles
+    result[insName][m.internals[insName].args.find inp] = some depth
+
+    for i, o in m.internals[insName].args:
+      if modules[m.internals[insName].module].ports[i].kind == pdOutput:
+        genBlueprintImpl o, conns, m, modules, depth+1, result
 
 
 
 func genBlueprint(m: VModule, modules: ModulesTable): BluePrint =
   let conns = initConnTable(m, modules)
-  var ds = initConnDepth(m.internals, modules)
+  # safe print conns
 
-  safe print conns
+  var insInputsDepth = initConnDepth(m.internals, modules)
+  for inp in m.inputs:
+    genBlueprintImpl inp, conns, m, modules, 0, insInputsDepth
 
-  genBlueprintImpl m.inputs.toseq, conns, m, modules, 0, ds
+  var insDepth: Table[string, int]
+  for insName, inputsDepth in insInputsDepth:
+    insDepth[insName] = inputsDepth.filterIt(issome it).mapIt(it.get).max()
 
-  safe print ds
+  # safe print insDepth
+
+  for insName, depth in insDepth:
+    if depth+1 > result.len:
+      result.setlen depth+1
+
+    result[depth].add insName
+  # safe print result
+
+
+# func genComponent
+
+func genLines(points: openArray[Point]): Wire =
+  var lp = points[0]
+
+  for i in 1 .. points.high:
+    let p = points[i]
+    result.add lp..p
+    lp = p
+
+func genWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
+  let 
+    dx = b.x - a.x
+    o = bias.float
+    xcenter= toInt( a.x + dx * o)
+
+  genLines [
+    a, (xcenter, a.y), (xcenter, b.y), b
+  ]
+
+
+func genSchematic(m: VModule, bp: BluePrint): Schematic =
+  discard
 
 # ------------------------------------------
 
 when isMainModule:
   let (modules, globalDefines) = extractModulesFrom ["./temp/sample.v"]
-  print modules
+  # print modules
 
   let bp = genBlueprint(modules["TopLevel"], modules)
