@@ -6,22 +6,17 @@ import ews
 import vverilog
 import print
 
+import ./conventions
+
 # ----------------------------------------------
 
-template err(msg): untyped =
-  raise newException(ValueError, msg)
-
-# let calc = newEvaluator()
-
-# proc getVfiles(dir: string): seq[string] =
-#   for p in walkDirRec dir:
-#     let (_, name, ext) = splitFile p
-#     if ext == ".v" and not name.startsWith "config":
-#       result.add p
-
-
 type
-  LookUp = Table[string, VNode]
+  ModulesTable = Table[string, VModule]
+
+  VModule = object
+    ports: seq[tuple[kind: PortDir, name: string]]
+    internals: Table[string, Instance]
+    defines: LookUp
 
   PortDir = enum
     pdInput, pdOutput
@@ -30,29 +25,17 @@ type
     module: string
     args: seq[string]
 
+  LookUp = Table[string, VNode]
+
+
+type
   InputDepth = seq[Option[int]]
 
-  VModule = object
-    ports: seq[tuple[kind: PortDir, name: string]]
-    registers: HashSet[string]
-    internals: Table[string, Instance]
-    defines: LookUp
-
-  ModulesTable = Table[string, VModule]
-
-
   BluePrint = seq[seq[string]]
-    # connections: seq[Wire]
-
 
   Point = tuple[x, y: int]
   Line = HSlice[Point, Point]
   Wire = seq[Line]
-
-  # Component = ref object
-  #   width, height: int
-  #   inputs, outputs: seq[string]
-
 
   Schematic = object
     wires: seq[Wire]
@@ -68,12 +51,6 @@ iterator inputs(m: VModule): lent string =
 
 iterator outputs(m: VModule): lent string =
   searchPort m, pdOutput
-
-
-template safe(body): untyped {.used.} =
-  {.cast(gcsafe).}:
-    {.cast(nosideEffect).}:
-      body
 
 
 func toVModule(m: VNode): VModule =
@@ -101,7 +78,7 @@ func toVModule(m: VNode): VModule =
           err "'inout' is not supported"
 
         else:
-          result.registers.incl name
+          discard
 
     of vnkDefine:
       result.defines[$vn.ident] = vn.value
@@ -113,7 +90,7 @@ func toVModule(m: VNode): VModule =
     else:
       discard
 
-proc extractModulesFrom(filePaths: openArray[string]):
+proc extractModulesFromFiles(filePaths: openArray[string]):
   tuple[modules: ModulesTable, lookup: LookUp] =
 
   for fp in filePaths:
@@ -139,7 +116,6 @@ func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]
           result[arg] = @[]
 
         result[arg].add name
-
 
 func initConnDepth(instances: Table[string, Instance],
     modules: ModulesTable): Table[string, InputDepth] =
@@ -201,10 +177,6 @@ func genWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
     a, (xcenter, a.y), (xcenter, b.y), b
   ]
 
-
-# func genSchematic(m: VModule, bp: BluePrint): Schematic =
-#   discard
-
 # ------------------------------------------
 
 template s(thing): untyped = toLispSymbol thing
@@ -214,12 +186,8 @@ template toLines(seqOfSomething): untyped =
   seqOfSomething.join "\n"
 
 
-const
-  sheet_width = 6000
-  sheet_height = 4000
-
 proc `project.eas`(designs: seq[tuple[name, libid: string]]): string =
-  let 
+  let
     id = $ genoid()
     ds = designs.
       mapIt(newLispList(s "DESIGN", l it.name, l it.libid)).
@@ -266,14 +234,14 @@ proc `project.eas`(designs: seq[tuple[name, libid: string]]): string =
   (END_OF_FILE)
   """
 
-const 
+const
   `toolflow.xml` = readFile "./assets/toolflow.xml"
   `workspace.eas` = readfile "./assets/workspace.eas"
 
 
-func genLibrary(components: seq[tuple[name, id: string]]): string =
+func `library.eas`(components: seq[tuple[name, id: string]]): string =
   let cps = components.
-    mapIt(newLispList(s"ENTITY", l it.name, l it.id))
+    mapIt(newLispList(s"ENTITY", l it.name, l it.id)).
     toLines
 
   fmt"""(DATABASE_VERSION 17)
@@ -295,7 +263,7 @@ func genLibrary(components: seq[tuple[name, id: string]]): string =
   (END_OF_FILE)
   """
 
-proc genComponent(name: string): string =
+proc genComponent(name: string, sheetWidth, sheetHeight: int): string =
   let fileId = $genoid()
 
   fmt"""(DATABASE_VERSION 17)
@@ -359,7 +327,7 @@ proc genComponent(name: string): string =
         (PROPERTIES
           (PROPERTY "SheetInfoFontSize" "8")
         )
-        (SHEETSIZE 0 0 {sheet_width} {sheet_height})
+        (SHEETSIZE 0 0 {sheetWidth} {sheetHeight})
         (PORT
           (OBID "aprtf700001065a527260c80b4d22c651712")
           (HDL_IDENT
@@ -510,23 +478,29 @@ proc genTopLevel(): string =
 
 
 proc genProject(path, projectName: string) =
-  let 
+  let
     dirPath = path / projectName & ".ews"
     dbPath = dirPath / "ease.db"
 
   createDir dirPath
   writeFile dirPath / "toolflow.xml", `toolflow.xml`
   writeFile dirPath / "workspace.eas", `workspace.eas`
-  
-  createDir dbPath 
+
+  createDir dbPath
   writeFile dbPath / "project.eas", ""
 
+
+proc getVfiles(dirPath: string): seq[string] =
+  for p in walkDirRec dirPath:
+    let (_, name, ext) = splitFile p
+    if ext == ".v" and not name.startsWith "config":
+      result.add p
 
 
 # ------------------------------------------
 
 when isMainModule:
-  let (modules, globalDefines) = extractModulesFrom ["./temp/sample.v"]
+  let (modules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
   # print modules
 
   let bp = genBlueprint(modules["TopLevel"], modules)
