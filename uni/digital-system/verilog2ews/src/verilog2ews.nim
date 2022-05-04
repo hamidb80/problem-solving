@@ -1,6 +1,6 @@
-import std/[os, strutils, tables, options, sequtils, sets]
+import std/[os, strutils, tables, options, sequtils, sets, options]
 
-import mathexpr
+# import mathexpr
 # import ews
 import vverilog
 import print
@@ -30,7 +30,7 @@ template err(msg): untyped =
 
 type
   LookUp = Table[string, VNode]
-  
+
   PortDir = enum
     pdInput, pdOutput
 
@@ -38,17 +38,41 @@ type
     name, module: string
     args: seq[string]
 
+  Lvl = object
+    inputsDepth: seq[Option[int]]
+
   VModule = object
-    name: string
     ports: seq[tuple[kind: PortDir, name: string]]
-    inputs, outputs: HashSet[string]
-    registers: seq[string]
+    # inputs, outputs: HashSet[string]
+    registers: HashSet[string]
     internals: seq[Instantiation]
     defines: LookUp
 
+  ModulesMap = Table[string, VModule]
+
+
+  # Point = tuple[x,y: int]
+  # Line = HSlice[Point, Point]
+  # Wire = seq[Line]
+
+  BluePrint = object
+    map: seq[seq[Instantiation]]
+    # connections: seq[Wire]
+
+template searchPort(m: VModule, pd: PortDir): untyped =
+  for p in m.ports:
+    if p.kind == pd:
+      yield p.name
+
+iterator inputs(m: VModule): lent string =
+  searchPort m, pdInput
+
+iterator outputs(m: VModule): lent string =
+  searchPort m, pdOutput
+
+
 func extractModule(m: VNode): VModule =
   let params = m.params.mapIt $it
-  result.name = $m.name
 
   for vn in m.children[^1].children:
     result.ports.setLen params.len
@@ -64,17 +88,17 @@ func extractModule(m: VNode): VModule =
         case vn.dkind:
         of vdkInput:
           addPort pdInput, name
-          result.inputs.incl name
+          # result.inputs.incl name
 
         of vdkOutput:
           addPort pdOutput, name
-          result.outputs.incl name
+          # result.outputs.incl name
 
         of vdkInOut:
           err "'inout' is not supported"
 
         else:
-          result.registers.add name
+          result.registers.incl name
 
     of vnkDefine:
       result.defines[$vn.ident] = vn.value
@@ -88,9 +112,8 @@ func extractModule(m: VNode): VModule =
     else:
       discard
 
-
 proc allModules(filePaths: openArray[string]):
-  tuple[modules: seq[VModule], lookup: LookUp] =
+  tuple[modules: ModulesMap, lookup: LookUp] =
 
   for fp in filePaths:
     let nodes = parseVerilog readfile fp
@@ -99,12 +122,31 @@ proc allModules(filePaths: openArray[string]):
       of vnkDefine:
         result.lookup[$n.ident] = n.value
       of vnkModule:
-        result.modules.add extractModule n
+        result.modules[$n.name] = extractModule n
       else:
         discard
 
+func initConnTable(m: VModule, modules: ModulesMap): Table[string, seq[string]] =
+  ## input -> instance names
+  for component in m.internals:
+    for i, arg in component.args:
+      if modules[component.module].ports[i].kind == pdInput:
+        if arg notin result:
+          result[arg] = @[]
+
+        result[arg].add component.name
+
+func genBlueprint(m: VModule, modules: ModulesMap): BluePrint =
+  let conns = initConnTable(m, modules)
+  # var intrnls = newSeqOfCap[](m.internals.len)
+
+  for inp in m.inputs:
+    discard
 
 # ------------------------------------------
 
 when isMainModule:
-  print allModules ["./temp/sample.v"]
+  let (modules, globalDefines) = allModules ["./temp/sample.v"]
+  print modules
+
+  let bp = genBlueprint(modules["TopLevel"], modules)
