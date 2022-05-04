@@ -4,7 +4,7 @@ import std/[os, strutils, tables, sequtils, sets, options, lenientops,
 # import mathexpr
 import ews
 import vverilog
-import print
+# import print
 
 import ./conventions
 
