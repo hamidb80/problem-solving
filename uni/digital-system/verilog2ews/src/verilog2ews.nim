@@ -34,21 +34,19 @@ type
   PortDir = enum
     pdInput, pdOutput
 
-  Instantiation = object
-    name, module: string
+  Instance = object
+    module: string
     args: seq[string]
 
-  Lvl = object
-    inputsDepth: seq[Option[int]]
+  InputDepth = seq[Option[int]]
 
   VModule = object
     ports: seq[tuple[kind: PortDir, name: string]]
-    # inputs, outputs: HashSet[string]
     registers: HashSet[string]
-    internals: seq[Instantiation]
+    internals: Table[string, Instance]
     defines: LookUp
 
-  ModulesMap = Table[string, VModule]
+  ModulesTable = Table[string, VModule]
 
 
   # Point = tuple[x,y: int]
@@ -56,8 +54,9 @@ type
   # Wire = seq[Line]
 
   BluePrint = object
-    map: seq[seq[Instantiation]]
+    map: seq[seq[Instance]]
     # connections: seq[Wire]
+
 
 template searchPort(m: VModule, pd: PortDir): untyped =
   for p in m.ports:
@@ -71,7 +70,13 @@ iterator outputs(m: VModule): lent string =
   searchPort m, pdOutput
 
 
-func extractModule(m: VNode): VModule =
+template safe(body): untyped =
+  {.cast(gcsafe).}:
+    {.cast(nosideEffect).}:
+      body
+
+
+func toVModule(m: VNode): VModule =
   let params = m.params.mapIt $it
 
   for vn in m.children[^1].children:
@@ -88,11 +93,9 @@ func extractModule(m: VNode): VModule =
         case vn.dkind:
         of vdkInput:
           addPort pdInput, name
-          # result.inputs.incl name
 
         of vdkOutput:
           addPort pdOutput, name
-          # result.outputs.incl name
 
         of vdkInOut:
           err "'inout' is not supported"
@@ -104,16 +107,14 @@ func extractModule(m: VNode): VModule =
       result.defines[$vn.ident] = vn.value
 
     of vnkInstanciate:
-      result.internals.add Instantiation(
-        module: $vn.module,
-        name: $vn.instanceIdent,
-        args: vn.children.mapit $it)
+      result.internals[$vn.instanceIdent] =
+        Instance(module: $vn.module, args: vn.children.mapit $it)
 
     else:
       discard
 
-proc allModules(filePaths: openArray[string]):
-  tuple[modules: ModulesMap, lookup: LookUp] =
+proc extractModulesFrom(filePaths: openArray[string]):
+  tuple[modules: ModulesTable, lookup: LookUp] =
 
   for fp in filePaths:
     let nodes = parseVerilog readfile fp
@@ -122,31 +123,56 @@ proc allModules(filePaths: openArray[string]):
       of vnkDefine:
         result.lookup[$n.ident] = n.value
       of vnkModule:
-        result.modules[$n.name] = extractModule n
+        result.modules[$n.name] = toVModule n
       else:
         discard
 
-func initConnTable(m: VModule, modules: ModulesMap): Table[string, seq[string]] =
+func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]] =
   ## input -> instance names
-  for component in m.internals:
+  for name, component in m.internals:
     for i, arg in component.args:
       if modules[component.module].ports[i].kind == pdInput:
         if arg notin result:
           result[arg] = @[]
 
-        result[arg].add component.name
+        result[arg].add name
 
-func genBlueprint(m: VModule, modules: ModulesMap): BluePrint =
+func initConnDepth(instances: Table[string, Instance],
+    modules: ModulesTable): Table[string, InputDepth] =
+
+  for name, ins in instances:
+    result[name] = newSeqWith(modules[ins.module].ports.len, none int)
+
+
+func genBlueprintImpl(
+  inputs: seq[string], conns: Table[string, seq[string]],
+  m: VModule, modules: ModulesTable,
+  depth: int, result: var Table[string, InputDepth]) =
+
+  for inp in inputs:
+    for insName in conns[inp]:
+      result[insName][m.internals[insName].args.find inp] = some depth
+      
+      for i, o in m.internals[insName].args:
+        if modules[m.internals[insName].module].ports[i].kind == pdOutput:
+          genBlueprintImpl conns[o], conns, m, modules, depth+1, result
+
+
+
+func genBlueprint(m: VModule, modules: ModulesTable): BluePrint =
   let conns = initConnTable(m, modules)
-  # var intrnls = newSeqOfCap[](m.internals.len)
+  var ds = initConnDepth(m.internals, modules)
 
-  for inp in m.inputs:
-    discard
+  safe print conns
+
+  genBlueprintImpl m.inputs.toseq, conns, m, modules, 0, ds
+
+  safe print ds
 
 # ------------------------------------------
 
 when isMainModule:
-  let (modules, globalDefines) = allModules ["./temp/sample.v"]
+  let (modules, globalDefines) = extractModulesFrom ["./temp/sample.v"]
   print modules
 
   let bp = genBlueprint(modules["TopLevel"], modules)
