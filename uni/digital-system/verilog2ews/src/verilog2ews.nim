@@ -19,7 +19,7 @@ type
     defines: LookUp
 
   PortDir = enum
-    pdInput, pdOutput
+    pdInput = 1, pdOutput = 2
 
   Instance = object
     module: string
@@ -27,7 +27,8 @@ type
 
   LookUp = Table[string, VNode]
 
-type
+
+
   InputDepth = seq[Option[int]]
 
   BluePrint = seq[seq[string]]
@@ -35,6 +36,33 @@ type
   Point = tuple[x, y: int]
   Line = HSlice[Point, Point]
   Wire = seq[Line]
+
+
+  Alignment = enum
+    BottomRight = 0
+    Bottom = 1
+    BottomLeft = 2
+    Right = 3
+    Center = 4
+    Left = 5
+    TopRight = 6
+    Top = 7
+    TopLeft = 8
+    # 8 7 6
+    # 5 4 3
+    # 2 1 0
+
+  Side = enum
+    TopToBottom
+    RightToLeft
+    BottomToTop
+    LeftToRight
+    #   0
+    # 3   1
+    #   2
+
+  Color = range[0..71]
+
 
   Schematic = object
     wires: seq[Wire]
@@ -166,7 +194,7 @@ func genLines(points: openArray[Point]): Wire =
     result.add lp..p
     lp = p
 
-func genWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
+func toWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
   let
     dx = b.x - a.x
     o = bias.float
@@ -240,7 +268,7 @@ proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
 
 func `library.eas`(obid: string,
   entities: seq[tuple[name, obid: string]]): string =
-  
+
   let es = entities.
     mapIt(newLispList(s"ENTITY", ~it.name, ~it.obid)).
     toLines
@@ -264,16 +292,92 @@ func `library.eas`(obid: string,
   (END_OF_FILE)
   """
 
+proc genNet(name: string,
+  connection: tuple[head, tail: tuple[componentId, portName: string]],
+  wire: Wire): string =
+
+  let
+    netid = $genOid()
+    name = $genOid()
+    partId = $genOid()
+    segments = wire.
+      mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
+      toLines
+
+  fmt"""
+  (NET
+    (OBID "{netid}")
+    (HDL_IDENT
+      (NAME "{name}")
+    )
+
+    (PART
+      (OBID "{partId}")
+
+      {segments}    
+
+      (PORT
+        (OBID "{connection.head.componentId}")
+        (NAME "{connection.head.portName}")
+      )
+      (PORT
+        (OBID "{connection.tail.componentId}")
+        (NAME "{connection.tail.portName}")
+      )
+    )
+  )
+  """
+
+proc genPort(isDef: bool, name, label: string, pd: PortDir, x, y: int,
+    portRefId: string, ): string =
+  let
+    id = $genOid()
+    (offx, offy) =
+      if isDef: (0, 0)
+      else: (x, y)
+
+    refport = 
+      if isDef:
+        ""
+      else:
+        fmt"(PORT {portRefId})"
+
+  fmt"""
+  (PORT
+    (OBID "{id}")
+    (HDL_IDENT
+      (NAME "{name}")
+      (USERNAME 1)
+      (ATTRIBUTES
+        (MODE {pd.int})
+      )
+    )
+    (GEOMETRY {offx} {offy} {x} {y})
+    (SIDE {LeftToRight.int})
+    
+    (LABEL
+      (POSITION {x} {y})
+      (SCALE 100)
+      (COLOR_LINE 0)
+      (SIDE {LeftToRight.int})
+      (ALIGNMENT {Left.int})
+      (FORMAT 35)
+      (TEXT "{label}")
+    )
+    
+    {refport}
+  )
+  """
 
 proc genComponent(name, lib, entity: string, label: string,
   x, y, width, height: int): string =
 
   let
-    obid = $genOid() 
-    fileId = $genoid()
+    obid = $genOid()
     ports = ""
 
-  fmt"""(COMPONENT
+  fmt"""
+  (COMPONENT
     (OBID "{obid}") 
     (ENTITY "{lib}" "{entity}")
 
@@ -295,11 +399,13 @@ proc genComponent(name, lib, entity: string, label: string,
     )
     
     { ports }
-  )"""
+  )
+  """
 
-proc genEntity(entryId, name: string, width, height, sheetWidth, sheetHeight: int): string =
-  let 
-    archId = $genOid()  
+proc genEntity(entryId, name: string, width, height, sheetWidth,
+    sheetHeight: int): string =
+  let
+    archId = $genOid()
     archTag = "structure"
     schemaId = $genOid()
 
@@ -307,7 +413,7 @@ proc genEntity(entryId, name: string, width, height, sheetWidth, sheetHeight: in
     portsImpl = ""
     components = ""
     nets = ""
-  
+
   fmt"""
   (DATABASE_VERSION 17)
   (ENTITY_FILE

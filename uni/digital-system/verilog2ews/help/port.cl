@@ -17,8 +17,8 @@
     (SIDE 3)
     (ALIGNMENT 5)
     (FORMAT 35)
-    (TEXT "c_inp1")
+    (TEXT "{label}")
   )
-
+  (PORT {portRefId})
   ;; { CONNECTION } is skipped in header
 )

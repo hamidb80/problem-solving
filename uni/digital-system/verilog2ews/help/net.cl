@@ -13,7 +13,6 @@
     
     (WIRE x1 y1 x2 y2)
     (WIRE ...)
-    (WIRE ...)
 
     (PORT ;; from
       (OBID "{PORT ID INSIDE COMPONENT INSTANTIATION}")
