@@ -236,6 +236,7 @@ type
     name, obid: string
     position: Point
 
+    entity {.cursor.}: Entity
     parent: Option[Component]
     reference: Option[Port]
 
@@ -388,10 +389,10 @@ proc `project.eas`(libraries: seq[Library]): string =
 
 func `library.eas`(lib: Library): string =
 
-  let entities = joinLines collect do: 
+  let entities = joinLines collect do:
     for name, e in lib.entities:
       fmt "(ENTITY \"{name}\" \"{e.obid}\")"
-    
+
 
   fmt"""(DATABASE_VERSION 17)
   (DESIGN_FILE
@@ -433,7 +434,7 @@ func `library.eas`(lib: Library): string =
 #     (PART
 #       (OBID "{partId}")
 
-#       {wireSegments}    
+#       {wireSegments}
 
 #       (PORT
 #         (OBID "{connection.head.componentId}")
@@ -451,19 +452,22 @@ func `library.eas`(lib: Library): string =
 proc toEas(p: Port): string =
   let
     isDef = isNone p.reference
-    (offx, offy) =
-      # FIXME if isDef: (0, 0)
-      (0, 0)
 
     refport =
       if isDef: ""
       else: fmt "(PORT \"{p.reference.get.obid}\")"
 
-    lbl = 
-      if isDef:      
+    lbl =
+      if isDef:
         ""
       else:
         genLabel(p.position.x, p.position.y, p.name, LeftToRight, Left)
+
+    side =
+      if p.dir == pdInput: LeftToRight
+      else: RightToLeft
+
+    (x, y) = p.position
 
     hld_ident = genIdent(p.name, [("MODE", $p.dir.int)])
 
@@ -472,8 +476,8 @@ proc toEas(p: Port): string =
     (OBID "{p.obid}")
     {hld_ident}
 
-    (GEOMETRY {offx} {offy} {p.position.x} {p.position.y})
-    (SIDE {LeftToRight.int})
+    (GEOMETRY {x} {y} {x} {y})
+    (SIDE {side.int})
     {lbl}
     
     {refport}
@@ -483,8 +487,8 @@ proc toEas(p: Port): string =
 proc toEas(c: Component): string =
   let
     ports = joinLines c.ports.map(toEas)
-    (x , y) = c.position
-    (w , h) = c.entity.componentSize
+    (x, y) = c.position
+    (w, h) = c.entity.componentSize
     lbl = genLabel(x + w div 2, y, c.name, LeftToRight, Top)
 
   fmt"""
@@ -619,14 +623,15 @@ when isMainModule:
     SchemaWidth = 6000
     SchemaHeight = 4000
     ComponentWidth = 400
-    ComponentYPadding = 30
-    PortYOffset = 50
+    ComponentYPadding = 100
+    PortYOffset = 200
     Xmargin = 100
 
   let (allModules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
   print allModules
 
   var lib = Library(obid: "lib" & $genOid(), name: "design")
+
   # entities declaration [name, ports, ...]
   for name, module in allModules:
     let (inputs, outputs) = splitPorts module
@@ -640,15 +645,18 @@ when isMainModule:
          PortYOffset*max(inputs.len, outputs.len)))
 
     for i, p in module.ports:
-      let x =
-        if p.dir == pdInput: 0
-        else: ComponentWidth
+      let
+        y = ComponentYPadding + i*PortYOffset
+        x =
+          if p.dir == pdInput: 0
+          else: ComponentWidth
 
       entr.ports.add Port(
         dir: p.dir,
         name: p.name,
+        entity: entr,
         obid: $genOid(),
-        position: (x, ComponentYPadding + i*PortYOffset))
+        position: (x, y))
 
       # entr.ports.add po
       # entr.sctructure[p.name] = Internal(kind: ikPort, port: po)
@@ -675,7 +683,7 @@ when isMainModule:
         c = instantiate(entry, iname)
         # pos = (0, i)
 
-      parentEntry.structure.objects[iname] = 
+      parentEntry.structure.objects[iname] =
         Object(kind: okComponent, component: c)
 
     # fill strcuture.ports
@@ -687,13 +695,13 @@ when isMainModule:
       if p.dir == pdOutput:
         newPort.position.x = width * (ComponentWidth + Xmargin)
 
-      parentEntry.structure.objects[p.name] = 
+      parentEntry.structure.objects[p.name] =
         Object(kind: okPort, port: newPort)
 
     # fill strcuture.nets
     # TODO
 
 
-  print lib
+  # print lib
   buildProject "./output/", "hope", @[lib]
 
