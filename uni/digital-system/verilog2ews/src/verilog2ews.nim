@@ -2,7 +2,6 @@ import std/[os, strutils, tables, sequtils, sets, options, lenientops,
     strformat, oids]
 
 # import mathexpr
-import ews
 import vverilog
 # import print
 
@@ -64,8 +63,12 @@ type
   Color = range[0..71]
 
 
+  Library = object
+    name: string
+    obid: string
+
   Schematic = object
-    wires: seq[Wire]
+    libraries: seq[Library]
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
@@ -206,11 +209,8 @@ func toWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
 
 # ------------------------------------------
 
-template s(thing): untyped = toLispSymbol thing
-template `~`(thing): untyped = toLispNode thing
-
-template toLines(seqOfSomething): untyped =
-  seqOfSomething.join "\n"
+template joinLines(s: seq): untyped =
+  s.join "\n"
 
 # ------------------------------------------
 
@@ -220,15 +220,15 @@ const
 
 proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
   let
-    obid = $genoid()
+    id = $genoid()
     libraries = designs.
-      mapIt(newLispList(s"DESIGN", ~it.name, ~it.obid)).
-      toLines
+      mapIt(fmt "(DESIGN {it.name} \"{it.obid})\"").
+      joinLines
 
   fmt"""
   (DATABASE_VERSION 17)
   (PROJECT_FILE
-    (OBID "proj{obid}")
+    (OBID "proj{id}")
       (PROPERTIES
       (PROPERTY "ArchFileFormatSpec" "%e_%a.%x")
       (PROPERTY "BodyFileFormatSpec" "%e_%a.%x")
@@ -256,9 +256,11 @@ proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
       (PROPERTY "VhdlExt" "vhd")
       (PROPERTY "VhdlFileFormatCase" "As is")
     )
+    
     {libraries}
+
     (PACKAGE
-      (OBID "pack{obid}")
+      (OBID "pack{id}")
       (LIBRARY "ieee")
       (NAME "std_logic_1164")
     )
@@ -270,8 +272,8 @@ func `library.eas`(obid: string,
   entities: seq[tuple[name, obid: string]]): string =
 
   let es = entities.
-    mapIt(newLispList(s"ENTITY", ~it.name, ~it.obid)).
-    toLines
+    mapIt(fmt "(ENTITY {it.name} \"{it.obid}\")").
+    joinLines
 
   fmt"""(DATABASE_VERSION 17)
   (DESIGN_FILE
@@ -287,10 +289,37 @@ func `library.eas`(obid: string,
     )
     (COMPONENT_LIB 0)
     (NAME "design")
+
     {es}
   )
   (END_OF_FILE)
   """
+
+func genLabel(x, y: int, label: string, side: Side,
+    alignment: Alignment, scale = 100, color: Color = 0): string =
+
+  fmt"""(LABEL
+    (POSITION {x} {y})
+    (SCALE {scale})
+    (COLOR_LINE {color})
+    (SIDE {side.int})
+    (ALIGNMENT {alignment.int})
+    (FORMAT 35)
+    (TEXT "{label}")
+  )
+  """
+
+func genIdent(name: string, attributes: openArray[tuple[key,
+    value: string]] = @[]): string =
+
+  let attrs = attributes.mapIt(fmt"({it.key} {it.value})").join " "
+
+  fmt"""
+  (HDL_IDENT 
+    (NAME "{name}")
+    (USERNAME 1)
+    (ATTRIBUTES {attrs})
+  )"""
 
 proc genNet(name: string,
   connection: tuple[head, tail: tuple[componentId, portName: string]],
@@ -300,21 +329,19 @@ proc genNet(name: string,
     netid = $genOid()
     name = $genOid()
     partId = $genOid()
-    segments = wire.
+    wireSegments = wire.
       mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
-      toLines
+      joinLines
 
   fmt"""
   (NET
     (OBID "{netid}")
-    (HDL_IDENT
-      (NAME "{name}")
-    )
+    {genIdent name}
 
     (PART
       (OBID "{partId}")
 
-      {segments}    
+      {wireSegments}    
 
       (PORT
         (OBID "{connection.head.componentId}")
@@ -330,40 +357,28 @@ proc genNet(name: string,
 
 proc genPort(isDef: bool, name, label: string, pd: PortDir, x, y: int,
     portRefId: string, ): string =
+
   let
     id = $genOid()
     (offx, offy) =
       if isDef: (0, 0)
       else: (x, y)
 
-    refport = 
-      if isDef:
-        ""
-      else:
-        fmt"(PORT {portRefId})"
+    refport =
+      if isDef: ""
+      else: fmt"(PORT {portRefId})"
+
+    lbl = genLabel(x, y, label, LeftToRight, Left)
+    hld_ident = genIdent(name, [("MODE", $pd.int)])
 
   fmt"""
   (PORT
     (OBID "{id}")
-    (HDL_IDENT
-      (NAME "{name}")
-      (USERNAME 1)
-      (ATTRIBUTES
-        (MODE {pd.int})
-      )
-    )
+    {hld_ident}
+
     (GEOMETRY {offx} {offy} {x} {y})
     (SIDE {LeftToRight.int})
-    
-    (LABEL
-      (POSITION {x} {y})
-      (SCALE 100)
-      (COLOR_LINE 0)
-      (SIDE {LeftToRight.int})
-      (ALIGNMENT {Left.int})
-      (FORMAT 35)
-      (TEXT "{label}")
-    )
+    {lbl}
     
     {refport}
   )
@@ -375,30 +390,20 @@ proc genComponent(name, lib, entity: string, label: string,
   let
     obid = $genOid()
     ports = ""
+    lbl = genLabel(x + width div 2, y, label, LeftToRight, Top)
 
   fmt"""
   (COMPONENT
     (OBID "{obid}") 
     (ENTITY "{lib}" "{entity}")
 
-    (HDL_IDENT 
-      (NAME "{name}")
-      (USERNAME 1)
-    )
+    {genIdent name}
 
     (GEOMETRY {x} {y} {x + width} {y + height})
     (SIDE 0)
-    (LABEL
-      (POSITION {x + width div 2} {y})
-      (SCALE 100)
-      (COLOR_LINE 0)
-      (SIDE 3)
-      (ALIGNMENT 7)
-      (FORMAT 13)
-      (TEXT {label})
-    )
     
-    { ports }
+    {lbl}
+    {ports}
   )
   """
 
@@ -427,10 +432,7 @@ proc genEntity(entryId, name: string, width, height, sheetWidth,
         (PROPERTY "STAMP_VERSION" "8.0")
       )
       
-      (HDL_IDENT
-        (NAME "{name}")
-        (USERNAME 1)
-      )
+      {genIdent name}
       
       (GEOMETRY 0 0 {width} {height})
       (HDL 1)
@@ -447,10 +449,7 @@ proc genEntity(entryId, name: string, width, height, sheetWidth,
     )
     (ARCH_DEFINITION
       (OBID "{archId}")
-      (HDL_IDENT
-        (NAME "{archTag}")
-        (USERNAME 1)
-      )
+      {genIdent archTag}
 
       (TYPE 1)
       (SCHEMATIC
@@ -459,16 +458,17 @@ proc genEntity(entryId, name: string, width, height, sheetWidth,
           (PROPERTY "SheetInfoFontSize" "8")
         )
         (SHEETSIZE 0 0 {sheetWidth} {sheetHeight})
-        { portsImpl }
-        { components }
-        { nets }
+        {portsImpl}
+        {components}
+        {nets}
       )
     )
   )
   (END_OF_FILE)
   """
 
-proc genProject(path, projectName: string) =
+
+proc buildProject(path, projectName: string) =
   let
     dirPath = path / projectName & ".ews"
     dbPath = dirPath / "ease.db"
