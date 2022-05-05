@@ -33,7 +33,7 @@ type
   BluePrint = seq[seq[string]]
 
   Point = tuple[x, y: int]
-  Rect = Point
+  Rect = tuple[width, height: int]
   Line = HSlice[Point, Point]
   Wire = seq[Line]
 
@@ -73,12 +73,15 @@ type
 
   Entity = ref object
     obid, name: string
-    # library {.cursor.}: Library
+    library {.cursor.}: Library
+
+    size: Rect
     ports: seq[Port]
     schemaSize: Rect
+
     internals: seq[Internal]
 
-  Port = ref object
+  Port {.acyclic.} = ref object
     kind: PortDir
     name, obid: string
     position: Point
@@ -95,15 +98,15 @@ type
 
   Component = ref object
     obid, name: string
-    reference: tuple[library, entity: string]
     position: Point
-    entity: Entity
-
-  LocalPortAddress = tuple[componentId, portName: string]
+    entity {.cursor.}: Entity
 
   Net = ref object
     obid: string
     head, tail: LocalPortAddress
+
+  LocalPortAddress = tuple
+    componentId, portName: string
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
