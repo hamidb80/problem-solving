@@ -95,9 +95,14 @@ func splitPorts(m: VModule): tuple[inputs, outputs: seq[string]] =
     of pdInput: result.inputs.add p.name
     of pdOutput: result.outputs.add p.name
 
-
+func onlyIdent(vn: VNode): string =
+  if vn.kind == vnkBracketExpr:
+    $vn.lookup
+  else:
+    $vn
+  
 func toVModule(m: VNode): VModule =
-  let params = m.params.mapIt $it
+  let params = m.params.mapIt onlyIdent it
 
   for vn in m.children[^1].children:
     result.ports.setLen params.len
@@ -105,7 +110,8 @@ func toVModule(m: VNode): VModule =
     case vn.kind:
     of vnkDeclare:
       for id in vn.idents:
-        let name = $id
+        let name = onlyIdent id
+          
 
         template addPort(kind, label): untyped =
           result.ports[params.find label] = (kind, label)
@@ -179,13 +185,17 @@ func genBlueprintImpl(
 
   ## FIXME set max for loop styles
 
-  for portAddr in conns[inp]:
-    let ins = portAddr.instanceName
-    result[ins][m.internals[ins].args.find inp] = some depth
+  try:
+    for portAddr in conns[inp]:
+      let ins = portAddr.instanceName
+      result[ins][m.internals[ins].args.find inp] = some depth
 
-    for i, o in m.internals[ins].args:
-      if modules[m.internals[ins].module].ports[i].dir == pdOutput:
-        genBlueprintImpl o, conns, m, modules, depth+1, result
+      for i, o in m.internals[ins].args:
+        if modules[m.internals[ins].module].ports[i].dir == pdOutput:
+          genBlueprintImpl o, conns, m, modules, depth+1, result
+  
+  except:
+    discard
 
 func genBlueprint(m: VModule, modules: ModulesTable,
     conns: ConnectionTable): BluePrint =
@@ -196,7 +206,10 @@ func genBlueprint(m: VModule, modules: ModulesTable,
 
   var insDepth: Table[string, int]
   for insName, inputsDepth in insInputsDepth:
-    insDepth[insName] = inputsDepth.filterIt(issome it).mapIt(it.get).max()
+    let n = inputsDepth.filterIt(issome it).mapIt(it.get)
+    if n.len != 0:
+      insDepth[insName] = n.max
+
 
   # safe print insDepth
 
@@ -280,9 +293,8 @@ type
     lkDirect, lkIndirect
 
   Link = object
-    case kind: LinkKinds
-    of lkDirect: index: int
-    of lkIndirect: portAddr: PortAddress
+    kind: LinkKinds
+    portAddr: PortAddress
 
 
 func genLabel(x, y: int, label: string, side: Side,
@@ -333,22 +345,20 @@ proc move(o: var Object, by: Point) =
   of okPort:
     o.port.move by
 
-func absolutePosition(p: Port): Point =
-  p.position + p.parent.get.position
+func getPort(link: Link, e: Entity): Port =
+  let (n, i) = link.portAddr
 
-func getPort(link: Link, e: Entity): Port = 
   case link.kind:
-  of lkDirect: 
-    e.ports[link.index]
+  of lkDirect:
+    e.structure.objects[n].port
   of lkIndirect:
-    let (n, i) = link.portAddr
     e.structure.objects[n].component.ports[i]
 
 proc initNet(p1, p2: Port): Net =
   Net(
     obid: $genOid(),
-    name: ($genOid())[0..6],
-    wire: toWire(absolutePosition p1, absolutePosition p2, 0.5),
+    # name: "net:" & ($genOid())[^6..^1],
+    wire: toWire(p1.position, p2.position, 0.9),
     connection: p1..p2)
 
 
@@ -436,6 +446,7 @@ func `library.eas`(lib: Library): string =
 proc toEas(n: Net): string =
   let
     partId = $genOid()
+    whatId = $genOid()
     wireSegments = n.wire.
       mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
       joinLines
@@ -447,17 +458,21 @@ proc toEas(n: Net): string =
     {genIdent n.name}
 
     (PART
+      (OBID "{whatId}")
+      (CBN 1)
+    )
+    (PART
       (OBID "{partId}")
 
       {wireSegments}
 
       (PORT
-        (OBID "{n.connection.a.parent.get.obid}")
-        (NAME "{n.connection.a.reference.get.obid}")
+        (OBID "{n.connection.a.obid}")
+        (NAME "{n.connection.a.reference.get.name}")
       )
       (PORT
-        (OBID "{n.connection.b.parent.get.obid}")
-        (NAME "{n.connection.b.reference.get.obid}")
+        (OBID "{n.connection.b.obid}")
+        (NAME "{n.connection.b.reference.get.name}")
       )
     )
   )
@@ -532,8 +547,9 @@ proc toEas(e: Entity): string =
     schemaId = $genOid()
 
     portsDef = e.ports.map(toEas).joinLines
-    nets = ""
-      # e.structure.nets.map(toEas).joinLines
+
+  let
+    nets = e.structure.nets.map(toEas).joinLines
     objects = joinLines collect do:
       for _, o in e.structure.objects:
         toEas o
@@ -641,7 +657,7 @@ when isMainModule:
     Ymargin = 200
     Xmargin = 400
 
-  let (allModules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
+  let (allModules, globalDefines) = extractModulesFromFiles getVfiles "./temp"
   print allModules
 
   var lib = Library(obid: "lib" & $genOid(), name: "design")
@@ -676,7 +692,7 @@ when isMainModule:
     lib.entities[mname] = entr
 
   # generate internal structure
-  for mname in ["TopLevel"]:
+  for mname in ["top"]:
     let
       module = allModules[mname]
       conns = initConnTable(module, allModules)
@@ -697,7 +713,7 @@ when isMainModule:
       parentEntry.structure.objects[p.name] =
         Object(kind: okPort, port: newPort)
 
-      portAddrs[p.name] = Link(kind: lkDirect, index: i)
+      portAddrs[newPort.name] = Link(kind: lkDirect, portAddr: (newPort.name, -1))
 
     # ------------------------------------------
 
@@ -733,13 +749,25 @@ when isMainModule:
 
     block drawWires:
       for head, tails in conns:
-        let l1 = getPort(portAddrs[head], parentEntry)
+        let p1 = getPort(portAddrs[head], parentEntry)
 
         for conn in tails:
-          let p = parentEntry.structure.objects[conn.instanceName].component.ports[conn.portIndex]
-          # parentEntry.structure.nets.add initNet(o1, o2)
+          let p2 =
+            parentEntry.structure.
+            objects[conn.instanceName].
+            component.ports[conn.portIndex]
+
+          parentEntry.structure.nets.add initNet(p1, p2)
+
+      # connect output ports
+      for i in module.outputIndexes:
+        let
+          poutName = parentEntry.ports[i].name
+          pout = parentEntry.structure.objects[poutName].port
+          pin = portAddrs[pout.name].getPort(parentEntry)
+
+        parentEntry.structure.nets.add initNet(pout, pin)
 
 
-  # print lib
+        # print lib
   buildProject "./output/", "hope", @[lib]
-
