@@ -672,7 +672,7 @@ when isMainModule:
     ComponentYPadding = 400
     PortYOffset = 200
     Ymargin = 200
-    Xmargin = 600
+    Xmargin = 1000
 
   let (allModules, globalDefines) = extractModulesFromFiles getVfiles "./temp" # ["./temp/sample.v"] 
   print allModules
@@ -714,7 +714,7 @@ when isMainModule:
       module = allModules[mname]
       conns = initConnTable(module, allModules)
       (inps, outs) = splitPorts module
-      bp = @[inps] & genBlueprint(module, allModules, conns) & @[outs]
+      bp = (@[inps] & genBlueprint(module, allModules, conns) & @[outs]).filterIt it.len != 0
 
 
     print conns, bp
