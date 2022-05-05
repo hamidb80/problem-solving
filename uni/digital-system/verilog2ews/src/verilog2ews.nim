@@ -57,18 +57,25 @@ type
 
   VModule = object
     ports: seq[tuple[dir: PortDir, name: string]]
+    outputIndexes: seq[int]
     internals: Table[string, Instance]
     defines: LookUp
 
   Instance = object
     module: string
+    name: string
     args: seq[string]
 
   LookUp = Table[string, VNode]
 
   InputDepth = seq[Option[int]]
 
+  ConnectionTable = Table[string, seq[PortAddress]]
+
+  PortAddress = tuple[instanceName: string, portIndex: int]
+
   BluePrint = seq[seq[string]]
+
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
@@ -120,11 +127,16 @@ func toVModule(m: VNode): VModule =
       result.defines[$vn.ident] = vn.value
 
     of vnkInstanciate:
-      result.internals[$vn.instanceIdent] =
-        Instance(module: $vn.module, args: vn.children.mapit $it)
+      let n = $vn.instanceIdent
+      result.internals[n] =
+        Instance(module: $vn.module, name: n, args: vn.children.mapit $it)
 
     else:
       discard
+
+  for i, p in result.ports:
+    if p.dir == pdOutput:
+      result.outputIndexes.add i
 
 proc extractModulesFromFiles(filePaths: openArray[string]):
   tuple[modules: ModulesTable, lookup: LookUp] =
@@ -140,7 +152,7 @@ proc extractModulesFromFiles(filePaths: openArray[string]):
       else:
         discard
 
-func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]] =
+func initConnTable(m: VModule, modules: ModulesTable): ConnectionTable =
   ## input -> instance names
   for o in m.outputs:
     result[o] = @[]
@@ -151,7 +163,7 @@ func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]
         if arg notin result:
           result[arg] = @[]
 
-        result[arg].add name
+        result[arg].add (name, i)
 
 func initConnDepth(instances: Table[string, Instance],
     modules: ModulesTable): Table[string, InputDepth] =
@@ -161,21 +173,22 @@ func initConnDepth(instances: Table[string, Instance],
 
 
 func genBlueprintImpl(
-  inp: string, conns: Table[string, seq[string]],
+  inp: string, conns: ConnectionTable,
   m: VModule, modules: ModulesTable,
   depth: int, result: var Table[string, InputDepth]) =
 
-  for insName in conns[inp]:
-    ## FIXME set max for loop styles
-    result[insName][m.internals[insName].args.find inp] = some depth
+  ## FIXME set max for loop styles
 
-    for i, o in m.internals[insName].args:
-      if modules[m.internals[insName].module].ports[i].dir == pdOutput:
+  for portAddr in conns[inp]:
+    let ins = portAddr.instanceName
+    result[ins][m.internals[ins].args.find inp] = some depth
+
+    for i, o in m.internals[ins].args:
+      if modules[m.internals[ins].module].ports[i].dir == pdOutput:
         genBlueprintImpl o, conns, m, modules, depth+1, result
 
-func genBlueprint(m: VModule, modules: ModulesTable): BluePrint =
-  let conns = initConnTable(m, modules)
-  # safe print conns
+func genBlueprint(m: VModule, modules: ModulesTable,
+    conns: ConnectionTable): BluePrint =
 
   var insInputsDepth = initConnDepth(m.internals, modules)
   for inp in m.inputs:
@@ -248,7 +261,7 @@ type
     okPort, okComponent
 
   Object = object
-    case kind: ObjectKinds:
+    case kind: ObjectKinds
     of okPort: port: Port
     of okComponent: component: Component
 
@@ -263,8 +276,13 @@ type
     wire: Wire
     connection: HSlice[Port, Port]
 
-  LocalPortAddress = tuple
-    componentId, portName: string
+  LinkKinds = enum
+    lkDirect, lkIndirect
+
+  Link = object
+    case kind: LinkKinds
+    of lkDirect: index: int
+    of lkIndirect: portAddr: PortAddress
 
 
 func genLabel(x, y: int, label: string, side: Side,
@@ -298,41 +316,6 @@ func genIdent(name: string,
     {attrs}
   )"""
 
-proc genNet(wire: Wire,
-  connection: tuple[head, tail: LocalPortAddress]): string =
-
-  let
-    netid = $genOid()
-    name = $genOid()
-    partId = $genOid()
-
-    wireSegments = wire.
-      mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
-      joinLines
-
-
-  fmt"""
-  (NET
-    (OBID "{netid}")
-    {genIdent name}
-
-    (PART
-      (OBID "{partId}")
-
-      {wireSegments}    
-
-      (PORT
-        (OBID "{connection.head.componentId}")
-        (NAME "{connection.head.portName}")
-      )
-      (PORT
-        (OBID "{connection.tail.componentId}")
-        (NAME "{connection.tail.portName}")
-      )
-    )
-  )
-  """
-
 
 proc move(p: var Port, by: Point) =
   p.position += by
@@ -352,6 +335,21 @@ proc move(o: var Object, by: Point) =
 
 func absolutePosition(p: Port): Point =
   p.position + p.parent.get.position
+
+func getPort(link: Link, e: Entity): Port = 
+  case link.kind:
+  of lkDirect: 
+    e.ports[link.index]
+  of lkIndirect:
+    let (n, i) = link.portAddr
+    e.structure.objects[n].component.ports[i]
+
+proc initNet(p1, p2: Port): Net =
+  Net(
+    obid: $genOid(),
+    name: ($genOid())[0..6],
+    wire: toWire(absolutePosition p1, absolutePosition p2, 0.5),
+    connection: p1..p2)
 
 
 const
@@ -678,53 +676,68 @@ when isMainModule:
     lib.entities[mname] = entr
 
   # generate internal structure
-  for modName in ["TopLevel"]:
+  for mname in ["TopLevel"]:
     let
-      module = allModules[modName]
+      module = allModules[mname]
+      conns = initConnTable(module, allModules)
       (inps, outs) = splitPorts module
-      bp = @[inps] & genBlueprint(module, allModules) & @[outs]
+      bp = @[inps] & genBlueprint(module, allModules, conns) & @[outs]
 
 
-    print bp
+    print conns, bp
     # ----------------------------------
 
-    var parentEntry = lib.entities[modName]
+    var portAddrs: Table[string, Link]
+    var parentEntry = lib.entities[mname]
 
-
-    for p in parentEntry.ports:
+    for i, p in parentEntry.ports:
       var newPort = deepCopy p
       newPort.reference = some p
 
       parentEntry.structure.objects[p.name] =
         Object(kind: okPort, port: newPort)
 
-    # fill structure.components
-    for iname, intr in module.internals:
-      let
-        entry = lib.entities[intr.module]
-        c = instantiate(entry, iname)
+      portAddrs[p.name] = Link(kind: lkDirect, index: i)
 
-      parentEntry.structure.objects[iname] =
-        Object(kind: okComponent, component: c)
+    # ------------------------------------------
 
+    block primaryIteration:
+      for iname, intr in module.internals:
+        let
+          entry = lib.entities[intr.module]
+          c = instantiate(entry, iname)
 
-    var xacc = Xmargin
-    for layer in bp:
-  
-      var yacc = Ymargin
-      for objectName in layer:
-        var obj = parentEntry.structure.objects[objectName]
-        obj.move (xacc, yacc)
+        parentEntry.structure.objects[iname] =
+          Object(kind: okComponent, component: c)
 
-        yacc.inc case obj.kind:
-          of okPort: Ymargin
-          of okComponent:
-            obj.component.entity.componentSize.height
+        for i in allModules[intr.module].outputIndexes:
+          portAddrs[intr.args[i]] = Link(kind: lkIndirect, portAddr: (intr.name, i))
 
-      xacc.inc ComponentWidth + Xmargin
+    print portAddrs
 
+    block placeObjects:
+      var xacc = Xmargin
+      for layer in bp:
 
-    # fill strcuture.nets
+        var yacc = Ymargin
+        for objectName in layer:
+          var obj = parentEntry.structure.objects[objectName]
+          obj.move (xacc, yacc)
+
+          yacc.inc case obj.kind:
+            of okPort: Ymargin
+            of okComponent:
+              obj.component.entity.componentSize.height
+
+        xacc.inc ComponentWidth + Xmargin
+
+    block drawWires:
+      for head, tails in conns:
+        let l1 = getPort(portAddrs[head], parentEntry)
+
+        for conn in tails:
+          let p = parentEntry.structure.objects[conn.instanceName].component.ports[conn.portIndex]
+          # parentEntry.structure.nets.add initNet(o1, o2)
 
 
   # print lib
