@@ -33,9 +33,9 @@ type
   BluePrint = seq[seq[string]]
 
   Point = tuple[x, y: int]
+  Rect = Point
   Line = HSlice[Point, Point]
   Wire = seq[Line]
-
 
   Alignment = enum
     BottomRight = 0
@@ -63,12 +63,47 @@ type
   Color = range[0..71]
 
 
-  Library = object
-    name: string
-    obid: string
-
-  Schematic = object
+type
+  Project = object
     libraries: seq[Library]
+
+  Library = ref object
+    obid, name: string
+    entities: seq[Entity]
+
+  Entity = ref object
+    obid, name: string
+    # library {.cursor.}: Library
+    ports: seq[Port]
+    schemaSize: Rect
+    internals: seq[Internal]
+
+  Port = ref object
+    kind: PortDir
+    name, obid: string
+    position: Point
+    reference: Port
+
+  InternalKinds = enum
+    ikNet, ikPort, ikComponent
+
+  Internal = object
+    case kind: InternalKinds
+    of ikNet: net: Net
+    of ikPort: port: Port
+    of ikComponent: component: Component
+
+  Component = ref object
+    obid, name: string
+    reference: tuple[library, entity: string]
+    position: Point
+    entity: Entity
+
+  LocalPortAddress = tuple[componentId, portName: string]
+
+  Net = ref object
+    obid: string
+    head, tail: LocalPortAddress
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
@@ -197,10 +232,10 @@ func genLines(points: openArray[Point]): Wire =
     result.add lp..p
     lp = p
 
-func toWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
+func toWire(a, b: Point, foldx: range[0.0 .. 1.0]): Wire =
   let
     dx = b.x - a.x
-    o = bias.float
+    o = foldx.float
     xcenter = toInt(a.x + dx * o)
 
   genLines [
@@ -209,20 +244,15 @@ func toWire(a, b: Point, bias: range[0.0 .. 1.0]): Wire =
 
 # ------------------------------------------
 
-template joinLines(s: seq): untyped =
-  s.join "\n"
-
-# ------------------------------------------
-
 const
   `toolflow.xml` = readFile "./assets/toolflow.xml"
   `workspace.eas` = readfile "./assets/workspace.eas"
 
-proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
+proc `project.eas`(libraries: seq[tuple[name, id: string]]): string =
   let
     id = $genoid()
-    libraries = designs.
-      mapIt(fmt "(DESIGN {it.name} \"{it.obid})\"").
+    designs = libraries.
+      mapIt(fmt "(DESIGN \"{it.name}\" \"{it.id})\"").
       joinLines
 
   fmt"""
@@ -257,7 +287,7 @@ proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
       (PROPERTY "VhdlFileFormatCase" "As is")
     )
     
-    {libraries}
+    {designs}
 
     (PACKAGE
       (OBID "pack{id}")
@@ -268,11 +298,11 @@ proc `project.eas`(designs: seq[tuple[name, obid: string]]): string =
   (END_OF_FILE)
   """
 
-func `library.eas`(obid: string,
+func `library.eas`(name, obid: string,
   entities: seq[tuple[name, obid: string]]): string =
 
   let es = entities.
-    mapIt(fmt "(ENTITY {it.name} \"{it.obid}\")").
+    mapIt(fmt "(ENTITY \"{it.name}\" \"{it.obid}\")").
     joinLines
 
   fmt"""(DATABASE_VERSION 17)
@@ -288,7 +318,7 @@ func `library.eas`(obid: string,
       (PROPERTY "STAMP_VERSION" "8.0")
     )
     (COMPONENT_LIB 0)
-    (NAME "design")
+    (NAME "{name}")
 
     {es}
   )
@@ -309,29 +339,30 @@ func genLabel(x, y: int, label: string, side: Side,
   )
   """
 
-func genIdent(name: string, attributes: openArray[tuple[key,
-    value: string]] = @[]): string =
+func genIdent(name: string,
+  attributes: openArray[tuple[key, value: string]] = @[]): string =
 
   let attrs = attributes.mapIt(fmt"({it.key} {it.value})").join " "
 
   fmt"""
-  (HDL_IDENT 
+  (HDL_IDENT
     (NAME "{name}")
     (USERNAME 1)
     (ATTRIBUTES {attrs})
   )"""
 
-proc genNet(name: string,
-  connection: tuple[head, tail: tuple[componentId, portName: string]],
-  wire: Wire): string =
+proc genNet(wire: Wire,
+  connection: tuple[head, tail: LocalPortAddress]): string =
 
   let
     netid = $genOid()
     name = $genOid()
     partId = $genOid()
+
     wireSegments = wire.
       mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
       joinLines
+
 
   fmt"""
   (NET
@@ -355,8 +386,8 @@ proc genNet(name: string,
   )
   """
 
-proc genPort(isDef: bool, name, label: string, pd: PortDir, x, y: int,
-    portRefId: string, ): string =
+proc genPort(name, label: string, x, y: int,
+  pd: PortDir, isDef: bool, portRefId: string = ""): string =
 
   let
     id = $genOid()
@@ -366,7 +397,7 @@ proc genPort(isDef: bool, name, label: string, pd: PortDir, x, y: int,
 
     refport =
       if isDef: ""
-      else: fmt"(PORT {portRefId})"
+      else: fmt "(PORT \"{portRefId}\")"
 
     lbl = genLabel(x, y, label, LeftToRight, Left)
     hld_ident = genIdent(name, [("MODE", $pd.int)])
@@ -384,7 +415,7 @@ proc genPort(isDef: bool, name, label: string, pd: PortDir, x, y: int,
   )
   """
 
-proc genComponent(name, lib, entity: string, label: string,
+proc genComponent(name, label, lib, entity: string,
   x, y, width, height: int): string =
 
   let
@@ -407,23 +438,22 @@ proc genComponent(name, lib, entity: string, label: string,
   )
   """
 
-proc genEntity(entryId, name: string, width, height, sheetWidth,
-    sheetHeight: int): string =
+proc genEntity(obid, name: string,
+  width, height, sheetWidth, sheetHeight: int): string =
+
   let
     archId = $genOid()
     archTag = "structure"
     schemaId = $genOid()
 
     portsDef = ""
-    portsImpl = ""
-    components = ""
-    nets = ""
+    internals = ""
 
   fmt"""
   (DATABASE_VERSION 17)
   (ENTITY_FILE
     (ENTITY
-      (OBID "{entryId}")
+      (OBID "{obid}")
       (PROPERTIES
         (PROPERTY "STAMP_PLATFORM" "PC")
         (PROPERTY "STAMP_REVISION" "Revision 4")
@@ -443,7 +473,7 @@ proc genEntity(entryId, name: string, width, height, sheetWidth,
         (MODIFIED 1651677907 "Wed May 04 19:55:07 2022")
       )
 
-      { portsDef }
+      {portsDef}
 
       (ARCH_DECLARATION 1 "{archId}" "{archTag}")
     )
@@ -458,9 +488,7 @@ proc genEntity(entryId, name: string, width, height, sheetWidth,
           (PROPERTY "SheetInfoFontSize" "8")
         )
         (SHEETSIZE 0 0 {sheetWidth} {sheetHeight})
-        {portsImpl}
-        {components}
-        {nets}
+        {internals}
       )
     )
   )
@@ -480,6 +508,7 @@ proc buildProject(path, projectName: string) =
   createDir dbPath
   writeFile dbPath / "project.eas", `project.eas`(@[])
 
+# ------------------------------------------
 
 proc getVfiles(dirPath: string): seq[string] =
   for p in walkDirRec dirPath:
@@ -487,8 +516,6 @@ proc getVfiles(dirPath: string): seq[string] =
     if ext == ".v" and not name.startsWith "config":
       result.add p
 
-
-# ------------------------------------------
 
 when isMainModule:
   let (modules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
