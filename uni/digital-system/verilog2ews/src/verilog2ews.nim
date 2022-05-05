@@ -3,7 +3,7 @@ import std/[os, strutils, tables, sequtils, sets, options, lenientops,
 
 # import mathexpr
 import vverilog
-# import print
+import print
 
 import ./conventions
 
@@ -49,7 +49,7 @@ type
   ModulesTable = Table[string, VModule]
 
   VModule = object
-    ports: seq[tuple[kind: PortDir, name: string]]
+    ports: seq[tuple[dir: PortDir, name: string]]
     internals: Table[string, Instance]
     defines: LookUp
 
@@ -66,7 +66,7 @@ type
 
 template searchPort(m: VModule, pd: PortDir): untyped =
   for p in m.ports:
-    if p.kind == pd:
+    if p.dir == pd:
       yield p.name
 
 iterator inputs(m: VModule): lent string =
@@ -74,6 +74,12 @@ iterator inputs(m: VModule): lent string =
 
 iterator outputs(m: VModule): lent string =
   searchPort m, pdOutput
+
+func splitPorts(m: VModule): tuple[inputs, outputs: seq[string]] =
+  for p in m.ports:
+    case p.dir:
+    of pdInput: result.inputs.add p.name
+    of pdOutput: result.outputs.add p.name
 
 
 func toVModule(m: VNode): VModule =
@@ -134,7 +140,7 @@ func initConnTable(m: VModule, modules: ModulesTable): Table[string, seq[string]
 
   for name, component in m.internals:
     for i, arg in component.args:
-      if modules[component.module].ports[i].kind == pdInput:
+      if modules[component.module].ports[i].dir == pdInput:
         if arg notin result:
           result[arg] = @[]
 
@@ -157,7 +163,7 @@ func genBlueprintImpl(
     result[insName][m.internals[insName].args.find inp] = some depth
 
     for i, o in m.internals[insName].args:
-      if modules[m.internals[insName].module].ports[i].kind == pdOutput:
+      if modules[m.internals[insName].module].ports[i].dir == pdOutput:
         genBlueprintImpl o, conns, m, modules, depth+1, result
 
 func genBlueprint(m: VModule, modules: ModulesTable): BluePrint =
@@ -203,12 +209,11 @@ func toWire(a, b: Point, foldx: range[0.0 .. 1.0]): Wire =
 # ------------------------------------------
 
 type
-  Project = object
-    libraries: seq[Library]
+  Project = seq[Library]
 
   Library = ref object
     obid, name: string
-    entities: seq[Entity]
+    entities: Table[string, Entity]
 
   Entity = ref object
     obid, name: string
@@ -217,27 +222,26 @@ type
     componentSize, schemaSize: Size
     ports: seq[Port]
 
-    internals: seq[Internal]
+    structure: Structure
 
   Port {.acyclic.} = ref object
-    kind: PortDir
+    dir: PortDir
     name, obid: string
     position: Point
-    reference: Port
 
-  InternalKinds = enum
-    ikNet, ikPort, ikComponent
+    belongsTo: Option[Component]
+    reference: Option[Port]
 
-  Internal = object
-    case kind: InternalKinds
-    of ikNet: net: Net
-    of ikPort: port: Port
-    of ikComponent: component: Component
+  Structure = object
+    ports: seq[Port]
+    components: seq[Component]
+    nets: seq[Net]
 
   Component = ref object
     obid, name: string
     position: Point
     entity {.cursor.}: Entity
+    ports: seq[Port]
 
   Net = ref object
     obid: string
@@ -521,7 +525,59 @@ proc getVfiles(dirPath: string): seq[string] =
 
 
 when isMainModule:
-  let (modules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
-  # print modules
+  const
+    SchemaWidth = 6000
+    SchemaHeight = 4000
+    ComponentWidth = 400
+    ComponentYPadding = 30
+    PortYOffset = 50
 
-  let bp = genBlueprint(modules["TopLevel"], modules)
+  let (allModules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
+  print allModules
+
+  var lib = Library(obid: "lib" & $genOid(), name: "design")
+  # entities declaration [name, ports, ...]
+  for name, module in allModules:
+    let (inputs, outputs) = splitPorts module
+
+    var entr = Entity(
+      obid: "entr" & $genOid(),
+      name: name,
+      library: lib,
+      schemaSize: (SchemaWidth, SchemaHeight),
+      componentSize: (ComponentWidth, ComponentYPadding*2 +
+         PortYOffset*max(inputs.len, outputs.len)))
+
+    for i, p in module.ports:
+      let x =
+        if p.dir == pdInput: 0
+        else: ComponentWidth
+
+      entr.ports.add Port(
+        dir: p.dir,
+        name: p.name,
+        obid: $genOid(),
+        position: (x, ComponentYPadding + i*PortYOffset))
+
+      # entr.ports.add po
+      # entr.sctructure[p.name] = Internal(kind: ikPort, port: po)
+
+    lib.entities[name] = entr
+
+  # generate internal structure
+  for modName in ["TopLevel"]:
+    let module = allModules[modName]
+
+    for name, intr in module.internals:
+      discard lib.entities[intr.module].structure.ports
+      let c = Component(
+        obid: "comp" & $genOid(),
+        name: name,
+        # position:
+          # entity {.cursor.}: Entity
+          # ports: seq[Port]
+      )
+
+  # TODO add nets
+  # let bp = genBlueprint(module, allModules)
+  # print bp
