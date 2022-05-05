@@ -1,6 +1,7 @@
 .vscode
 
 temp
+output
 
 *.exe
 play.*

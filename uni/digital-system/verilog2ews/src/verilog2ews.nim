@@ -1,5 +1,5 @@
 import std/[os, strutils, tables, sequtils, sets, options, lenientops,
-    strformat, oids]
+    strformat, oids, sugar]
 
 # import mathexpr
 import vverilog
@@ -42,6 +42,13 @@ type
 
   PortDir = enum
     pdInput = 1, pdOutput = 2
+
+func `+`(p1, p2: Point): Point =
+  (p1.x + p2.x, p1.y + p2.y)
+
+func `+=`(p1: var Point, p2: Point) =
+  p1.x += p2.x
+  p1.y += p2.y
 
 # ----------------------------------------------
 
@@ -229,13 +236,20 @@ type
     name, obid: string
     position: Point
 
-    belongsTo: Option[Component]
+    parent: Option[Component]
     reference: Option[Port]
 
   Structure = object
-    ports: seq[Port]
-    components: seq[Component]
+    objects: Table[string, Object]
     nets: seq[Net]
+
+  ObjectKinds = enum
+    okPort, okComponent
+
+  Object = object
+    case kind: ObjectKinds:
+    of okPort: port: Port
+    of okComponent: component: Component
 
   Component = ref object
     obid, name: string
@@ -251,15 +265,82 @@ type
     componentId, portName: string
 
 
+func genLabel(x, y: int, label: string, side: Side,
+    alignment: Alignment, scale = 100, color: Color = 0): string =
+
+  fmt"""(LABEL
+    (POSITION {x} {y})
+    (SCALE {scale})
+    (COLOR_LINE {color})
+    (SIDE {side.int})
+    (ALIGNMENT {alignment.int})
+    (FORMAT 35)
+    (TEXT "{label}")
+  )
+  """
+
+func genIdent(name: string,
+  attributes: openArray[tuple[key, value: string]] = @[]): string =
+
+  let attrs = block:
+    if attributes.len == 0:
+      let t = attributes.mapIt(fmt"({it.key} {it.value})").join " "
+      fmt"(ATTRIBUTES {t})"
+    else:
+      ""
+
+  fmt"""
+  (HDL_IDENT
+    (NAME "{name}")
+    (USERNAME 1)
+    {attrs}
+  )"""
+
+proc genNet(wire: Wire,
+  connection: tuple[head, tail: LocalPortAddress]): string =
+
+  let
+    netid = $genOid()
+    name = $genOid()
+    partId = $genOid()
+
+    wireSegments = wire.
+      mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
+      joinLines
+
+
+  fmt"""
+  (NET
+    (OBID "{netid}")
+    {genIdent name}
+
+    (PART
+      (OBID "{partId}")
+
+      {wireSegments}    
+
+      (PORT
+        (OBID "{connection.head.componentId}")
+        (NAME "{connection.head.portName}")
+      )
+      (PORT
+        (OBID "{connection.tail.componentId}")
+        (NAME "{connection.tail.portName}")
+      )
+    )
+  )
+  """
+
+
 const
   `toolflow.xml` = readFile "./assets/toolflow.xml"
   `workspace.eas` = readfile "./assets/workspace.eas"
 
-proc `project.eas`(libraries: seq[tuple[name, id: string]]): string =
+proc `project.eas`(libraries: seq[Library]): string =
   let
     id = $genoid()
     designs = libraries.
-      mapIt(fmt "(DESIGN \"{it.name}\" \"{it.id})\"").
+      mapIt(fmt "(DESIGN \"{it.name}\" \"{it.obid}\")").
       joinLines
 
   fmt"""
@@ -305,16 +386,16 @@ proc `project.eas`(libraries: seq[tuple[name, id: string]]): string =
   (END_OF_FILE)
   """
 
-func `library.eas`(name, obid: string,
-  entities: seq[tuple[name, obid: string]]): string =
+func `library.eas`(lib: Library): string =
 
-  let es = entities.
-    mapIt(fmt "(ENTITY \"{it.name}\" \"{it.obid}\")").
-    joinLines
+  let entities = joinLines collect do: 
+    for name, e in lib.entities:
+      fmt "(ENTITY \"{name}\" \"{e.obid}\")"
+    
 
   fmt"""(DATABASE_VERSION 17)
   (DESIGN_FILE
-    (OBID "{obid}")
+    (OBID "{lib.obid}")
     (PROPERTIES
       (PROPERTY "OUTPUT_DIR" "design.hdl")
       (PROPERTY "OUTPUT_FILE" "design.vhd")
@@ -325,96 +406,73 @@ func `library.eas`(name, obid: string,
       (PROPERTY "STAMP_VERSION" "8.0")
     )
     (COMPONENT_LIB 0)
-    (NAME "{name}")
+    (NAME "{lib.name}")
 
-    {es}
+    {entities}
   )
   (END_OF_FILE)
   """
 
-func genLabel(x, y: int, label: string, side: Side,
-    alignment: Alignment, scale = 100, color: Color = 0): string =
 
-  fmt"""(LABEL
-    (POSITION {x} {y})
-    (SCALE {scale})
-    (COLOR_LINE {color})
-    (SIDE {side.int})
-    (ALIGNMENT {alignment.int})
-    (FORMAT 35)
-    (TEXT "{label}")
-  )
-  """
+# proc toEas(net: Net): string =
+#   let
+#     netid = $genOid()
+#     name = $genOid()
+#     partId = $genOid()
 
-func genIdent(name: string,
-  attributes: openArray[tuple[key, value: string]] = @[]): string =
+#     wireSegments = wire.
+#       mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
+#       joinLines
 
-  let attrs = attributes.mapIt(fmt"({it.key} {it.value})").join " "
 
-  fmt"""
-  (HDL_IDENT
-    (NAME "{name}")
-    (USERNAME 1)
-    (ATTRIBUTES {attrs})
-  )"""
+#   fmt"""
+#   (NET
+#     (OBID "{netid}")
+#     {genIdent name}
 
-proc genNet(wire: Wire,
-  connection: tuple[head, tail: LocalPortAddress]): string =
+#     (PART
+#       (OBID "{partId}")
 
+#       {wireSegments}    
+
+#       (PORT
+#         (OBID "{connection.head.componentId}")
+#         (NAME "{connection.head.portName}")
+#       )
+#       (PORT
+#         (OBID "{connection.tail.componentId}")
+#         (NAME "{connection.tail.portName}")
+#       )
+#     )
+#   )
+#   """
+
+
+proc toEas(p: Port): string =
   let
-    netid = $genOid()
-    name = $genOid()
-    partId = $genOid()
-
-    wireSegments = wire.
-      mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
-      joinLines
-
-
-  fmt"""
-  (NET
-    (OBID "{netid}")
-    {genIdent name}
-
-    (PART
-      (OBID "{partId}")
-
-      {wireSegments}    
-
-      (PORT
-        (OBID "{connection.head.componentId}")
-        (NAME "{connection.head.portName}")
-      )
-      (PORT
-        (OBID "{connection.tail.componentId}")
-        (NAME "{connection.tail.portName}")
-      )
-    )
-  )
-  """
-
-proc genPort(name, label: string, x, y: int,
-  pd: PortDir, isDef: bool, portRefId: string = ""): string =
-
-  let
-    id = $genOid()
+    isDef = isNone p.reference
     (offx, offy) =
-      if isDef: (0, 0)
-      else: (x, y)
+      # FIXME if isDef: (0, 0)
+      (0, 0)
 
     refport =
       if isDef: ""
-      else: fmt "(PORT \"{portRefId}\")"
+      else: fmt "(PORT \"{p.reference.get.obid}\")"
 
-    lbl = genLabel(x, y, label, LeftToRight, Left)
-    hld_ident = genIdent(name, [("MODE", $pd.int)])
+    lbl = 
+      if isDef:      
+        ""
+      else:
+        genLabel(p.position.x, p.position.y, p.name, LeftToRight, Left)
+
+    hld_ident = genIdent(p.name, [("MODE", $p.dir.int)])
 
   fmt"""
   (PORT
-    (OBID "{id}")
+    (OBID "{p.obid}")
     {hld_ident}
 
-    (GEOMETRY {offx} {offy} {x} {y})
+    (GEOMETRY {offx} {offy} {p.position.x} {p.position.y})
     (SIDE {LeftToRight.int})
     {lbl}
     
@@ -422,22 +480,21 @@ proc genPort(name, label: string, x, y: int,
   )
   """
 
-proc genComponent(name, label, lib, entity: string,
-  x, y, width, height: int): string =
-
+proc toEas(c: Component): string =
   let
-    obid = $genOid()
-    ports = ""
-    lbl = genLabel(x + width div 2, y, label, LeftToRight, Top)
+    ports = joinLines c.ports.map(toEas)
+    (x , y) = c.position
+    (w , h) = c.entity.componentSize
+    lbl = genLabel(x + w div 2, y, c.name, LeftToRight, Top)
 
   fmt"""
   (COMPONENT
-    (OBID "{obid}") 
-    (ENTITY "{lib}" "{entity}")
+    (OBID "{c.obid}") 
+    (ENTITY "{c.entity.library.obid}" "{c.entity.obid}")
 
-    {genIdent name}
+    {genIdent c.name}
 
-    (GEOMETRY {x} {y} {x + width} {y + height})
+    (GEOMETRY {x} {y} {x + w} {y + h})
     (SIDE 0)
     
     {lbl}
@@ -445,22 +502,31 @@ proc genComponent(name, label, lib, entity: string,
   )
   """
 
-proc genEntity(obid, name: string,
-  width, height, sheetWidth, sheetHeight: int): string =
+proc toEas(o: Object): string =
+  case o.kind:
+  of okPort: toEas o.port
+  of okComponent: toEas o.component
 
+
+
+proc toEas(e: Entity): string =
   let
     archId = $genOid()
     archTag = "structure"
     schemaId = $genOid()
 
-    portsDef = ""
-    internals = ""
+    portsDef = e.ports.map(toEas).joinLines
+    nets = ""
+      # e.structure.nets.map(toEas).joinLines
+    objects = joinLines collect do:
+      for _, o in e.structure.objects:
+        toEas o
 
   fmt"""
   (DATABASE_VERSION 17)
   (ENTITY_FILE
     (ENTITY
-      (OBID "{obid}")
+      (OBID "{e.obid}")
       (PROPERTIES
         (PROPERTY "STAMP_PLATFORM" "PC")
         (PROPERTY "STAMP_REVISION" "Revision 4")
@@ -469,9 +535,9 @@ proc genEntity(obid, name: string,
         (PROPERTY "STAMP_VERSION" "8.0")
       )
       
-      {genIdent name}
+      {genIdent e.name}
       
-      (GEOMETRY 0 0 {width} {height})
+      (GEOMETRY 0 0 {e.componentSize.width} {e.componentSize.height})
       (HDL 1)
       (EXTERNAL 0)
       (OBJSTAMP
@@ -494,8 +560,10 @@ proc genEntity(obid, name: string,
         (PROPERTIES
           (PROPERTY "SheetInfoFontSize" "8")
         )
-        (SHEETSIZE 0 0 {sheetWidth} {sheetHeight})
-        {internals}
+        (SHEETSIZE 0 0 {e.schemaSize.width} {e.schemaSize.height})
+        
+        {objects}
+        {nets}
       )
     )
   )
@@ -503,7 +571,7 @@ proc genEntity(obid, name: string,
   """
 
 
-proc buildProject(path, projectName: string) =
+proc buildProject(path, projectName: string, proj: Project) =
   let
     dirPath = path / projectName & ".ews"
     dbPath = dirPath / "ease.db"
@@ -513,7 +581,15 @@ proc buildProject(path, projectName: string) =
   writeFile dirPath / "workspace.eas", `workspace.eas`
 
   createDir dbPath
-  writeFile dbPath / "project.eas", `project.eas`(@[])
+  writeFile dbPath / "project.eas", `project.eas`(proj)
+
+  for lib in proj:
+    let libPath = dbpath / lib.obid
+    createDir libPath
+    writeFile libPath / "library.eas", `library.eas`(lib)
+
+    for _, entity in lib.entities:
+      writeFile libPath / entity.obid & ".eas", toEas(entity)
 
 # ------------------------------------------
 
@@ -523,6 +599,20 @@ proc getVfiles(dirPath: string): seq[string] =
     if ext == ".v" and not name.startsWith "config":
       result.add p
 
+proc instantiate(e: Entity, name: string): Component =
+  result = Component(
+    obid: "comp" & $genOid(),
+    name: name,
+    entity: e)
+
+  for p in e.ports:
+    var newPort = deepCopy p
+    newPort.obid = $genOid()
+    newPort.reference = some p
+    newPort.parent = some result
+    # newPort.position += pos
+    result.ports.add newPort
+
 
 when isMainModule:
   const
@@ -531,6 +621,7 @@ when isMainModule:
     ComponentWidth = 400
     ComponentYPadding = 30
     PortYOffset = 50
+    Xmargin = 100
 
   let (allModules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
   print allModules
@@ -566,18 +657,43 @@ when isMainModule:
 
   # generate internal structure
   for modName in ["TopLevel"]:
-    let module = allModules[modName]
+    let
+      module = allModules[modName]
+      bp = genBlueprint(module, allModules)
 
-    for name, intr in module.internals:
-      discard lib.entities[intr.module].structure.ports
-      let c = Component(
-        obid: "comp" & $genOid(),
-        name: name,
-        # position:
-          # entity {.cursor.}: Entity
-          # ports: seq[Port]
-      )
+    print bp
 
-  # TODO add nets
-  # let bp = genBlueprint(module, allModules)
-  # print bp
+    # ----------------------------------
+
+    var parentEntry = lib.entities[modName]
+
+    # fill structure.components
+    # var i = 0
+    for iname, intr in module.internals:
+      let
+        entry = lib.entities[intr.module]
+        c = instantiate(entry, iname)
+        # pos = (0, i)
+
+      parentEntry.structure.objects[iname] = 
+        Object(kind: okComponent, component: c)
+
+    # fill strcuture.ports
+    let width = bp.len
+    for p in parentEntry.ports:
+      var newPort = deepCopy p
+      newPort.reference = some p
+
+      if p.dir == pdOutput:
+        newPort.position.x = width * (ComponentWidth + Xmargin)
+
+      parentEntry.structure.objects[p.name] = 
+        Object(kind: okPort, port: newPort)
+
+    # fill strcuture.nets
+    # TODO
+
+
+  print lib
+  buildProject "./output/", "hope", @[lib]
+
