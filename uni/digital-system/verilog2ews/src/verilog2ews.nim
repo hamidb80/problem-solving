@@ -233,7 +233,7 @@ type
 
   Port {.acyclic.} = ref object
     dir: PortDir
-    name, obid: string
+    name, label, obid: string
     position: Point
 
     entity {.cursor.}: Entity
@@ -259,15 +259,16 @@ type
     ports: seq[Port]
 
   Net = ref object
-    obid: string
-    head, tail: LocalPortAddress
+    obid, name: string
+    wire: Wire
+    connection: HSlice[Port, Port]
 
   LocalPortAddress = tuple
     componentId, portName: string
 
 
 func genLabel(x, y: int, label: string, side: Side,
-    alignment: Alignment, scale = 100, color: Color = 0): string =
+    alignment: Alignment, scale = 90, color: Color = 0): string =
 
   fmt"""(LABEL
     (POSITION {x} {y})
@@ -331,6 +332,26 @@ proc genNet(wire: Wire,
     )
   )
   """
+
+
+proc move(p: var Port, by: Point) =
+  p.position += by
+
+proc move(c: var Component, by: Point) =
+  c.position += by
+
+  for p in c.ports.mitems:
+    p.move by
+
+proc move(o: var Object, by: Point) =
+  case o.kind:
+  of okComponent:
+    o.component.move by
+  of okPort:
+    o.port.move by
+
+func absolutePosition(p: Port): Point =
+  p.position + p.parent.get.position
 
 
 const
@@ -414,40 +435,35 @@ func `library.eas`(lib: Library): string =
   (END_OF_FILE)
   """
 
-
-# proc toEas(net: Net): string =
-#   let
-#     netid = $genOid()
-#     name = $genOid()
-#     partId = $genOid()
-
-#     wireSegments = wire.
-#       mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
-#       joinLines
+proc toEas(n: Net): string =
+  let
+    partId = $genOid()
+    wireSegments = n.wire.
+      mapIt(fmt"(WIRE {it.a.x} {it.a.y} {it.b.x} {it.b.y})").
+      joinLines
 
 
-#   fmt"""
-#   (NET
-#     (OBID "{netid}")
-#     {genIdent name}
+  fmt"""
+  (NET
+    (OBID "{n.obid}")
+    {genIdent n.name}
 
-#     (PART
-#       (OBID "{partId}")
+    (PART
+      (OBID "{partId}")
 
-#       {wireSegments}
+      {wireSegments}
 
-#       (PORT
-#         (OBID "{connection.head.componentId}")
-#         (NAME "{connection.head.portName}")
-#       )
-#       (PORT
-#         (OBID "{connection.tail.componentId}")
-#         (NAME "{connection.tail.portName}")
-#       )
-#     )
-#   )
-#   """
-
+      (PORT
+        (OBID "{n.connection.a.parent.get.obid}")
+        (NAME "{n.connection.a.reference.get.obid}")
+      )
+      (PORT
+        (OBID "{n.connection.b.parent.get.obid}")
+        (NAME "{n.connection.b.reference.get.obid}")
+      )
+    )
+  )
+  """
 
 proc toEas(p: Port): string =
   let
@@ -461,7 +477,7 @@ proc toEas(p: Port): string =
       if isDef:
         ""
       else:
-        genLabel(p.position.x, p.position.y, p.name, LeftToRight, Left)
+        genLabel(p.position.x - 50, p.position.y, p.label, LeftToRight, TopLeft)
 
     side =
       if p.dir == pdInput: LeftToRight
@@ -510,8 +526,6 @@ proc toEas(o: Object): string =
   case o.kind:
   of okPort: toEas o.port
   of okComponent: toEas o.component
-
-
 
 proc toEas(e: Entity): string =
   let
@@ -606,12 +620,13 @@ proc getVfiles(dirPath: string): seq[string] =
 proc instantiate(e: Entity, name: string): Component =
   result = Component(
     obid: "comp" & $genOid(),
-    name: name,
+    name: fmt"{e.name}:{name}",
     entity: e)
 
   for p in e.ports:
     var newPort = deepCopy p
     newPort.obid = $genOid()
+    newPort.label = fmt"{name}:{p.name}"
     newPort.reference = some p
     newPort.parent = some result
     # newPort.position += pos
@@ -625,7 +640,8 @@ when isMainModule:
     ComponentWidth = 400
     ComponentYPadding = 100
     PortYOffset = 200
-    Xmargin = 100
+    Ymargin = 200
+    Xmargin = 400
 
   let (allModules, globalDefines) = extractModulesFromFiles ["./temp/sample.v"]
   print allModules
@@ -633,12 +649,12 @@ when isMainModule:
   var lib = Library(obid: "lib" & $genOid(), name: "design")
 
   # entities declaration [name, ports, ...]
-  for name, module in allModules:
+  for mname, module in allModules:
     let (inputs, outputs) = splitPorts module
 
     var entr = Entity(
       obid: "entr" & $genOid(),
-      name: name,
+      name: mname,
       library: lib,
       schemaSize: (SchemaWidth, SchemaHeight),
       componentSize: (ComponentWidth, ComponentYPadding*2 +
@@ -654,52 +670,61 @@ when isMainModule:
       entr.ports.add Port(
         dir: p.dir,
         name: p.name,
+        label: p.name,
         entity: entr,
         obid: $genOid(),
         position: (x, y))
 
-      # entr.ports.add po
-      # entr.sctructure[p.name] = Internal(kind: ikPort, port: po)
-
-    lib.entities[name] = entr
+    lib.entities[mname] = entr
 
   # generate internal structure
   for modName in ["TopLevel"]:
     let
       module = allModules[modName]
-      bp = genBlueprint(module, allModules)
+      (inps, outs) = splitPorts module
+      bp = @[inps] & genBlueprint(module, allModules) & @[outs]
+
 
     print bp
-
     # ----------------------------------
 
     var parentEntry = lib.entities[modName]
 
-    # fill structure.components
-    # var i = 0
-    for iname, intr in module.internals:
-      let
-        entry = lib.entities[intr.module]
-        c = instantiate(entry, iname)
-        # pos = (0, i)
 
-      parentEntry.structure.objects[iname] =
-        Object(kind: okComponent, component: c)
-
-    # fill strcuture.ports
-    let width = bp.len
     for p in parentEntry.ports:
       var newPort = deepCopy p
       newPort.reference = some p
 
-      if p.dir == pdOutput:
-        newPort.position.x = width * (ComponentWidth + Xmargin)
-
       parentEntry.structure.objects[p.name] =
         Object(kind: okPort, port: newPort)
 
+    # fill structure.components
+    for iname, intr in module.internals:
+      let
+        entry = lib.entities[intr.module]
+        c = instantiate(entry, iname)
+
+      parentEntry.structure.objects[iname] =
+        Object(kind: okComponent, component: c)
+
+
+    var xacc = Xmargin
+    for layer in bp:
+  
+      var yacc = Ymargin
+      for objectName in layer:
+        var obj = parentEntry.structure.objects[objectName]
+        obj.move (xacc, yacc)
+
+        yacc.inc case obj.kind:
+          of okPort: Ymargin
+          of okComponent:
+            obj.component.entity.componentSize.height
+
+      xacc.inc ComponentWidth + Xmargin
+
+
     # fill strcuture.nets
-    # TODO
 
 
   # print lib
