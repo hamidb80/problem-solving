@@ -100,7 +100,7 @@ func onlyIdent(vn: VNode): string =
     $vn.lookup
   else:
     $vn
-  
+
 func toVModule(m: VNode): VModule =
   let params = m.params.mapIt onlyIdent it
 
@@ -111,7 +111,7 @@ func toVModule(m: VNode): VModule =
     of vnkDeclare:
       for id in vn.idents:
         let name = onlyIdent id
-          
+
 
         template addPort(kind, label): untyped =
           result.ports[params.find label] = (kind, label)
@@ -135,7 +135,8 @@ func toVModule(m: VNode): VModule =
     of vnkInstanciate:
       let n = $vn.instanceIdent
       result.internals[n] =
-        Instance(module: $vn.module, name: n, args: vn.children.mapit $it)
+        Instance(module: $vn.module, name: n,
+            args: vn.children.mapit onlyIdent it)
 
     else:
       discard
@@ -181,28 +182,35 @@ func initConnDepth(instances: Table[string, Instance],
 func genBlueprintImpl(
   inp: string, conns: ConnectionTable,
   m: VModule, modules: ModulesTable,
-  depth: int, result: var Table[string, InputDepth]) =
+  depth: int, result: var Table[string, InputDepth], seen:var HashSet[string]) =
 
-  ## FIXME set max for loop styles
+  seen.incl inp
 
   try:
     for portAddr in conns[inp]:
-      let ins = portAddr.instanceName
-      result[ins][m.internals[ins].args.find inp] = some depth
+      let 
+        ins = portAddr.instanceName
+        intr = m.internals[ins]
 
-      for i, o in m.internals[ins].args:
-        if modules[m.internals[ins].module].ports[i].dir == pdOutput:
-          genBlueprintImpl o, conns, m, modules, depth+1, result
-  
+      result[ins][intr.args.find inp] = some depth
+
+      for i, o in intr.args:
+        if modules[intr.module].ports[i].dir == pdOutput:
+          if o notin seen:
+            genBlueprintImpl o, conns, m, modules, depth+1, result, seen
+
   except:
     discard
 
 func genBlueprint(m: VModule, modules: ModulesTable,
     conns: ConnectionTable): BluePrint =
 
-  var insInputsDepth = initConnDepth(m.internals, modules)
+  var 
+    insInputsDepth = initConnDepth(m.internals, modules)
+    seen: HashSet[string]
+
   for inp in m.inputs:
-    genBlueprintImpl inp, conns, m, modules, 0, insInputsDepth
+    genBlueprintImpl inp, conns, m, modules, 0, insInputsDepth, seen
 
   var insDepth: Table[string, int]
   for insName, inputsDepth in insInputsDepth:
@@ -211,14 +219,11 @@ func genBlueprint(m: VModule, modules: ModulesTable,
       insDepth[insName] = n.max
 
 
-  # safe print insDepth
-
   for insName, depth in insDepth:
     if depth+1 > result.len:
       result.setlen depth+1
 
     result[depth].add insName
-  # safe print result
 
 
 func genLines(points: openArray[Point]): Wire =
@@ -638,26 +643,38 @@ proc instantiate(e: Entity, name: string): Component =
     entity: e)
 
   for p in e.ports:
-    var newPort = deepCopy p
-    newPort.obid = $genOid()
-    newPort.label = fmt"{name}:{p.name}"
-    newPort.reference = some p
-    newPort.parent = some result
-    # newPort.position += pos
+    # var newPort = deepCopy p
+    # newPort.obid = $genOid()
+    # newPort.label = fmt"{name}:{p.name}"
+    # newPort.reference = some p
+    # newPort.parent = some result
+
+    var newPort = Port(
+      dir: p.dir,
+      name: p.name,
+      obid: $genOid(),
+      label: fmt"{name}:{p.name}",
+      reference: some p,
+      parent: some result,
+      position: p.position,
+      entity: p.entity,
+      )
+
+
     result.ports.add newPort
 
 
 when isMainModule:
   const
-    SchemaWidth = 6000
-    SchemaHeight = 4000
+    SchemaWidth = 10000
+    SchemaHeight = 10000
     ComponentWidth = 400
-    ComponentYPadding = 100
+    ComponentYPadding = 400
     PortYOffset = 200
     Ymargin = 200
-    Xmargin = 400
+    Xmargin = 600
 
-  let (allModules, globalDefines) = extractModulesFromFiles getVfiles "./temp"
+  let (allModules, globalDefines) = extractModulesFromFiles getVfiles "./temp" # ["./temp/sample.v"] 
   print allModules
 
   var lib = Library(obid: "lib" & $genOid(), name: "design")
@@ -672,7 +689,7 @@ when isMainModule:
       library: lib,
       schemaSize: (SchemaWidth, SchemaHeight),
       componentSize: (ComponentWidth, ComponentYPadding*2 +
-         PortYOffset*max(inputs.len, outputs.len)))
+         PortYOffset*(inputs.len + outputs.len)))
 
     for i, p in module.ports:
       let
@@ -715,11 +732,9 @@ when isMainModule:
 
       portAddrs[newPort.name] = Link(kind: lkDirect, portAddr: (newPort.name, -1))
 
-    # ------------------------------------------
-
     block primaryIteration:
       for iname, intr in module.internals:
-        let
+        let 
           entry = lib.entities[intr.module]
           c = instantiate(entry, iname)
 
@@ -728,6 +743,7 @@ when isMainModule:
 
         for i in allModules[intr.module].outputIndexes:
           portAddrs[intr.args[i]] = Link(kind: lkIndirect, portAddr: (intr.name, i))
+
 
     print portAddrs
 
@@ -770,4 +786,6 @@ when isMainModule:
 
 
         # print lib
+
+
   buildProject "./output/", "hope", @[lib]
