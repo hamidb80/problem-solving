@@ -759,7 +759,7 @@ when isMainModule:
           yacc.inc case obj.kind:
             of okPort: Ymargin
             of okComponent:
-              obj.component.entity.componentSize.height
+              obj.component.entity.componentSize.height + Ymargin
 
         xacc.inc ComponentWidth + Xmargin
 
