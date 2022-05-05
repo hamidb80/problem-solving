@@ -10,30 +10,8 @@ import ./conventions
 # ----------------------------------------------
 
 type
-  ModulesTable = Table[string, VModule]
-
-  VModule = object
-    ports: seq[tuple[kind: PortDir, name: string]]
-    internals: Table[string, Instance]
-    defines: LookUp
-
-  PortDir = enum
-    pdInput = 1, pdOutput = 2
-
-  Instance = object
-    module: string
-    args: seq[string]
-
-  LookUp = Table[string, VNode]
-
-
-
-  InputDepth = seq[Option[int]]
-
-  BluePrint = seq[seq[string]]
-
   Point = tuple[x, y: int]
-  Rect = tuple[width, height: int]
+  Size = tuple[width, height: int]
   Line = HSlice[Point, Point]
   Wire = seq[Line]
 
@@ -62,51 +40,28 @@ type
 
   Color = range[0..71]
 
+  PortDir = enum
+    pdInput = 1, pdOutput = 2
+
+# ----------------------------------------------
 
 type
-  Project = object
-    libraries: seq[Library]
+  ModulesTable = Table[string, VModule]
 
-  Library = ref object
-    obid, name: string
-    entities: seq[Entity]
+  VModule = object
+    ports: seq[tuple[kind: PortDir, name: string]]
+    internals: Table[string, Instance]
+    defines: LookUp
 
-  Entity = ref object
-    obid, name: string
-    library {.cursor.}: Library
+  Instance = object
+    module: string
+    args: seq[string]
 
-    size: Rect
-    ports: seq[Port]
-    schemaSize: Rect
+  LookUp = Table[string, VNode]
 
-    internals: seq[Internal]
+  InputDepth = seq[Option[int]]
 
-  Port {.acyclic.} = ref object
-    kind: PortDir
-    name, obid: string
-    position: Point
-    reference: Port
-
-  InternalKinds = enum
-    ikNet, ikPort, ikComponent
-
-  Internal = object
-    case kind: InternalKinds
-    of ikNet: net: Net
-    of ikPort: port: Port
-    of ikComponent: component: Component
-
-  Component = ref object
-    obid, name: string
-    position: Point
-    entity {.cursor.}: Entity
-
-  Net = ref object
-    obid: string
-    head, tail: LocalPortAddress
-
-  LocalPortAddress = tuple
-    componentId, portName: string
+  BluePrint = seq[seq[string]]
 
 
 template searchPort(m: VModule, pd: PortDir): untyped =
@@ -246,6 +201,51 @@ func toWire(a, b: Point, foldx: range[0.0 .. 1.0]): Wire =
   ]
 
 # ------------------------------------------
+
+type
+  Project = object
+    libraries: seq[Library]
+
+  Library = ref object
+    obid, name: string
+    entities: seq[Entity]
+
+  Entity = ref object
+    obid, name: string
+    library {.cursor.}: Library
+
+    componentSize, schemaSize: Size
+    ports: seq[Port]
+
+    internals: seq[Internal]
+
+  Port {.acyclic.} = ref object
+    kind: PortDir
+    name, obid: string
+    position: Point
+    reference: Port
+
+  InternalKinds = enum
+    ikNet, ikPort, ikComponent
+
+  Internal = object
+    case kind: InternalKinds
+    of ikNet: net: Net
+    of ikPort: port: Port
+    of ikComponent: component: Component
+
+  Component = ref object
+    obid, name: string
+    position: Point
+    entity {.cursor.}: Entity
+
+  Net = ref object
+    obid: string
+    head, tail: LocalPortAddress
+
+  LocalPortAddress = tuple
+    componentId, portName: string
+
 
 const
   `toolflow.xml` = readFile "./assets/toolflow.xml"
