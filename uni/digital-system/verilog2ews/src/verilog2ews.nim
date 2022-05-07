@@ -679,12 +679,23 @@ when isMainModule:
     Ymargin = 200
     Xmargin = 1000
 
+
+  let params = commandLineParams()
+  
+  if params.len == 0:
+    quit("""
+USAGE:
+app <verilogFilesDir> <savePath> <projectName> ...<moduleNamesYouWannaBuildStructure>
+
+EXAMPEL:
+app ./temp ./output hope top
+    """)
+
   let 
-    params = commandLineParams()
     verilogDir = params[0]
     savePath = params[1]
     projectName = params[2]
-    whatModules = params[3 .. ^1]   # TODO
+    whatModules = params[3 .. ^1]
 
   # verilog dir path - where to save ews - modules you wanna genenarate
   
@@ -727,7 +738,7 @@ when isMainModule:
 
 
   # generate internal structure
-  for mname in ["top"]:
+  for mname in whatModules:
     let
       module = allModules[mname]
       conns = initConnTable(module, allModules)
