@@ -10,11 +10,6 @@ import ./conventions
 # ----------------------------------------------
 
 type
-  Point = tuple[x, y: int]
-  Size = tuple[width, height: int]
-  Line = HSlice[Point, Point]
-  Wire = seq[Line]
-
   Alignment = enum
     BottomRight = 0
     Bottom = 1
@@ -39,6 +34,16 @@ type
     #   2
 
   Color = range[0..71]
+
+  Point = tuple
+    x, y: int
+  
+  Size = tuple
+    width, height: int
+
+  Line = HSlice[Point, Point]
+  
+  Wire = seq[Line]
 
   PortDir = enum
     pdInput = 1, pdOutput = 2
@@ -667,15 +672,26 @@ proc instantiate(e: Entity, name: string): Component =
 when isMainModule:
   const
     SchemaWidth = 10000
-    SchemaHeight = 10000
+    SchemaHeight = 12000
     ComponentWidth = 400
     ComponentYPadding = 400
     PortYOffset = 200
     Ymargin = 200
     Xmargin = 1000
 
-  let (allModules, globalDefines) = extractModulesFromFiles getVfiles "./temp" # ["./temp/sample.v"] 
-  print allModules
+  let 
+    params = commandLineParams()
+    verilogDir = params[0]
+    savePath = params[1]
+    projectName = params[2]
+    whatModules = params[3 .. ^1]   # TODO
+
+  # verilog dir path - where to save ews - modules you wanna genenarate
+  
+
+  let (allModules, globalDefines) = extractModulesFromFiles getVfiles verilogDir
+  # print allModules
+
 
   var lib = Library(obid: "lib" & $genOid(), name: "design")
 
@@ -708,6 +724,8 @@ when isMainModule:
 
     lib.entities[mname] = entr
 
+
+
   # generate internal structure
   for mname in ["top"]:
     let
@@ -717,7 +735,7 @@ when isMainModule:
       bp = (@[inps] & genBlueprint(module, allModules, conns) & @[outs]).filterIt it.len != 0
 
 
-    print conns, bp
+    # print conns, bp
     # ----------------------------------
 
     var portAddrs: Table[string, Link]
@@ -744,8 +762,7 @@ when isMainModule:
         for i in allModules[intr.module].outputIndexes:
           portAddrs[intr.args[i]] = Link(kind: lkIndirect, portAddr: (intr.name, i))
 
-
-    print portAddrs
+    # print portAddrs
 
     block placeObjects:
       var xacc = Xmargin
@@ -788,4 +805,4 @@ when isMainModule:
         # print lib
 
 
-  buildProject "./output/", "hope", @[lib]
+  buildProject savePath, projectName, @[lib]
