@@ -1,0 +1,2 @@
+input(). # comment
+split()
