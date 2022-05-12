@@ -1,4 +1,4 @@
-import std/[math, dom]
+import std/[dom, math]
 import bumpy, vmath, glob, config, utils
 
 
@@ -7,6 +7,7 @@ type
     id*: int
     el*: Element
     location*: Point
+    isFound*: bool
 
   QuadSpace* = ref object
     root*: QuadNode
@@ -16,6 +17,8 @@ type
     things*: seq[Entry]
     nodes*: seq[QuadNode]
     bounds*: Rect
+    level*: int
+    isProbed*: bool
     el*: Element
 
 
@@ -23,11 +26,15 @@ converter toVec2(p: Point): Vec2 =
   vec2 p.x, p.y
 
 
-proc genCircle*(p: Point): Element =
+proc genCircle*(e: Entry): Element =
   result = newSvgEl "circle"
-  for (p, v) in {"cx": $p.x, "cy": $p.y, "class": "point"}:
-
+  for (p, v) in {"cx": $e.location.x, "cy": $e.location.y, "class": "point"}:
     result.setAttr p.K, v.K
+
+  
+  if e.isFound:
+    result.classList.add K"special"
+
 
 proc genBorder*(qn: QuadNode): Element =
   result = newSvgEl "rect"
@@ -41,11 +48,14 @@ proc genBorder*(qn: QuadNode): Element =
     result.setAttr K(p), K($v)
 
   result.setAttr K"class", K"border"
+  if qn.isProbed:
+    result.classList.add K"special"
 
 
-proc newQuadNode(bounds: Rect): QuadNode =
+proc newQuadNode(bounds: Rect, level = 0): QuadNode =
   result = QuadNode()
   result.bounds = bounds
+  result.level = level
 
 proc newQuadSpace*(bounds: Rect, maxThings = 10): QuadSpace =
   result = QuadSpace()
@@ -74,12 +84,13 @@ proc split(qs: QuadSpace, qn: var QuadNode) =
     w = qn.bounds.w/2
     h = qn.bounds.h/2
 
+  let lvl = qn.level+1
+
   qn.nodes = @[
-    newQuadNode(Rect(x: x, y: y, w: w, h: h)),
-    newQuadNode(Rect(x: x, y: y+h, w: w, h: h)),
-    newQuadNode(Rect(x: x+w, y: y, w: w, h: h)),
-    newQuadNode(Rect(x: x+w, y: y+h, w: w, h: h))
-  ]
+    newQuadNode(Rect(x: x, y: y, w: w, h: h), lvl),
+    newQuadNode(Rect(x: x, y: y+h, w: w, h: h), lvl),
+    newQuadNode(Rect(x: x+w, y: y, w: w, h: h), lvl),
+    newQuadNode(Rect(x: x+w, y: y+h, w: w, h: h), lvl)]
 
   for e in qn.things:
     let index = qn.whichQuadrant(e)
@@ -124,7 +135,7 @@ iterator allEntries*(qs: QuadSpace): Entry =
       for e in qs.things:
         yield e
 
-iterator findInRangeApprox*(qs: QuadSpace, e: Entry, radius: float): Entry =
+iterator findInRangeApprox*(qs: QuadSpace, p: Point, radius: float): Entry =
   ## Iterates all entries in range of an entry but does not cull them.
   ## Useful if you need distance anyways and will compute other computations.
   var nodes = @[qs.root]
@@ -132,14 +143,15 @@ iterator findInRangeApprox*(qs: QuadSpace, e: Entry, radius: float): Entry =
     var qs = nodes.pop()
     if qs.nodes.len == 4:
       for node in qs.nodes:
-        if circle(e.location, radius).overlaps(node.bounds):
+        if circle(p, radius).overlaps(node.bounds):
+          node.isProbed = true
           nodes.add(node)
     else:
       for e in qs.things:
         yield e
 
-iterator findInRange*(qs: QuadSpace, e: Entry, radius: float): Entry =
-  let radiusSq = radius * radius
-  for thing in qs.findInRangeApprox(e, radius):
-    if e.id != thing.id and e.location.distSq(thing.location) < radiusSq:
-      yield thing
+proc findInRange*(qs: QuadSpace, p: Point, radius: float) =
+  let radiusSq = radius ^ 2
+  for thing in qs.findInRangeApprox(p, radius):
+    if thing.location.distSq(p) < radiusSq:
+      thing.isFound = true

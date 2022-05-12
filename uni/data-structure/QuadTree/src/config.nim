@@ -1,4 +1,4 @@
 const
   size* = 600'f32
-  limit* = 4
+  limitDefault* = 4
   canvasMargin* = 1
