@@ -11,12 +11,12 @@ type
 
   QuadSpace* = ref object
     root*: QuadNode
-    maxThings*: int
+    maxData*: int
 
   QuadNode* = ref object
-    things*: seq[Entry]
+    data*: seq[Entry]
     nodes*: seq[QuadNode]
-    bounds*: Rect
+    geometry*: Rect
     level*: int
     isProbed*: bool
     el*: Element
@@ -40,10 +40,10 @@ proc genBorder*(qn: QuadNode): Element =
   result = newSvgEl "rect"
 
   for (p, v) in {
-    "x": qn.bounds.x + canvasMargin,
-    "y": qn.bounds.y + canvasMargin,
-    "width": qn.bounds.w,
-    "height": qn.bounds.h}:
+    "x": qn.geometry.x + canvasMargin,
+    "y": qn.geometry.y + canvasMargin,
+    "width": qn.geometry.w,
+    "height": qn.geometry.h}:
 
     result.setAttr K(p), K($v)
 
@@ -52,23 +52,23 @@ proc genBorder*(qn: QuadNode): Element =
     result.classList.add K"special"
 
 
-proc newQuadNode(bounds: Rect, level = 0): QuadNode =
+proc newQuadNode(geometry: Rect, level = 0): QuadNode =
   result = QuadNode()
-  result.bounds = bounds
+  result.geometry = geometry
   result.level = level
 
-proc newQuadSpace*(bounds: Rect, maxThings = 10): QuadSpace =
+proc newQuadSpace*(geometry: Rect, maxData = 10): QuadSpace =
   result = QuadSpace()
-  result.root = newQuadNode(bounds)
-  result.maxThings = maxThings
+  result.root = newQuadNode(geometry)
+  result.maxData = maxData
 
 proc insert*(qs: QuadSpace, e: Entry)
 proc insert*(qs: QuadSpace, qn: var QuadNode, e: Entry)
 
 proc whichQuadrant(qs: QuadNode, e: Entry): int =
   let
-    xMid = qs.bounds.x + qs.bounds.w/2
-    yMid = qs.bounds.y + qs.bounds.h/2
+    xMid = qs.geometry.x + qs.geometry.w/2
+    yMid = qs.geometry.y + qs.geometry.h/2
 
   if e.location.x < xMid:
     if e.location.y < yMid: 0
@@ -79,10 +79,10 @@ proc whichQuadrant(qs: QuadNode, e: Entry): int =
 
 proc split(qs: QuadSpace, qn: var QuadNode) =
   let
-    x = qn.bounds.x
-    y = qn.bounds.y
-    w = qn.bounds.w/2
-    h = qn.bounds.h/2
+    x = qn.geometry.x
+    y = qn.geometry.y
+    w = qn.geometry.w/2
+    h = qn.geometry.h/2
 
   let lvl = qn.level+1
 
@@ -92,11 +92,11 @@ proc split(qs: QuadSpace, qn: var QuadNode) =
     newQuadNode(Rect(x: x+w, y: y, w: w, h: h), lvl),
     newQuadNode(Rect(x: x+w, y: y+h, w: w, h: h), lvl)]
 
-  for e in qn.things:
+  for e in qn.data:
     let index = qn.whichQuadrant(e)
     qs.insert(qn.nodes[index], e)
 
-  qn.things.setLen(0)
+  qn.data.setLen(0)
 
 proc insert(qs: QuadSpace, qn: var QuadNode, e: Entry) =
   if qn.nodes.len != 0:
@@ -104,8 +104,8 @@ proc insert(qs: QuadSpace, qn: var QuadNode, e: Entry) =
     qs.insert(qn.nodes[index], e)
 
   else:
-    qn.things.add e
-    if qn.things.len > qs.maxThings:
+    qn.data.add e
+    if qn.data.len > qs.maxData:
       qs.split(qn)
 
 proc insert*(qs: QuadSpace, e: Entry) =
@@ -113,7 +113,7 @@ proc insert*(qs: QuadSpace, e: Entry) =
 
 proc clear*(qs: QuadSpace) {.inline.} =
   qs.root.nodes.setLen(0)
-  qs.root.things.setLen(0)
+  qs.root.data.setLen(0)
 
 iterator allNodes*(qs: QuadSpace): QuadNode =
   var nodeStack = @[qs.root]
@@ -132,7 +132,7 @@ iterator allEntries*(qs: QuadSpace): Entry =
       for node in qs.nodes:
         nodes.add(node)
     else:
-      for e in qs.things:
+      for e in qs.data:
         yield e
 
 iterator findInRangeApprox*(qs: QuadSpace, p: Point, radius: float): Entry =
@@ -143,11 +143,11 @@ iterator findInRangeApprox*(qs: QuadSpace, p: Point, radius: float): Entry =
     var qs = nodes.pop()
     if qs.nodes.len == 4:
       for node in qs.nodes:
-        if circle(p, radius).overlaps(node.bounds):
+        if circle(p, radius).overlaps(node.geometry):
           node.isProbed = true
           nodes.add(node)
     else:
-      for e in qs.things:
+      for e in qs.data:
         yield e
 
 proc findInRange*(qs: QuadSpace, p: Point, radius: float) =

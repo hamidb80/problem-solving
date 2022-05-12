@@ -1,5 +1,5 @@
-import std/[jsffi, jsconsole, dom, xmltree, strtabs, strformat, strutils]
-import vmath, bumpy, std/random
+import std/[jsconsole, dom, strformat, strutils]
+import bumpy, std/random
 import spacy, utils, config, glob
 
 type
