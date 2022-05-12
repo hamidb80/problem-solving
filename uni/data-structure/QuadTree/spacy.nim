@@ -104,16 +104,6 @@ proc clear*(qs: QuadSpace) {.inline.} =
   qs.root.nodes.setLen(0)
   qs.root.things.setLen(0)
 
-proc len*(qs: QuadSpace): int {.inline.} =
-  var nodes = @[qs.root]
-  while nodes.len > 0:
-    var qs = nodes.pop()
-    if qs.nodes.len == 4:
-      for node in qs.nodes:
-        nodes.add(node)
-    else:
-      result += qs.things.len
-
 iterator allNodes*(qs: QuadSpace): QuadNode =
   var nodeStack = @[qs.root]
   while nodeStack.len > 0:

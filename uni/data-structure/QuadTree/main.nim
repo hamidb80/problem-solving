@@ -22,7 +22,7 @@ proc reDraw =
   for (p, v) in {
     "width": $(size + canvasMargin * 2),
     "height": $(size + canvasMargin * 2)}:
-    
+
     svg.setAttr K p, K v
 
 
@@ -45,21 +45,19 @@ proc reDraw =
 let board = document.getElementById("board")
 
 board.addEventListener(cstring"click") do(ev: Event):
-  let
-    emouse = MouseEvent ev
-    p = Point(x: emouse.offsetX.float, y: emouse.offsetY.float)
+  # let
+  #   emouse = MouseEvent ev
+  #   p = Point(x: emouse.offsetX.float, y: emouse.offsetY.float)
 
-  addToEntries p
+  # addToEntries p
+
+
   reDraw()
-
-# console.log space
-
-# for a in space.all():
-#   for b in space.findInRange(a, distance):
-#     console.log a, " is close to ", b
-
-# space.clear()
 
 # ----------------------------------------------
 
-reDraw()
+when isMainModule:
+  for i in 1..100:
+    addToEntries Point(x: rand size, y: rand size)
+
+  reDraw()
