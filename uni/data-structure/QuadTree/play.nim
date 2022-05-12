@@ -17,7 +17,7 @@ when false:
 
     QuadTree = object
       geometry: tuple[x,y, w,h: float]
-      data: seq[Entry]
+      data: seq[Photo]
       nodes: seq[QuadTree]
 
   ]

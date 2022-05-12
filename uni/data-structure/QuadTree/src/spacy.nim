@@ -57,7 +57,7 @@ proc newQuadNode(geometry: Rect, level = 0): QuadNode =
   result.geometry = geometry
   result.level = level
 
-proc newQuadSpace*(geometry: Rect, maxData = 10): QuadSpace =
+proc newQuadSpace*(geometry: Rect, maxData: int): QuadSpace =
   result = QuadSpace()
   result.root = newQuadNode(geometry)
   result.maxData = maxData
