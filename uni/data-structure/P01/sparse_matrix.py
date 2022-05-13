@@ -125,7 +125,7 @@ class Graph:
     def rels(g, node):  # AKA get_similars
         result = []
 
-        nid = g.getid(node)
+        nid = g.getId(node)
         for rid, row in g.matrix:
             if row[nid]:
                 result.append(g.idNameMap[rid])
@@ -142,13 +142,10 @@ class Graph:
         return result
 
     def remove(g, node):
-        result = []
-        for yid, row in g.matrix.data.items():
-            for xid in row:
-                if yid != xid:
-                    result.append((g.idNameMap[yid], g.idNameMap[xid]))
+        id = g.getId(node)
 
-        return result
+        for yid in g.matrix.data:
+            g.put(yid, id, 0)
 
 
 if __name__ == "__main__":
