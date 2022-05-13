@@ -1,13 +1,14 @@
 from pprint import pprint
 
+
 class SparseMatrix:
     # SparseMatrix = Table[int, Table[int, int]]
     data = None
     cap = None
 
-    def __init__(sm): 
-      sm.data = {}
-      sm.cap = 0
+    def __init__(sm):
+        sm.data = {}
+        sm.cap = 0
 
     def insert(sm, row, col, value):
         if row not in sm.data:
@@ -39,7 +40,7 @@ class SparseMatrix:
         result = []
 
         for _ in range(size):
-          result.append([0] * size) 
+            result.append([0] * size)
 
         for y in sm.data:
             for x, val in sm.data[y].items():
@@ -70,7 +71,7 @@ class SparseMatrix:
 
 def fromArray(arr2d):
     assert(len(arr2d) == len(arr2d[0]))
-    
+
     result = SparseMatrix()
     result.cap = len(arr2d)
 
@@ -98,11 +99,13 @@ class Graph:
     def __init__(self): pass
 
     def genId(g, node):
-        result = g.idTracker
-        g.idTracker += 1
-        g.idNameMap[result] = node
+        id = g.idTracker
 
-        return result
+        g.idTracker += 1
+        g.idNameMap[id] = node
+        g.nameIdMap[node] = id
+
+        return id
 
     def getId(g, node):
         return g.nameIdMap[node]
@@ -118,8 +121,7 @@ class Graph:
         g.put(n1, n2, 0)
 
     def insert(g, node):
-        id = g.genId(node)
-        g.nameIdMap[node] = id
+        g.genId(node)
         g.addRel(node, node)
 
     def rels(g, node):  # AKA get_similars
@@ -144,8 +146,12 @@ class Graph:
     def remove(g, node):
         id = g.getId(node)
 
-        for yid in g.matrix.data:
-            g.put(yid, id, 0)
+        for y in g.matrix.data:
+            if y == id:
+                for x in range(g.matrix.cap + 1):
+                    g.matrix.put(y, x, 0)
+            else:
+                g.matrix.put(y, id, 0)
 
 
 if __name__ == "__main__":
@@ -170,10 +176,11 @@ if __name__ == "__main__":
     for node in ["A", "B", "C", "D", "E", "F"]:
         g.insert(node)
 
-    for (a, b) in [("A", "B"), ("B", "C"), ("B", "D")]:
+    for (a, b) in [("A", "B"), ("B", "C"), ("B", "D"), ("D", "F")]:
         g.addRel(a, b)
 
-    g.delRel("B", "D")
+    # g.delRel("B", "D")
+    # g.remove("B")
 
     for (a, b) in g.allRels():
         print(a, " -> ", b)
