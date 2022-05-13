@@ -1,14 +1,27 @@
-import std/[sequtils, algorithm, math, strutils]
+import macros
 
-func `~=`(a,b: float): bool =
-  almostEqual(a, b, 10)
 
-func `!`(a: int): int =
-  if a <= 1:
+const 
+  m = 60
+  h = 3600
+  d = 85400
+
+let runtime= parseInt input()
+
+let num = runtime + 2 * 3 + 9
+
+dumpTree:
+  if cond1:
     1
   else:
-    a * !(a-1)
+    2
 
-echo 1.2 ~= 1.1
-
-echo !5
+when false:
+  IfStmt:
+    ElifBranch:
+      Ident "cond"
+      StmtList:
+        IntLit 1
+    Else:
+      StmtList:
+        IntLit 2
