@@ -14,8 +14,8 @@ func `[]=`(n: var int, index: int, value: static[int]) =
 # --------------------------------
 
 var a = 15
-# echo toBin(a, 8), " << Before"
+echo toBin(a, 8), " << Before"
 a[2] = 0
-a[6] = 1
-# echo toBin(a, 8), " << After"
+a[6] = 3
+echo toBin(a, 8), " << After"
 echo a[5]
