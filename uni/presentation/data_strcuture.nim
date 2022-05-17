@@ -1,7 +1,15 @@
-import std/[]
+import std/[tables]
 
 type
-  Path  = seq[string]
   Matrix = seq[seq[int]]
-  # Matrix[N: SomeNumber] = seq[seq[N]]
 
+  SparseMatrix = Table[tuple[x, y: int], int]
+
+
+var spm = toTable {
+  (1, 2): 7,
+  (6, 4): 3
+}
+
+del spm, (1, 2)
+echo spm[(6, 4)]
