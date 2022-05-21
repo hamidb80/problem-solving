@@ -38,13 +38,13 @@ proc reDraw =
 
     svg.setAttr K p, K v
 
-  for e in entries:
-    e.el = genCircle e
-    svg.appendChild e.el
-
   for n in space.allNodes:
     n.el = genBorder n
     svg.appendChild n.el
+
+  for e in entries:
+    e.el = genCircle e
+    svg.appendChild e.el
 
 
   console.clear

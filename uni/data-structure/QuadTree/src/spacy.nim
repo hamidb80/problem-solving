@@ -49,7 +49,9 @@ proc genBorder*(qn: QuadNode): Element =
 
   result.setAttr K"class", K"border"
   if qn.isProbed:
-    result.classList.add K"special"
+    result.classList.add: 
+      if qn.data.len != 0: K"final"
+      else: K"special"
 
 
 proc newQuadNode(geometry: Rect, level = 0): QuadNode =
