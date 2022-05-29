@@ -5,3 +5,5 @@ bin/
 *.exe
 
 issue.md
+
+__pycache__
