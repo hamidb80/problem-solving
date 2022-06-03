@@ -51,8 +51,8 @@ func `+`(c1, c2: Coordinate): Coordinate =
 func `-`(m: Moves): Moves =
   reversedMove[m]
 
-func apply(c: var Coordinate, move: Moves) =
-  c = c + toVector[move]
+func apply(c: Coordinate, move: Moves): Coordinate =
+  c + toVector[move]
 
 func initMaze(rows, cols: int): Maze =
   newSeqWith rows:
@@ -81,46 +81,58 @@ func findPath*(mz: Maze, head, tail: Coordinate): Option[Path] =
         if y in ybound or x in xbound: true
         else: mz[y-1][x-1]
 
-
   # --- go
   var
     pos = head + offset
     track: Path
 
+
+  mark[pos] = true
   track.add mTopLeft
-  pos.apply mTopLeft
+  pos = pos.apply mTopLeft
+  mark[pos] = true
 
   while track.len != 0:
     let move = track.last
 
     if move == mOffSide:
-      pos.apply -track.pop
-
-      mark[pos] = true
-      debugEcho pos
+      debugEcho 1
+      track.shoot
 
       inc track.last
-      pos.apply track.last
-
+      pos = pos.apply track.last
+      
     elif pos == endpos:
-      debugEcho 2
       return some track
 
     elif borderedMaze[pos]: # hit the wall
-      debugEcho 3
-      pos.apply -track.pop
+      # debugEcho 3
+      pos = pos.apply -track.pop
 
-      let newMove = Moves move.int + 1
+      let 
+        newMove = Moves move.int + 1
+        newPos = pos.apply newMove
 
+      pos = newPos
       track.add newMove
-      pos.apply track.last
-
-      debugEcho track, pos
-
+      mark[newPos] = true
+      
     else:
       debugEcho (4, track.len, pos)
-      track.add mTopLeft
-      pos.apply track.last
+      
+      var
+        newMove = mTopLeft
+        newPos = pos.apply mTopLeft
+
+      if mark[newPos]:
+        while mark[newPos]:
+          newPos = pos.apply -track.pop
+          inc newMove
+          newPos = pos.apply newMove
+        
+      else:
+        track.add newMove
+        pos = newPos
 
 
 suite "test":
@@ -133,4 +145,4 @@ suite "test":
   ]
 
   test "simple":
-    echo findPath(m, (0, 0), (0, 4))
+    echo findPath(m, (1, 0), (0, 4))
