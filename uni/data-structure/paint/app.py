@@ -1,3 +1,5 @@
+# written by @hamidb80
+
 from dataclasses import *
 from typing import *
 import sys
@@ -51,13 +53,12 @@ class Window(QMainWindow):
     history: History
     brush_size: int
     brush_color: QColor
-    is_drawing: bool
     current_points: List[QPoint]
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Paint App")
-        self.setGeometry(100, 100, 1000, 800)
+        self.setGeometry(100, 100, 2000, 1800)
         self.build_menu()
         self.init_states()
         self.render()
@@ -125,7 +126,6 @@ class Window(QMainWindow):
         self.brush_size = 2  # default brush size
         self.brush_color = Qt.black  # default color
 
-        self.is_drawing = False  # drawing flag
         self.current_points = []
 
     def render(self):
@@ -156,15 +156,13 @@ class Window(QMainWindow):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.is_drawing = True
             self.current_points.append(event.pos())
 
     def mouseMoveEvent(self, event):
-        if self.is_drawing:
-            new_pos = event.pos()
-            points = [self.current_points[-1], new_pos]
-            self.draw_line(Line(points, self.brush_color, self.brush_size))
-            self.current_points.append(new_pos)
+        new_pos = event.pos()
+        points = [self.current_points[-1], new_pos]
+        self.draw_line(Line(points, self.brush_color, self.brush_size))
+        self.current_points.append(new_pos)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -172,7 +170,6 @@ class Window(QMainWindow):
                 Line(self.current_points, self.brush_color, self.brush_size))
 
             self.current_points = []
-            self.is_drawing = False
 
     def paintEvent(self, event):
         QPainter(self).drawImage(self.rect(), self.image, self.image.rect())
