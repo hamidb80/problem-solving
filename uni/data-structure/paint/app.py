@@ -1,3 +1,5 @@
+# author: @hamidb80
+
 import sys
 from typing import *
 
@@ -8,7 +10,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 
-# _------------------------
+# _-- Funcdumental Data Structures
 
 class Stack:
     data: List
@@ -19,11 +21,11 @@ class Stack:
     def push(self, v):
         self.data.append(v)
 
-    def pop(self, v):
-        return self.data.pop(v)
+    def pop(self):
+        return self.data.pop()
 
     def reset(self):
-        self.data.clear()
+        self.data = []
 
     def is_empty(self):
         return len(self.data) == 0
@@ -37,9 +39,9 @@ class History:
         self.past = Stack()
         self.future = Stack()
 
-    def push(self, ev):
+    def push(self, val):
+        self.past.push(val)
         self.future.reset()
-        self.past.push(ev)
 
     def undo(self):
         if not self.past.is_empty():
@@ -52,7 +54,7 @@ class History:
     def get_current_data(self):
         return self.past.data
 
-# _------------------------
+# --- App Specefic Data Strcutures
 
 
 @dataclass
@@ -60,34 +62,30 @@ class Line:
     points: list[QPoint]
     color: QColor
 
+# --- App Specefic Constants
+
 
 LINE_WIDTH = 4
+WHITE = QColor('#FFFFFF')
+
+# --- visual Components
 
 
 class Canvas(QLabel):
     pen_color: QColor
     drawn_points: List[tuple]
+    history: History
 
-    def __init__(self, height, width, background_color=QColor('#FFFFFF')):
+    def __init__(self, height, width, background_color=WHITE):
         super().__init__()
+
         qpixmap = QPixmap(int(height), int(width))
         qpixmap.fill(background_color)
         self.setPixmap(qpixmap)
+
         self.pen_color = QColor('#000000')
         self.drawn_points = []
-
-    def set_pen_color(self, color):
-        self.pen_color = QColor(color)
-
-    def draw_line(self, p1, p2):
-        painter = QPainter(self.pixmap())
-        p = painter.pen()
-        p.setWidth(LINE_WIDTH)
-        p.setColor(self.pen_color)
-        painter.setPen(p)
-        painter.drawLine(p1[0], p1[1], p2[0], p2[1])
-        painter.end()
-        self.update()
+        self.history = History()
 
     def mousePressEvent(self, e: QMouseEvent):
         self.drawn_points.append((e.x(), e.y()))
@@ -96,11 +94,54 @@ class Canvas(QLabel):
         last_point = self.drawn_points[-1]
         new_point = (e.x(), e.y())
 
-        self.draw_line(last_point, new_point)
+        self.draw_segement(last_point, new_point,
+                           self.pen_color, LINE_WIDTH, True)
         self.drawn_points.append(new_point)
 
     def mouseReleaseEvent(self, _):
-        self.drawn_points.clear()
+        self.history.push(Line(self.drawn_points, self.pen_color))
+        self.drawn_points = []
+
+    def set_pen_color(self, color):
+        self.pen_color = QColor(color)
+
+    def draw_segement(self, p1, p2, color, width, should_update):
+        painter = QPainter(self.pixmap())
+        p = painter.pen()
+        p.setWidth(width)
+        p.setColor(color)
+
+        painter.setPen(p)
+        painter.drawLine(p1[0], p1[1], p2[0], p2[1])
+        painter.end()
+
+        if should_update:
+            self.update()
+
+    def draw_line(self, points, color, width):
+        for i in range(1, len(points)):
+            self.draw_segement(points[i-1], points[i], color, width, True)
+
+    def refill(self):
+        self.pixmap().fill(WHITE)
+
+    def draw_all_lines(self):
+        for l in self.history.get_current_data():
+            self.draw_line(l.points, l.color, LINE_WIDTH)
+
+    def time_travel(self, undo: bool):
+        """
+        the screen gets cleaned and is redrawn from the very first action
+        """
+
+        if undo:
+            self.history.undo()
+        else:
+            self.history.redo()
+
+        self.refill()
+        self.draw_all_lines()
+        self.update()
 
 
 class PaletteButton(QPushButton):
@@ -145,6 +186,23 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(w)
 
+        self.build_menu()
+
+    def build_menu(self):
+        main_menu = self.menuBar()
+
+        state_menu = main_menu.addMenu("State")
+
+        undo_action = QAction("Undo", self)
+        undo_action.setShortcut("Ctrl+Z")
+        state_menu.addAction(undo_action)
+        undo_action.triggered.connect(self.undo)
+
+        redo_action = QAction("Redo", self)
+        redo_action.setShortcut("Ctrl+Y")
+        state_menu.addAction(redo_action)
+        redo_action.triggered.connect(self.redo)
+
     def add_palette_button(self, palette):
         for c in self.colors:
             item = PaletteButton(c)
@@ -154,8 +212,14 @@ class MainWindow(QMainWindow):
     def set_canvas_color(self):
         self.canvas.set_pen_color(self.sender().color)
 
-# ----------------------
+    def undo(self):
+        self.canvas.time_travel(True)
 
+    def redo(self):
+        self.canvas.time_travel(False)
+
+
+# --- run
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

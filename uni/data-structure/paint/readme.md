@@ -1,3 +1,4 @@
-you can use `ctrl+z` for undo and `ctrl+y` for redo.
+# Paint App!
+a paint app with **Undo** [`ctrl+z`] and **Redo** [`ctrl+y`]
 
-install `pyqt` using `pip` then run `app.py`
+install `pyqt` using `pip`, then run `app.py`.
