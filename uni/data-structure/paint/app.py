@@ -1,204 +1,166 @@
-# written by @hamidb80
+import sys
+from typing import *
 
 from dataclasses import *
-from typing import *
-import sys
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 
+# _------------------------
+
+class Stack:
+    data: List
+
+    def __init__(self):
+        self.data = []
+
+    def push(self, v):
+        self.data.append(v)
+
+    def pop(self, v):
+        return self.data.pop(v)
+
+    def reset(self):
+        self.data.clear()
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+
+class History:
+    past: Stack
+    future: Stack
+
+    def __init__(self):
+        self.past = Stack()
+        self.future = Stack()
+
+    def push(self, ev):
+        self.future.reset()
+        self.past.push(ev)
+
+    def undo(self):
+        if not self.past.is_empty():
+            self.future.push(self.past.pop())
+
+    def redo(self):
+        if not self.future.is_empty():
+            self.past.push(self.future.pop())
+
+    def get_current_data(self):
+        return self.past.data
+
+# _------------------------
+
+
 @dataclass
 class Line:
     points: list[QPoint]
     color: QColor
-    size: int
 
 
-class History:
-    index: int
-    events: List
-
-    def __init__(self):
-        self.index = -1
-        self.events = []
-
-    def get_events(self):
-        return self.events[0:self.index + 1]
-
-    def push(self, ev):
-        if self.index != len(self.events) - 1:
-            print(".. ahead events deleted")
-            self.events = self.get_events()
-
-        self.events.append(ev)
-        self.index += 1
-
-        print(">> pushed, len: ", len(self.events))
-
-    def move_cursor(self, step):
-        if step > 0:
-            if self.index < len(self.events) - 1:
-                self.index += step
-
-        else:
-            if self.index > -1:
-                self.index += step
-
-        print(f"&& cursor {self.index}/{len(self.events)}")
+LINE_WIDTH = 4
 
 
-class Window(QMainWindow):
-    history: History
-    brush_size: int
-    brush_color: QColor
-    current_points: List[QPoint]
+class Canvas(QLabel):
+    pen_color: QColor
+    drawn_points: List[tuple]
+
+    def __init__(self, height, width, background_color=QColor('#FFFFFF')):
+        super().__init__()
+        qpixmap = QPixmap(int(height), int(width))
+        qpixmap.fill(background_color)
+        self.setPixmap(qpixmap)
+        self.pen_color = QColor('#000000')
+        self.drawn_points = []
+
+    def set_pen_color(self, color):
+        self.pen_color = QColor(color)
+
+    def draw_line(self, p1, p2):
+        painter = QPainter(self.pixmap())
+        p = painter.pen()
+        p.setWidth(LINE_WIDTH)
+        p.setColor(self.pen_color)
+        painter.setPen(p)
+        painter.drawLine(p1[0], p1[1], p2[0], p2[1])
+        painter.end()
+        self.update()
+
+    def mousePressEvent(self, e: QMouseEvent):
+        self.drawn_points.append((e.x(), e.y()))
+
+    def mouseMoveEvent(self, e):
+        last_point = self.drawn_points[-1]
+        new_point = (e.x(), e.y())
+
+        self.draw_line(last_point, new_point)
+        self.drawn_points.append(new_point)
+
+    def mouseReleaseEvent(self, _):
+        self.drawn_points.clear()
+
+
+class PaletteButton(QPushButton):
+    def __init__(self, color):
+        super().__init__()
+
+        self.setFixedSize(QSize(32, 32))
+        self.color = color
+
+        self.setStyleSheet(f"""
+            background-color: {color};
+            border-radius : 15;
+        """)
+
+
+class MainWindow(QMainWindow):
+    colors = [
+        '#000002', '#868687', '#900124', '#ed2832', '#2db153', '#13a5e7', '#4951cf',
+        '#fdb0ce', '#fdca0f', '#eee3ab', '#9fdde8', '#7a96c2', '#cbc2ec', '#a42f3b',
+        '#f45b7a', '#c24998', '#81588d', '#bcb0c2', '#dbcfc2',
+    ]
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Paint App")
-        self.setGeometry(100, 100, 2000, 1800)
-        self.build_menu()
-        self.init_states()
-        self.render()
 
-    def build_menu(self):
-        main_menu = self.menuBar()
+        app = QApplication.instance()
+        screen = app.primaryScreen()
+        geometry = screen.availableGeometry()
 
-        # ---
-        file_menu = main_menu.addMenu("File")
+        self.canvas = Canvas(geometry.width()*0.60, geometry.height()*0.7)
 
-        save_action = QAction("Save", self)
-        save_action.setShortcut("Ctrl+S")
-        file_menu.addAction(save_action)
-        save_action.triggered.connect(self.save)
+        w = QWidget()
+        l = QVBoxLayout()  # vertical layout
 
-        clear_action = QAction("Clear", self)
-        clear_action.setShortcut("Ctrl+C")
-        file_menu.addAction(clear_action)
-        clear_action.triggered.connect(self.clear)
+        w.setStyleSheet("background-color: #313234")
+        w.setLayout(l)
+        l.addWidget(self.canvas)
 
-        # ---
-        state_menu = main_menu.addMenu("State")
+        palette = QHBoxLayout()  # horizontal layout
+        self.add_palette_button(palette)
+        l.addLayout(palette)
 
-        undo_action = QAction("Undo", self)
-        undo_action.setShortcut("Ctrl+Z")
-        state_menu.addAction(undo_action)
-        undo_action.triggered.connect(self.undo)
+        self.setCentralWidget(w)
 
-        redo_action = QAction("Redo", self)
-        redo_action.setShortcut("Ctrl+Y")
-        state_menu.addAction(redo_action)
-        redo_action.triggered.connect(self.redo)
+    def add_palette_button(self, palette):
+        for c in self.colors:
+            item = PaletteButton(c)
+            item.pressed.connect(self.set_canvas_color)
+            palette.addWidget(item)
 
-        # ---
-        brush_size_menu = main_menu.addMenu("Brush Size")
-        for brush_size in [2, 4, 8, 12, 16, 20]:
-            action = QAction(f"{brush_size}px", self)
-            brush_size_menu.addAction(action)
-            action.triggered.connect(self.gen_brush_size_setter(brush_size))
+    def set_canvas_color(self):
+        self.canvas.set_pen_color(self.sender().color)
 
-        brush_color_menu = main_menu.addMenu("Brush Color")
-        for (qt_color, color_name) in [(Qt.black, "Black"), (Qt.white, "White"),
-                                       (Qt.green, "Green"), (Qt.yellow, "Yellow"),
-                                       (Qt.red, "Red")]:
-
-            color = QAction(color_name, self)
-            brush_color_menu.addAction(color)
-            color.triggered.connect(self.gen_brush_color_setter(qt_color))
-
-    def gen_brush_size_setter(self, size):
-        def setter():
-            self.brush_size = size
-
-        return setter
-
-    def gen_brush_color_setter(self, color):
-        def setter():
-            self.brush_color = color
-
-        return setter
-
-    def init_states(self):
-        self.history = History()
-
-        self.brush_size = 2  # default brush size
-        self.brush_color = Qt.black  # default color
-
-        self.current_points = []
-
-    def render(self):
-        self.image = QImage(self.size(), QImage.Format_RGB32)
-        self.image.fill(Qt.white)
-
-        self.update()
-
-        for line in self.history.get_events():
-            self.draw_line(line)
-
-
-    def draw_line(self, line: Line):
-        painter = QPainter(self.image)
-
-        painter.setPen(
-            QPen(line.color, line.size, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-
-        for i in range(1, len(line.points)):
-            painter.drawLine(line.points[i-1], line.points[i])
-
-        self.update()
-
-    # --- events
-
-    def resizeEvent(self, event: QResizeEvent):
-        self.render()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.current_points.append(event.pos())
-
-    def mouseMoveEvent(self, event):
-        new_pos = event.pos()
-        points = [self.current_points[-1], new_pos]
-        self.draw_line(Line(points, self.brush_color, self.brush_size))
-        self.current_points.append(new_pos)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.history.push(
-                Line(self.current_points, self.brush_color, self.brush_size))
-
-            self.current_points = []
-
-    def paintEvent(self, event):
-        QPainter(self).drawImage(self.rect(), self.image, self.image.rect())
-
-    # --- helpers
-
-    def save(self):
-        filePath, _ = QFileDialog.getSaveFileName(
-            self, "Save Image", "",
-            "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
-
-        if filePath != "":
-            self.image.save(filePath)
-
-    def clear(self):
-        self.image.fill(Qt.white)
-        self.update()
-
-    def undo(self):
-        self.history.move_cursor(-1)
-        self.render()
-
-    def redo(self):
-        self.history.move_cursor(+1)
-        self.render()
+# ----------------------
 
 
 if __name__ == "__main__":
-    App = QApplication(sys.argv)
-    window = Window()
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.setWindowFlags(Qt.WindowCloseButtonHint |
+                          Qt.WindowMinimizeButtonHint)
     window.show()
-    sys.exit(App.exec())
+    app.exec_()
