@@ -12,18 +12,21 @@
       padding: 0;
     }
 
-    body{
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
     }
 
-    button, label, input{
+    button,
+    label,
+    input {
       font-size: 16px;
     }
 
-    button, form input{
+    button,
+    form input {
       padding: 4px 2px;
     }
 
@@ -37,7 +40,7 @@
       fill: rgb(255 27 27 / 20%);
     }
 
-    .border.final{
+    .border.final {
       fill: rgb(171 120 255);
     }
 
@@ -63,26 +66,46 @@
 
 <body>
   <h2>Interactive QuadTree</h2>
+
   <div id="pwrapper">
     <div id="pointer"></div>
   </div>
 
+  <style id="board-styles"></style>
+
   <div id="board"></div>
-  <div>
-    <button onclick="addMode()">add</button>
-    <button onclick="searchMode()">search</button>
-    <button onclick="genRandom()">random</button>
-    <button onclick="resetApp()">reset</button>
+
+  <div class="forms">
+    <div>
+      <button onclick="addMode()">add</button>
+      <button onclick="searchMode()">search</button>
+      <button onclick="genRandom()">random</button>
+      <button onclick="resetApp()">reset</button>
+    </div>
+
+    <form>
+      <label>Limit: </label>
+      <input type="number" min="1" id="limit">
+    </form>
+
+    <form>
+      <label>Radius: </label>
+      <input type="number" min="1" id="radius">
+    </form>
+
+    <div class="levels" action="nothing()">
+      <label>Show Level: </label>
+      <button onclick="showDepth(-1)">all</button>
+      <button onclick="showDepth(1)">1</button>
+      <button onclick="showDepth(2)">2</button>
+      <button onclick="showDepth(3)">3</button>
+      <button onclick="showDepth(4)">4</button>
+    </div>
+
   </div>
-  <form>
-    <label>Limit: </label>
-    <input type="number" min="1" id="limit">
-  </form>
-  <form>
-    <label>Radius: </label>
-    <input type="number" min="1" id="radius">
-  </form>
+
 </body>
+
 <script src="./main.js"></script>
 
 </html>

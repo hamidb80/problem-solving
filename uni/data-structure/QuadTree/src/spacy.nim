@@ -1,4 +1,4 @@
-import std/[dom, math]
+import std/[dom, math, strformat]
 import bumpy, vmath, glob, config, utils
 
 
@@ -47,7 +47,9 @@ proc genBorder*(qn: QuadNode): Element =
 
     result.setAttr K(p), K($v)
 
-  result.setAttr K"class", K"border"
+  result.classList.add K"border"
+  result.classList.add K(fmt"level-{qn.level}")
+
   if qn.isProbed:
     result.classList.add: 
       if qn.data.len != 0: K"final"

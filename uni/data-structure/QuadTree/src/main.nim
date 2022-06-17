@@ -1,4 +1,4 @@
-import std/[jsconsole, dom, strformat, strutils]
+import std/[jsconsole, dom, strformat, strutils, sequtils]
 import bumpy, std/random
 import spacy, utils, config, glob
 
@@ -11,6 +11,17 @@ var
   entries: seq[Entry]
   limit = 4
   radius: int
+
+template `%`(id): untyped =
+  document.getElementById(id)
+
+let
+  cursor = %"pointer"
+  board = %"board"
+  limitInput = %"limit"
+  radiusInput = %"radius"
+  boardStyles = %"board-styles"
+
 
 proc genSpace: QuadSpace =
   newQuadSpace(Rect(x: 0, y: 0, w: size, h: size), limit)
@@ -32,11 +43,11 @@ proc buildSpace =
 
 proc reDraw =
   let svg = initWrapper()
-  for (p, v) in {
-    "width": $(size + canvasMargin * 2),
-    "height": $(size + canvasMargin * 2)}:
 
-    svg.setAttr K p, K v
+  block:
+    let v = K $(size + canvasMargin * 2)
+    svg.setAttr K"width", v
+    svg.setAttr K"height", v
 
   for n in space.allNodes:
     n.el = genBorder n
@@ -50,17 +61,12 @@ proc reDraw =
   console.clear
   console.log space
 
-  document.getElementById("board").innerHTML = ""
-  document.getElementById("board").appendChild svg
+  board.innerHTML = ""
+  board.appendChild svg
 
 
 # ----------------------------------------------
 
-let
-  cursor = document.getElementById("pointer")
-  board = document.getElementById("board")
-  limitInput = document.getElementById("limit")
-  radiusInput = document.getElementById("radius")
 
 proc setRadius(r: int) =
   radius = r
@@ -99,12 +105,33 @@ limitInput.addEventListener(K"change") do(_: Event):
 radiusInput.addEventListener(K"change") do(_: Event):
   setRadius parseInt $radiusInput.value
 
-
-setRadius 30
-radiusInput.value = K $radius
-limitInput.value = K $limit
-
 # ----------------------------------------------
+
+proc resetDepthShow =
+  boardStyles.innerHTML = K""
+
+proc showDepth(n: int) {.exportc.} =
+  resetDepthShow()
+
+  var r: seq[string]
+
+  if n != -1:
+    for l in 1 .. 5:
+      r.add:
+        if l < n:
+          fmt""".level-{l}:not(.final) {{
+            fill: transparent !important;
+          }}"""
+
+        elif l > n:
+          fmt""".level-{l} {{
+            fill: transparent !important;
+          }}"""
+        
+        else:
+          ""
+
+  boardStyles.innerHTML = K r.join
 
 proc render =
   buildSpace()
@@ -113,6 +140,7 @@ proc render =
 proc resetApp {.exportc.} =
   entries.setlen 0
   space = genSpace()
+  resetDepthShow()
   render()
 
 proc addMode {.exportc.} =
@@ -127,5 +155,10 @@ proc genRandom {.exportc.} =
 
   render()
 
+# ----------------
 
-render()
+block init:
+  setRadius 30
+  radiusInput.value = K $radius
+  limitInput.value = K $limit
+  render()
