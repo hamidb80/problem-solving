@@ -1,4 +1,4 @@
-import std/[jsconsole, dom, strformat, strutils, sequtils]
+import std/[jsconsole, dom, strformat, strutils, options]
 import bumpy, std/random
 import spacy, utils, config, glob
 
@@ -6,11 +6,16 @@ type
   AppMode = enum
     amAdd, amSearch
 
+  CursorInfo = object
+    radius: int
+    position: Point
+
 var
   mode = amAdd
   entries: seq[Entry]
   limit = 4
   radius: int
+  lastSearchCursor: Option[CursorInfo]
 
 template `%`(id): untyped =
   document.getElementById(id)
@@ -57,6 +62,19 @@ proc reDraw =
     e.el = genCircle e
     svg.appendChild e.el
 
+  if issome lastSearchCursor:
+    let 
+      cr = lastSearchCursor.get
+      p = cr.position
+
+    svg.appendChild:
+      var cEl = newSvgEl "circle"
+
+      for (p, v) in {"cx": $p.x, "cy": $p.y, "r": $cr.radius, "class": "last-cursor"}:
+        cEl.setAttr p.K, v.K
+
+      cEl
+
 
   console.clear
   console.log space
@@ -87,6 +105,7 @@ board.addEventListener(K"click") do(ev: Event):
 
   of amSearch:
     buildSpace()
+    lastSearchCursor = some CursorInfo(position: p, radius: radius)
     space.findInRange(p, radius.toFloat)
     reDraw()
 
@@ -138,8 +157,10 @@ proc render =
   reDraw()
 
 proc resetApp {.exportc.} =
-  entries.setlen 0
+  setlen entries, 0
   space = genSpace()
+  
+  reset lastSearchCursor
   resetDepthShow()
   render()
 
