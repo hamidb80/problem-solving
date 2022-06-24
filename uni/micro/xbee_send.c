@@ -1,10 +1,12 @@
 // receiver module
+
 >> +++ // enter command mode
 
->> ATSH
-<< [ADDR1]
->> ATSL
-<< [ADDR2]
+>> ATSH     // get higher part of node's address
+<< [ADDR_H]
+
+>> ATSL     // get lower part of node's address
+<< [ADDR_L]
 
 >> ATCN // exit command mode
 << Transmit Mode // enter Transmit Node
@@ -15,13 +17,14 @@
 
 >> +++ // enter command mode
 
->> ATDH [ADDR1] // set upper part of destination address
+>> ATDH [ADDR_H] // set higher part of destination address
 << Write Command successful
 
->> ATDL [ADDR2] // set lower part of destination address
+>> ATDL [ADDR_L] // set lower part of destination address
 << Write Command successful
 
 >> ATCN // exit command mode
 << Transmit Mode // enter Transmit Node
 
-// send by "\r" like: Hey I Am Hamid\r
+// put "\r" after your text to send 
+// like: Hey I Am Hamid\r

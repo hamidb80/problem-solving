@@ -1,12 +1,5 @@
->> ATE0              // turn off the Echo of GSM shield.
-<< OK
-
->> AT                // check the module is working fine.
-<< OK
-
->> AT+CMGF=1       // set the message style to "English" text
-                   // for "Persian" or "Chinese" should be 0
-
+>> AT+CMGF=1  // set the message style to "English" text
+              // for "Persian" or "Chinese" should be 0
 << OK
 
 >> AT+CNMI=1,2,0,0,0 // set the listener
