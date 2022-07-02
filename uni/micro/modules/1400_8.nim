@@ -17,10 +17,10 @@ var
 
 block init:
   for msg in ["AT+CMGF=1","AT+CNMI=1,2,0,0,0"]:
-    sim900_UART.send msg
+    sim900_UART.send(msg & "\r")
 
   for msg in ["+++","ATDH [ADDR_H]","ATDL [ADDR_L]","ATCN"]:
-    xbee_UART.send msg  
+    xbee_UART.send(msg & "\r")
 
 block mainLoop:
   while true:
@@ -30,4 +30,4 @@ block mainLoop:
       
       if out.startsWith("+CMT: "):
         let msg = popFirst sim900_UART.recvQ
-        xbee_UART.send msg
+        xbee_UART.send(msg & "\r")
