@@ -1,0 +1,12 @@
+// sender device
+>> AT+BTOPPPUSH=1,[FILE ADDRESS]
+<< OK
+<< +BTOPPPUSH: 1
+
+// reciever device
++BTOPPPUSHING:
+"[NAME OF SENDER DEVICE]","[NAME OF FILE]"
+
+>> AT+BTOPPACPT=1
+<< OK
+<< +BTOPPPUSH: 1
