@@ -41,17 +41,20 @@ PNode *sum(PNode *p1, PNode *p2)
       }
 
       result->next = newNode;
+      result = result->next;
     }
     else if (c1)
     {
       auto newNode = new PNode(p1->power, p1->coefficient);
       result->next = newNode;
+      result = result->next;
       p1 = p1->next;
     }
     else if (c2)
     {
       auto newNode = new PNode(p2->power, p2->coefficient);
       result->next = newNode;
+      result = result->next;
       p2 = p2->next;
     }
     else
