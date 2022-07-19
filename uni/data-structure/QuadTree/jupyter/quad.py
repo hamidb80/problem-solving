@@ -31,8 +31,7 @@ class Geometry:
     def contains(g, p):
         return (
             (p.x >= g.x and p.x <= (g.x + g.w)) and
-            (p.y >= g.y and p.y <= (g.y + g.h))
-        )
+            (p.y >= g.y and p.y <= (g.y + g.h)))
 
 
 @dataclass
@@ -160,14 +159,14 @@ def gen_random_entries(n):
 
 
 if __name__ == "__main__":
-    W = 600
-    H = 600
+    W = 400
+    H = 400
 
     qs = QuadSpace(Geometry(0, 0, W, H), 2)
-    
+
     query = Geometry(
-        randrange(0, W*2/3), randrange(0, H*2/3),
-        randrange(20, W/3), randrange(20, H/3)
+        randrange(0, int(W*2/3)), randrange(0, int(H*2/3)),
+        randrange(20, int(W/3)), randrange(20, int(H/3))
     )
 
     for e in gen_random_entries(40):
@@ -177,3 +176,13 @@ if __name__ == "__main__":
         "./temp.png", qs.image(svg_rect(query, "rgba(30, 200, 30, 0.3)")))
 
     pprint(qs.find(query, 3))
+
+
+"""
+show many images at one:
+
+    from IPython.display import Image
+    from IPython.display import display
+    imgs = [Image(filename='temp.png'), Image(filename='temp.png')]
+    display(*imgs)
+"""

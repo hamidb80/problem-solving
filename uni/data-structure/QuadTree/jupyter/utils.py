@@ -1,12 +1,12 @@
 
 
-def svg_cirle(x, y, r = 3):
+def svg_cirle(x, y, r=2.4):
     return f"""
         <circle cx="{x}" cy="{y}" r="{r}" fill="red"/>
     """
 
 
-def svg_rect(geo, color="transparent", border = 1):
+def svg_rect(geo, color="transparent", border=1):
     return f"""
         <rect x="{geo.x}" y="{geo.y}" width="{geo.w}" height="{geo.h}" stroke="black" fill="{color}" stroke-width="{border}"/>
     """
@@ -59,7 +59,7 @@ def insersects(r1, r2):
     return (ln > 0) and (ln <= r1_len) and (ln <= r2_len)
 
 
-# print(insersects((0, 4), (2, 6)))  # A 
+# print(insersects((0, 4), (2, 6)))  # A
 # print(insersects((2, 6), (0, 4)))  # B
 # print(insersects((0, 6), (2, 3)))  # C
 # print(insersects((2, 3), (0, 6)))  # D
