@@ -1,8 +1,10 @@
+from PIL import Image
 from pprint import *
 from random import *
 from dataclasses import *
 
 from cairosvg import svg2png
+from numpy import save
 
 
 @dataclass
@@ -20,6 +22,15 @@ class Geometry:
     y: float
     w: float
     h: float
+
+    def intersects(g1, g2):
+        ...
+
+    def contains(g, p):
+        return (
+            (p.x >= g.x and p.x <= (g.x + g.w)) and
+            (p.y >= g.y and p.y <= (g.y + g.h))
+        )
 
 
 @dataclass
@@ -91,21 +102,19 @@ class QuadSpace:
             if len(qn.entries) > qs.limit:
                 qs.split(qn)
 
-    def find(qs, p: Point, radius: float):
+    def find(qs, p: Point,  query: Geometry):
         result = []
         qs._find(qs.root, p, radius, result)
         return result
 
-    def _find(qs, qn: QuadNode, p, r, acc):
-        desiredDistance = r ** 2
-
+    def _find(qs, qn: QuadNode, query: Geometry, acc):
         for n in qn.nodes:
-          if intersects(n.geometry, Circle(x, y, r)):
-            qs._find(n, p, r, acc)
+            if n.geometry.intersects(query):
+                qs._find(n, query, acc)
 
         for e in qn.entries:
-          if p.distance(e.location) < desiredDistance:
-            acc.append(e)
+            if query.contains(e.location):
+                acc.append(e)
 
     def image(qs):
         return svg2png(bytestring=qs.svgrepr())
@@ -130,9 +139,39 @@ class QuadSpace:
             qs._svgrepr(n, acc)
 
         for e in qn.entries:
+            print(e)
             acc.append(f"""
             <circle cx="{e.location.x}" cy="{e.location.y}" r="3" stroke="red" fill="transparent" stroke-width="5"/>
           """)
+
+
+def save_fileb(path, content):
+    file1 = open(path, "wb")
+    file1.write(content)
+    file1.close()
+
+
+def generate_gif(qs, entries, path):
+    frames = []
+    for e in entries:
+        qs.insert(e)
+        save_fileb("./temp.png", qs.image())
+        frames.append(Image.open("./temp.png"))
+
+    frame_one = frames[0]
+    frame_one.save(path, format="GIF", append_images=frames,
+                   save_all=True, duration=300, loop=0)
+
+
+def gen_random_entries(n):
+    result = []
+
+    for i in range(n):
+        x, y = randrange(0, W),  randrange(0, H)
+        e = Entry(i, Point(x, y))
+        result.append(e)
+
+    return result
 
 
 if __name__ == "__main__":
@@ -140,18 +179,6 @@ if __name__ == "__main__":
     H = 400
 
     qs = QuadSpace(Geometry(0, 0, W, H), 2)
-
-    for n in range(20):
-        x, y = randrange(0, W),  randrange(0, H)
-        p = Point(x, y)
-
-        qs.insert(Entry(n, p))
-        print(n, p)
-
-    file1 = open("result.png", "wb")
-    file1.write(qs.image())
-    file1.close()
-
-    print(qs.treerepr())
+    generate_gif(qs, gen_random_entries(20), "./ss.gif")
 
     pprint(qs)
