@@ -47,9 +47,9 @@ class QuadNode:
     geometry: Geometry
     level: int
 
-    def whichQuadrant(qs, e) -> int:
-        xMid = qs.geometry.x + qs.geometry.w/2
-        yMid = qs.geometry.y + qs.geometry.h/2
+    def whichQuadrant(qn, e) -> int:
+        xMid = qn.geometry.x + qn.geometry.w/2
+        yMid = qn.geometry.y + qn.geometry.h/2
 
         if e.location.x < xMid:
             if e.location.y < yMid:
@@ -61,6 +61,9 @@ class QuadNode:
                 return 2
             else:
                 return 3
+
+    def is_final(qn):
+        return len(qn.nodes) == 0
 
 
 class QuadSpace:
@@ -147,6 +150,38 @@ class QuadSpace:
             acc.append(svg_cirle(e.location.x, e.location.y))
 
 
+def gen_search_process(qn, query):
+    """
+    show many images at one:
+        from IPython.display import Image
+        from IPython.display import display
+        imgs = [Image(filename='temp.png'), Image(filename='temp.png')]
+        display(*imgs)
+    """
+
+    # final_qnodes = []
+
+    # level 0
+    # keep new final_qnodes
+
+    # level 1
+    # keep new final_qnodes
+
+    # level 2
+    # keep new final_qnodes
+    
+    # ...
+    # nodes.len == 0
+
+    # -> seq[Image]
+
+# NOTE: deletion is not optimal, and should be avoided
+
+def gen_add_process(qn, entries):
+    ...
+    # like that GIF
+
+
 def gen_random_entries(n):
     result = []
 
@@ -176,13 +211,3 @@ if __name__ == "__main__":
         "./temp.png", qs.image(svg_rect(query, "rgba(30, 200, 30, 0.3)")))
 
     pprint(qs.find(query, 3))
-
-
-"""
-show many images at one:
-
-    from IPython.display import Image
-    from IPython.display import display
-    imgs = [Image(filename='temp.png'), Image(filename='temp.png')]
-    display(*imgs)
-"""
