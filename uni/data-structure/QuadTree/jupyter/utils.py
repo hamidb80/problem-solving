@@ -1,8 +1,8 @@
 
 
-def svg_cirle(x, y, r=2.4):
+def svg_cirle(x, y, r=2.4, color='red'):
     return f"""
-        <circle cx="{x}" cy="{y}" r="{r}" fill="red"/>
+        <circle cx="{x}" cy="{y}" r="{r}" fill="{color}"/>
     """
 
 
