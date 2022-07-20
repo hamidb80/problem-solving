@@ -1,3 +1,6 @@
+class Empty(Exception):
+    "when heap is empty"
+
 class MaxHeap:
     @staticmethod
     def left_child(i: int) -> int:
@@ -24,29 +27,26 @@ class MaxHeap:
 
     # ---------------------------
 
-    def size(self):
+    def cursor(self):
         return len(self.data)
 
+    def size(self):
+        return self.cursor() - 1
+
     def is_empty(self):
-        return self.size() == 1
+        return self.cursor() == 1
 
     def is_branch(self, i: int) -> bool:
-        return self.left_child(i) < self.size()
+        return self.left_child(i) < self.cursor()
 
     def max_child_index(self, i: int):
         l = self.left_child(i)
         r = self.right_child(i)
 
-        if r >= self.size() or self.data[l] > self.data[r]:
+        if r >= self.cursor() or self.data[l] > self.data[r]:
             return l
         else:
             return r
-
-    def extract_max(self):
-        if self.is_empty():
-            raise "empty"
-        else:
-            return self.pop()
 
     def find_max(self):
         return self.data[-1]
@@ -75,17 +75,20 @@ class MaxHeap:
 
     def push(self, k):
         self.data.append(k)
-        self.bubble_up(self.size() - 1)
+        self.bubble_up(self.cursor() - 1)
 
     def pop(self):
         if len(self.data) == 1:
-            raise "empty"
+            raise Empty
 
         max = self.data[1]
-        self.data[1] = self.data[self.size()-1]
+        self.data[1] = self.data[self.cursor()-1]
         self.data.pop()
         self.bubble_down(1)
         return max
+
+    def extract_max(self):
+        return self.pop()
 
     # ---------------------------
 
