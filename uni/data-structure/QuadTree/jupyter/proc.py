@@ -3,7 +3,7 @@
 from random import randrange
 
 # --- Jupyter Notebook things
-from IPython.display import display
+from IPython.display import display, SVG
 
 # --- my codes
 from defs import *
@@ -27,7 +27,7 @@ def gen_random_entries(n: int, max_width, max_height) -> list[Entry]:
     return result
 
 
-def gen_search_process(qs: QuadSpace, query: Geometry) -> list[Image]:
+def gen_search_process(qs: QuadSpace, query: Geometry) -> list[SVG]:
     """
     Visualizes the step-by-step process of searching in `qs`
     """
@@ -35,21 +35,21 @@ def gen_search_process(qs: QuadSpace, query: Geometry) -> list[Image]:
     result = []
     final_qnodes = []
 
-    query_rect = SVG.toRect(query, "rgba(30, 200, 30, 0.3)")
+    query_rect = toRect(query, "rgba(30, 200, 30, 0.3)")
 
     for n in range(0, 10):
         nodes = qs.find(query, n)
 
-        ss1 = "".join([SVG.toRect(n.geometry, "rgba(0,0,0, 0.3)")
+        ss1 = "".join([toRect(n.geometry, "rgba(0,0,0, 0.3)")
                       for n in final_qnodes])
 
         end = len(nodes) == 0
         if end:
             points = qs.find(query, -1)
             ss2 = "".join(
-                [SVG.toCircle(p.location.x, p.location.y, 5, "purple") for p in points])
+                [toCircle(p.location.x, p.location.y, 5, "purple") for p in points])
         else:
-            ss2 = "".join([SVG.toRect(n.geometry, "rgba(0,0,150,0.3)")
+            ss2 = "".join([toRect(n.geometry, "rgba(0,0,150,0.3)")
                           for n in nodes])
 
         result.append(qs.snapshot(ss1 + ss2 + query_rect))
@@ -64,7 +64,7 @@ def gen_search_process(qs: QuadSpace, query: Geometry) -> list[Image]:
     return result
 
 
-def gen_add_process(qs: QuadSpace, entries: list[Entry]) -> list[Image]:
+def gen_add_process(qs: QuadSpace, entries: list[Entry]) -> list[SVG]:
     """
     Visualizes the step-by-step process of inserting to `qs`
 
@@ -76,7 +76,7 @@ def gen_add_process(qs: QuadSpace, entries: list[Entry]) -> list[Image]:
 
     for e in entries:
         qs.insert(e)
-        newPoint = SVG.toCircle(e.location.x, e.location.y, 4, "purple")
+        newPoint = toCircle(e.location.x, e.location.y, 4, "purple")
         result.append(qs.snapshot(newPoint))
 
     return result

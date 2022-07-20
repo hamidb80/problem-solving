@@ -4,7 +4,7 @@ from dataclasses import *
 from utils import *
 
 # --- Jupyter Notebook things
-from IPython.display import Image
+from IPython.display import SVG
 
 # =================================================== Basic Classes
 
@@ -210,22 +210,8 @@ class QuadSpace:
 
     # --- for sake of visualization
 
-    def snapshot(qs, extra="") -> Image:
-        """
-        takes an image of `qs` and returns it as `IPython.Image`
-        to display it later in "Jupyter Notebook"
-        """
-        p = "./temp.png"
-        f = open(p, 'wb')
-        f.write(qs.image(extra))
-        f.close()
-        return Image(filename=p)
-
-    def image(qs, extra="") -> bytes:
-        """
-        returns `.PNG` binary of captured QuadSpace `qs`
-        """
-        return SVG.toPNG(qs.svgrepr(extra))
+    def snapshot(qs, extra="") -> SVG:
+        return SVG(qs.svgrepr(extra))
 
     def svgrepr(qs, extra) -> str:
         """
@@ -245,8 +231,8 @@ class QuadSpace:
 
     def _svgrepr(qs, qn, acc):
         for n in qn.nodes:
-            acc.append(SVG.toRect(n.geometry))
+            acc.append(toRect(n.geometry))
             qs._svgrepr(n, acc)
 
         for e in qn.entries:
-            acc.append(SVG.toCircle(e.location.x, e.location.y))
+            acc.append(toCircle(e.location.x, e.location.y))
