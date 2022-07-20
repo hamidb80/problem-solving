@@ -1,13 +1,18 @@
 from pprint import *
 from random import *
 from dataclasses import *
-from typing import List
+
+# --- converting .SVG to .PNG
 from cairosvg import svg2png  # pip install cairosvg
 
+# --- Jupyter Notebook things
 from IPython.display import Image
 from IPython.display import display
 
+# --- my personal utility functions
 from utils import *
+
+# =================================================== Classes
 
 
 @dataclass
@@ -189,10 +194,12 @@ class QuadSpace:
         for e in qn.entries:
             acc.append(svg_cirle(e.location.x, e.location.y))
 
+# =================================================== Other Functions
+
 
 def take_snapshot(qs: QuadSpace, extra="") -> Image:
     """
-    takes an image of `qs` and save it as `IPython.Image`
+    takes an image of `qs` and returns it as `IPython.Image`
     to display it later in "Jupyter Notebook"
     """
     save_file_binary("temp.png", qs.image(extra))
@@ -201,7 +208,7 @@ def take_snapshot(qs: QuadSpace, extra="") -> Image:
 
 def gen_search_process(qs: QuadSpace, query: Geometry) -> list[Image]:
     """
-    visualize the step-by-step process of searching in `qs`
+    Visualizes the step-by-step process of searching in `qs`
     """
 
     result = []
@@ -238,9 +245,9 @@ def gen_search_process(qs: QuadSpace, query: Geometry) -> list[Image]:
 
 def gen_add_process(qs: QuadSpace, entries: list[Entry]) -> list[Image]:
     """
-    visualize the step-by-step process of inserting to `qs`
+    Visualizes the step-by-step process of inserting to `qs`
 
-    the new point in each step is visualized differently
+    The new point in each step is visualized differently
     e.g. bolder or different color
     """
 
@@ -255,6 +262,9 @@ def gen_add_process(qs: QuadSpace, entries: list[Entry]) -> list[Image]:
 
 
 def gen_random_entries(n: int) -> list[Entry]:
+    """
+    Generates `n` random Entries to insert in `QuadSpace`
+    """
 
     result = []
 
@@ -265,6 +275,7 @@ def gen_random_entries(n: int) -> list[Entry]:
 
     return result
 
+# =================================================== Go!
 
 if __name__ == "__main__":
     W = 400
