@@ -33,8 +33,6 @@ func update[T](t: var SortedSeq[T], value: T) =
         if t.list.len > t.size:
           del t.list, t.size
 
-  # implement ----------------------------------
-
 # implementation -----------------------------
 
 iterator buckets(data: string): int =
