@@ -49,6 +49,9 @@ func matchResult(opponent, you: Toy): Result =
   elif opponent.whatChooseToWin == you: win
   else: lost
 
+func score(res: Result, you: Toy): int =
+  res.int + you.int
+
 # implement ----------------------------------
 
 iterator rounds(data: string): (char, char) =
@@ -62,7 +65,7 @@ func part1(data: string): int =
       you = toToy y
       res = matchResult(opponent, you)
 
-    result.inc res.int + you.int
+    result.inc score(res, you)
 
 func part2(data: string): int =
   for (o, r) in rounds data:
@@ -75,7 +78,7 @@ func part2(data: string): int =
         of win: whatChooseToWin opponent
         of lost: whatChooseToLose opponent
 
-    result.inc res.int + you.int
+    result.inc score(res, you)
 
 # go -----------------------------------------
 
