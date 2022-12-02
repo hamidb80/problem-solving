@@ -5,8 +5,8 @@ import std/[strutils]
 type
   Toy = enum
     rock = 1
-    paper
-    scissors
+    paper = 2
+    scissors = 3
 
   Result = enum
     lost = 0
@@ -80,5 +80,5 @@ func part2(data: string): int =
 # go -----------------------------------------
 
 let data = readFile("./input.txt")
-echo part1 data
-echo part2 data
+echo part1 data # 12855
+echo part2 data # 13726
