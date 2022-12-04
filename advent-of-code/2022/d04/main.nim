@@ -35,5 +35,6 @@ func part2(data: string): int =
 # go -----------------------------------------
 
 let data = readFile("./input.txt")
-echo part1 data
-echo part2 data
+echo part1 data # 456
+echo part2 data # 808
+
