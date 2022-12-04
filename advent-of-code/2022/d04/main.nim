@@ -9,7 +9,7 @@ func fullyOverlap[T](r1, r2: Slice[T]): bool =
   r1 in r2 or r2 in r1
 
 func overlapImpl[T](r1, r2: Slice[T]): bool =
-  (r1.a <= r2.a and r1.b >= r2.a)
+  r1.a <= r2.a and r1.b >= r2.a
 
 func overlap[T](r1, r2: Slice[T]): bool =
   overlapImpl(r1, r2) or overlapImpl(r2, r1)
@@ -32,9 +32,12 @@ func part2(data: string): int =
     if overlap(j1, j2):
       result.inc
 
+  # or just use `iterrr` package :D
+  # import iterrr
+  # data.jobs |> filter((j1, j2) => overlap(j1, j2)).count()
+
 # go -----------------------------------------
 
 let data = readFile("./input.txt")
 echo part1 data # 456
 echo part2 data # 808
-
