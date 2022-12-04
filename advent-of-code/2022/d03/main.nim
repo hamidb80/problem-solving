@@ -1,4 +1,4 @@
-import std/[strutils]
+import std/[strutils, setutils]
 
 # utils --------------------------------------
 
@@ -11,19 +11,17 @@ func priority(ch: char): int =
   of 'A'..'Z': 27 + ch.ord - 'A'.ord
   else: invalid
 
+func first[T](s: set[T]): T =
+  for i in s:
+    return i
+
 func common(packets: seq[string]): char =
-  for ch in packets[0]:
+  var acc = packets[0].toSet
 
-    var has = true
-    for i in 1..packets.high:
-      if ch notin packets[i]:
-        has = false
-        break
+  for i in 1..packets.high:
+    acc = acc * packets[i].toSet
 
-    if has:
-      return ch
-
-  invalid
+  first acc
 
 # implement ----------------------------------
 
@@ -48,6 +46,6 @@ func part2(data: string): int =
 
 # go -----------------------------------------
 
-let data = readFile("./input.txt")
+let data = readFile "./input.txt"
 echo part1 data # 7872
 echo part2 data # 2497

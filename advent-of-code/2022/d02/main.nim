@@ -39,10 +39,7 @@ func whatChooseToLose(opponent: Toy): Toy =
   of paper: rock
 
 func whatChooseToWin(opponent: Toy): Toy =
-  case opponent
-  of scissors: rock
-  of paper: scissors
-  of rock: paper
+  opponent.whatChooseToLose.whatChooseToLose
 
 func matchResult(opponent, you: Toy): Result =
   if opponent == you: draw
