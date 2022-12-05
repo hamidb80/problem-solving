@@ -2,11 +2,10 @@
 vlib work
 
 # 2) Compile the half adder
-vlog ring4bd.v
-vlog ring4bd_test.v
+vlog clocks.v
 
 # 3) Load it for simulation
-vsim ring4bd_test
+vsim clocks
 
 # 4) Open some selected windows for viewing
 view structure
@@ -16,9 +15,14 @@ view wave
 # 5) Show some of the signals in the wave window
 add wave -noupdate -divider -height 32 Inputs
 add wave -noupdate -divider -height 32 Outputs
-add wave -noupdate clock
-add wave -noupdate reset
-add wave -noupdate count
+add wave -noupdate clk
+add wave -noupdate clk2
+add wave -noupdate clk3
+add wave -noupdate clk4
+add wave -noupdate clk5
+add wave -noupdate clk6
+add wave -noupdate clk7
+add wave -noupdate clk8
 
 # 6) Run the simulation for 1800 ns
-run 4000
+run 1000

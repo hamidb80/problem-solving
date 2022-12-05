@@ -9,6 +9,7 @@
     1. [Remigijus Jodelis](https://github.com/remigijusj/aoc-2021/) [in Nim]
     2. [zevv](https://github.com/zevv/aoc2021/) [in Elixir]
     3. [Michal Marsalek](https://github.com/MichalMarsalek/Advent-of-code/)
+    4. [clojure](https://github.com/motform/advent-of-clojure/)
     
     videos:
     [AOC 2020 in Nim](https://www.youtube.com/playlist?list=PL9Yd0XwsGAqzeDak6qtp6hQ4m7Qo_XA_4)
