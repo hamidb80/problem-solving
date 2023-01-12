@@ -10,7 +10,7 @@ type
   Vector = Position
 
   Direction = enum
-    top
+    up
     down
     left
     right
@@ -26,7 +26,7 @@ template last(a): untyped = a[^1]
 
 func toVec(d: Direction): Vector =
   Vector case d
-  of top: (0, -1)
+  of up: (0, -1)
   of down: (0, +1)
   of left: (-1, 0)
   of right: (+1, 0)
@@ -127,7 +127,7 @@ func visibleTrees(mat: Matrix[int]): Matrix[bool] =
       r = (row, mat.cols-1)
 
     result.set whichIsVisible(mat, l, down)
-    result.set whichIsVisible(mat, r, top)
+    result.set whichIsVisible(mat, r, up)
 
   for col in 0..<mat.cols:
     let
@@ -149,7 +149,7 @@ func looking(mat: Matrix[int], pos: Position, dir: Direction): int =
 func scenicScore(mat: Matrix[int], pos: Position): int =
   mat.looking(pos, left) *
   mat.looking(pos, right) *
-  mat.looking(pos, top) *
+  mat.looking(pos, up) *
   mat.looking(pos, down)
 
 func bestScenicScore(mat: Matrix[int]): int =
