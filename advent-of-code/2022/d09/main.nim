@@ -96,7 +96,7 @@ func adapt(tail, head: Point): Vector =
   if dx.abs <= 1 and dy.abs <= 1: (0, 0) # is near
   else: (-dx.sgn, -dy.sgn)
 
-func listKnotVisitsCount(moves: seq[Move], size: int): int =
+func lastKnotVisitsCount(moves: seq[Move], size: int): int =
   var
     visited = initHashSet[Point]()
     knots = newSeqWith(size, (0, 0))
@@ -121,5 +121,5 @@ func listKnotVisitsCount(moves: seq[Move], size: int): int =
 # go -----------------------------------------
 
 let data = "./input.txt".readFile.moves.toseq
-echo data.listKnotVisitsCount(2) # 6464
-echo data.listKnotVisitsCount(10) # 2604
+echo data.lastKnotVisitsCount(2) # 6464
+echo data.lastKnotVisitsCount(10) # 2604
