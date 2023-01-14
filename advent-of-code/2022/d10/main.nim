@@ -27,11 +27,11 @@ func delay(c: Command): int =
 
 func parseInstruction(line: string): Instruction =
   let
-    parts = line.splitWhitespace
-    c = parseEnum[Command](parts[0])
+    c = parseEnum[Command](line[0..3])
     v =
-      if c == addx: parseInt parts[1]
-      else: 0
+      case c
+      of addx: parseInt line[5..^1]
+      of noop: 0
 
   Instruction(command: c, value: v)
 
