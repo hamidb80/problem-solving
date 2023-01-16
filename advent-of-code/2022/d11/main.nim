@@ -1,24 +1,39 @@
 import std/[sequtils, deques, strutils, tables, algorithm, math]
-import emath
-# import bigints
+import bigints
 
 # def ----------------------------------------
 
 type
+  Item = BigInt
+
   Monkey = object
     id: int
-    items: Deque[int]
-    operation: EMathNode
+    items: Deque[Item]
+    operation: seq[string]
     test: int
     action: array[bool, int]
 
-# utils --------------------------------------
 
-template parseMath(e): untyped =
-  emath.parse e
+# utils --------------------------------------
 
 template valErr(msg): untyped =
   raise newException(ValueError, msg)
+
+func resolve(current: BigInt, val: string): Bigint = 
+  case val
+  of "old": current
+  else: initBigInt val
+
+func eval(current: BigInt, operation: seq[string]): BigInt =
+  let 
+    left = resolve(current, operation[0])
+    operator = operation[1]
+    right = resolve(current, operation[2])
+
+  case operator
+  of "*": left * right
+  of "+": left + right
+  else: valErr "not supported"
 
 iterator parseMonkeys(s: string): Monkey =
   var monkey: Monkey
@@ -38,10 +53,10 @@ iterator parseMonkeys(s: string): Monkey =
 
       case property:
       of "  Starting items":
-        monkey.items = value.split(", ").map(parseInt).toDeque
+        monkey.items = value.split(", ").mapit(initBigInt it).toDeque
 
       of "  Operation":
-        monkey.operation = parseMath value
+        monkey.operation = value[6..^1].split " "
 
       of "  Test":
         monkey.test = parseInt value["divisible by ".len..^1]
@@ -59,11 +74,6 @@ iterator parseMonkeys(s: string): Monkey =
 
 # implement ----------------------------------
 
-const noFn = EMathFnLookup()
-
-func vars(old: int): EMathVarLookup =
-  toTable {"old": old.toFloat}
-
 func test(monkeys: seq[Monkey], rounds, worryDiv: int): int =
   var
     mks = monkeys
@@ -76,17 +86,17 @@ func test(monkeys: seq[Monkey], rounds, worryDiv: int): int =
         inspections[m.id].inc
 
         let
-          worry = m.operation.right.eval(vars item, noFn)
-          after = worry.toInt div worryDiv
-          answer = after mod m.test == 0
+          worry = eval(item, m.operation)
+          after = worry div worryDiv.initBigInt
+          answer = after mod m.test.initBigInt == 0.initBigInt
 
         mks[m.action[answer]].items.addLast after
 
-    # if r < 10:# or r mod 1000 == 0:
-    # debugEcho "\n:: ROUND ", r
-    # debugEcho "inspections: ", inspections
-    # for m in mks:
-    #   debugecho m.id, " : ", m.items
+    if r in [1, 20] or r mod 1000 == 0:
+      debugEcho "\n:: ROUND ", r
+      debugEcho "inspections: ", inspections
+      for m in mks:
+        debugecho m.id, " : ", m.items
 
   inspections.sort
   # debugEcho inspections
@@ -96,4 +106,4 @@ func test(monkeys: seq[Monkey], rounds, worryDiv: int): int =
 
 let data = "./test.txt".readFile.parseMonkeys.toseq
 echo test(data, 20, 3)
-# echo test(data, 10000, 1)
+echo test(data, 10000, 1) # numbers gets too large to compute ...
