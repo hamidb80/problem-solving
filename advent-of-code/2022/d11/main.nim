@@ -19,13 +19,13 @@ type
 template valErr(msg): untyped =
   raise newException(ValueError, msg)
 
-func resolve(current: BigInt, val: string): Bigint = 
+func resolve(current: BigInt, val: string): Bigint =
   case val
   of "old": current
   else: initBigInt val
 
 func eval(current: BigInt, operation: seq[string]): BigInt =
-  let 
+  let
     left = resolve(current, operation[0])
     operator = operation[1]
     right = resolve(current, operation[2])
@@ -107,3 +107,6 @@ func test(monkeys: seq[Monkey], rounds, worryDiv: int): int =
 let data = "./test.txt".readFile.parseMonkeys.toseq
 echo test(data, 20, 3)
 echo test(data, 10000, 1) # numbers gets too large to compute ...
+# idea: create a mod list for current number: 
+# [11, 17, 19]
+# [9,   3,  1]
