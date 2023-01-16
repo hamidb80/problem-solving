@@ -102,7 +102,7 @@ func `div`(n: Number, d: int): Number =
       if d != m:
         r = remOn(m, d, r, n mod d) div d
 
-    result.modulos[d] = 0
+    result.modulos[d] = 0 # 90 / 3 = 30    30 mod 3 == 0 ????
 
 func eval(current: Number, operation: seq[string]): Number =
   let
@@ -159,12 +159,12 @@ iterator parseMonkeys(s: string): Monkey =
 
 # implement ----------------------------------
 
-func sumOf2MostInspections(monkeys: seq[Monkey], rounds, worryDiv: int): int =
+func sumOf2MostInspections(monkeys: seq[Monkey], rounds: int): int =
   var
     mks = monkeys
     inspections = newseq[int](mks.len)
 
-  let tests = mks.mapIt(it.test) & worryDiv
+  let tests = mks.mapIt(it.test)
 
   for m in mks.mitems:
     for i in m.items.mitems:
@@ -178,11 +178,9 @@ func sumOf2MostInspections(monkeys: seq[Monkey], rounds, worryDiv: int): int =
 
         let
           worry = eval(item, m.operation)
-          reduced = worry div worryDiv
-          # reduced = worry
-          answer = reduced mod m.test == 0
+          answer = worry mod m.test == 0
 
-        mks[m.action[answer]].items.addLast reduced
+        mks[m.action[answer]].items.addLast worry
 
     when defined debug:
       if r in [1, 20] or r mod 1000 == 0:
@@ -190,7 +188,7 @@ func sumOf2MostInspections(monkeys: seq[Monkey], rounds, worryDiv: int): int =
         debugEcho "inspections: ", inspections
 
         for m in mks:
-          debugEcho m.id, ": ", m.items.mapIt it.modulos
+          debugEcho "Monkey ", m.id, ": ", m.items.mapIt it.modulos
 
   inspections.sort
   inspections[^2..^1].foldl a * b
@@ -215,5 +213,4 @@ suite "number":
 # test -----------------------------------------
 
 let data = "./input.txt".readFile.parseMonkeys.toseq
-echo data.sumOf2MostInspections(20, 3) # 69918
-echo data.sumOf2MostInspections(10000, 1) # 19573408701
+echo data.sumOf2MostInspections(10000) # 19573408701 | part2
