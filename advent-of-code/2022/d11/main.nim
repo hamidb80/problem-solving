@@ -31,23 +31,26 @@ iterator parseMonkeys(s: string): Monkey =
       yield monkey
 
     else:
-      let parts = l.split(": ")
+      let
+        parts = l.split(": ")
+        property = parts[0]
+        value = parts[1]
 
-      case parts[0]:
+      case property:
       of "  Starting items":
-        monkey.items = parts[1].split(", ").map(parseInt).toDeque
+        monkey.items = value.split(", ").map(parseInt).toDeque
 
       of "  Operation":
-        monkey.operation = parseMath parts[1]
+        monkey.operation = parseMath value
 
       of "  Test":
-        monkey.test = parseInt parts[1]["divisible by ".len..^1]
+        monkey.test = parseInt value["divisible by ".len..^1]
 
       of "    If true":
-        monkey.action[true] = parseInt parts[1]["throw to monkey ".len..^1]
+        monkey.action[true] = parseInt value["throw to monkey ".len..^1]
 
       of "    If false":
-        monkey.action[false] = parseInt parts[1]["throw to monkey ".len..^1]
+        monkey.action[false] = parseInt value["throw to monkey ".len..^1]
 
       else:
         valErr parts[0]
@@ -86,7 +89,7 @@ func test(monkeys: seq[Monkey], rounds, worryDiv: int): int =
     #   debugecho m.id, " : ", m.items
 
   inspections.sort
-  debugEcho inspections
+  # debugEcho inspections
   inspections[^2..^1].foldl a * b
 
 # go -----------------------------------------
