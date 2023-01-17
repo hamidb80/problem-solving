@@ -1,4 +1,4 @@
-import std/[strutils, unittest, hashes]
+import std/[strutils]
 import astar
 
 # def ----------------------------------------
@@ -11,18 +11,12 @@ type
     Grid = object
         width: int
         data: seq[char]
-        directPath: Slice[Point]
+        travel: Slice[Point]
 
+# utils --------------------------------------
 
-# A sample grid. Each number represents the cost of moving to that space
-
-# let start: Point = (x: 0, y: 3)
-# let goal: Point = (x: 4, y: 3)
-
-# # Pass in the start and end points and iterate over the results.
-# for point in path[Grid, Point, float](grid, start, goal):
-#   echo point
-
+func pos(i, width: int): Point =
+    (i mod width, i div width)
 
 func `+`(p1, p2: Point): Point =
     (p1.x + p2.x, p1.y + p2.y)
@@ -45,38 +39,47 @@ iterator neighbors*(g: Grid, pin: Point): Point =
         if g[dest] <= g[pin]:
             yield (dest+pin)
 
-proc cost*(grid: Grid, a, b: Point): float =
-    grid[a.x, a.y].ord.toFloat
+proc cost*(grid: Grid, a, b: Point): int =
+    grid[a.x, a.y].ord
 
-proc heuristic*(grid: Grid, node, goal: Point): float =
-    ## Returns the priority of inspecting the given node
-    asTheCrowFlies(node, goal)
-
-# utils --------------------------------------
-
+proc heuristic*(grid: Grid, node, goal: Point): int =
+    manhattan[Point, int](node, goal)
 
 # implement ----------------------------------
 
 func toGrid(data: string): Grid =
-    result.width = data.find('\n') - 1
-    for ch in data:
-        if ch != '\n':
+    let w = data.find('\n') - 1
+    result.width = w
+
+    for i, ch in data:
+        case ch
+        of 'S':
+            result.travel.a = pos(i, w)
+
+        of 'E':
+            result.travel.b = pos(i, w)
+
+        of 'a'..'z':
             result.data.add ch
+
+        else:
+            discard
 
 func test(g: Grid): int =
     discard
 
 # tests --------------------------------------
 
-test "":
-    let data = "./test.txt".readFile.toGrid
+let
+    data = "./test.txt".readFile.toGrid
+    s = data.travel.a
+    e = data.travel.b
+    minPath = path[Grid, Point, int](data, s, e) # Error: internal error: proc has no result symbol
 
-    # Pass in the start and end points and iterate over the results.
-    for point in path[seq[char], Point, float](grid, goal):
-        echo point
-
+# echo minPath
+echo data
 
 # go -----------------------------------------
 
-let data = "./input.txt".readFile.toGrid
-echo test(data)
+# let data = "./input.txt".readFile.toGrid
+# echo test(data)
