@@ -75,7 +75,7 @@ func cmp(a, b: JsonNode): int =
   correctOrderImpl(a, b).int
 
 
-func correctOrderOrderIndexSum(packets: seq[JsonNode]): int =
+func correctPairOrderIndexSum(packets: seq[JsonNode]): int =
   for (i, a, b) in packets.couples:
     if correctOrder(a, b):
       inc result, i
@@ -94,5 +94,5 @@ func decoderKey(packets: seq[JsonNode]): int =
 # go -----------------------------------------
 
 let data = "./input.txt".readFile.lists.toseq
-echo data.correctOrderOrderIndexSum # 5623
+echo data.correctPairOrderIndexSum # 5623
 echo data.decoderKey # 20570
