@@ -1,6 +1,14 @@
-import std/[sequtils, algorithm, sugar]
+import std/[sequtils, sugar]
 import ../common
 
+
+# utils --------------------------------
+
+func sum[T](s: seq[T], indexes: Slice[int]): T =
+  for i in indexes:
+    result.inc s[i]
+
+# main --------------------------------
 
 func isPromising(collection: seq[Item], index, maxSoFar: int): bool =
   discard

@@ -92,6 +92,8 @@ func bestSelect(collection: seq[Item], maxWeight: int): int =
   debugDynamic(collection, cache, pall)
   cache[collection.high, maxWeight]
 
+#TODO you have to create a direction matrix to keep track of selected ones
+
 # go -----------------------------------
 
 when isMainModule:
