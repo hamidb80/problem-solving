@@ -13,12 +13,7 @@ type
 
 # utils --------------------------------------
 
-func isInt(j: JsonNode): bool =
-  j.kind == Jint
-
-func toInt(j: JsonNode): int =
-  if j.isInt: j.getInt
-  else: j[0].toInt
+func isInt(j: JsonNode): bool = j.kind == Jint
 
 func cmpc[T](a, b: T): Result =
   case cast[-1 .. +1](cmp(a, b))
@@ -98,6 +93,6 @@ func decoderKey(packets: seq[JsonNode]): int =
 
 # go -----------------------------------------
 
-let data = "./test.txt".readFile.lists.toseq
+let data = "./input.txt".readFile.lists.toseq
 echo data.correctOrderOrderIndexSum # 5623
 echo data.decoderKey # 20570
