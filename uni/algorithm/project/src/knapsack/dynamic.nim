@@ -2,6 +2,8 @@ import std/[sequtils, tables, algorithm]
 import ../common
 import terminaltables
 
+# data strcutures ----------------------
+
 type
   Position = tuple
     index: int
@@ -9,13 +11,30 @@ type
 
   DynamicCache = Table[Position, int]
 
+# utils --------------------------------
 
-func `[]`(c: DynamicCache, i, w: int): int =
-  c.getOrDefault((i, w), 0)
+func flatten[T](s: seq[seq[T]]): seq[T] =
+  for r in s:
+    for i in r:
+      result.add i
 
-func `[]=`(c: var DynamicCache, i, w, v: int) =
-  c[(i, w)] = v
+# debug --------------------------------
 
+func debugDynamic(collection: seq[Item], cache: DynamicCache, pall: seq[int]) =
+  when defined debug:
+    {.cast(nosideEffect).}:
+      let ttab = newUnicodeTable()
+      ttab.setHeaders @["item/cap"] & mapIt(pall, $it)
+
+      for i in 0..collection.high:
+        ttab.addRow @['#' & $(i+1) & $collection[i]] & pall.mapIt(
+          if (i, it) in cache: $cache[(i, it)]
+          else: ""
+        )
+
+      printTable ttab
+
+# implementation -----------------------
 
 func determineImpl(result: var seq[seq[int]], collection: seq[Item],
   itemIndex, freeWieght: int) =
@@ -37,10 +56,7 @@ func determine(collection: seq[Item], maxWeight: int): seq[seq[int]] =
   result[collection.high].add maxWeight
   determineImpl result, collection, collection.high, maxWeight
 
-func flatten[T](s: seq[seq[T]]): seq[T] =
-  for r in s:
-    for i in r:
-      result.add i
+# main ---------------------------------
 
 func bestSelectImpl(collection: seq[Item],
   index, capacity: int, cache: var DynamicCache) =
@@ -49,26 +65,12 @@ func bestSelectImpl(collection: seq[Item],
     item = collection[index]
     put = capacity - item.weight
 
-  var acc = @[cache[index-1, capacity]]
+  var acc = @[cache[(index-1, capacity)]]
 
   if put >= 0:
-    acc.add cache[index-1, put] + item.profit
+    acc.add cache[(index-1, put)] + item.profit
 
-  cache[index, capacity] = max(acc)
-
-func debugDynamic(collection: seq[Item], cache: DynamicCache, pall: seq[int]) =
-  when defined debug:
-    {.cast(nosideEffect).}:
-      let ttab = newUnicodeTable()
-      ttab.setHeaders @["item/cap"] & mapIt(pall, $it)
-
-      for i in 0..collection.high:
-        ttab.addRow @['#' & $(i+1) & $collection[i]] & pall.mapIt(
-          if (i, it) in cache: $cache[i, it]
-          else: ""
-        )
-
-      printTable ttab
+  cache[(index, capacity)] = max(acc)
 
 proc bestSelect(collection: seq[Item], maxWeight: int): int =
   var cache: DynamicCache
@@ -82,13 +84,15 @@ proc bestSelect(collection: seq[Item], maxWeight: int): int =
 
 
   debugDynamic(collection, cache, pall)
-  cache[collection.high, maxWeight]
+  cache[(collection.high, maxWeight)]
 
+# go -----------------------------------
 
-let items: seq[Item] = @[
-  newItem(50, 5),
-  newItem(60, 10),
-  newItem(140, 20),
-]
+when isMainModule: 
+  let items: seq[Item] = @[
+    newItem(50, 5),
+    newItem(60, 10),
+    newItem(140, 20),
+  ]
 
-echo items.bestSelect(30)
+  echo items.bestSelect(30)
