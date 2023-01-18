@@ -3,6 +3,5 @@ type
     profit*: int
     weight*: int
 
-
 func newItem*(p, w: int): Item =
   Item(profit: p, weight: w)
