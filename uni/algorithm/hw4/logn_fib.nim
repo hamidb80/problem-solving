@@ -1,7 +1,5 @@
 # THANKS TO: https://kukuruku.co/hub/algorithms/the-nth-fibonacci-number-in-olog-n
-
 import std/[math, tables]
-
 
 type Matrix2x2 = array[4, int]
 
