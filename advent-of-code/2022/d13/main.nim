@@ -88,7 +88,7 @@ func decoderKey(packets: seq[JsonNode]): int =
   result = 1
 
   for i, packet in sorted(packets & @[d2, d6], cmp):
-    if packet == d2 or packet == d6:
+    if packet in [d2, d6]:
       result *= i+1
 
 # go -----------------------------------------
