@@ -18,6 +18,12 @@ func flatten[T](s: seq[seq[T]]): seq[T] =
     for i in r:
       result.add i
 
+func `[]`(d: DynamicCache, index, capacity: int): int =
+  d.getOrDefault((index, capacity))
+
+func `[]=`(d: var DynamicCache, index, capacity, value: int) =
+  d[(index, capacity)] = value
+
 # debug --------------------------------
 
 func debugDynamic(collection: seq[Item], cache: DynamicCache, pall: seq[int]) =
@@ -28,7 +34,7 @@ func debugDynamic(collection: seq[Item], cache: DynamicCache, pall: seq[int]) =
 
       for i in 0..collection.high:
         ttab.addRow @['#' & $(i+1) & $collection[i]] & pall.mapIt(
-          if (i, it) in cache: $cache[(i, it)]
+          if (i, it) in cache: $cache[i, it]
           else: ""
         )
 
@@ -65,14 +71,14 @@ func bestSelectImpl(collection: seq[Item],
     item = collection[index]
     put = capacity - item.weight
 
-  var acc = @[cache[(index-1, capacity)]]
+  var acc = @[cache[index-1, capacity]]
 
   if put >= 0:
-    acc.add cache[(index-1, put)] + item.profit
+    acc.add cache[index-1, put] + item.profit
 
-  cache[(index, capacity)] = max(acc)
+  cache[index, capacity] = max(acc)
 
-proc bestSelect(collection: seq[Item], maxWeight: int): int =
+func bestSelect(collection: seq[Item], maxWeight: int): int =
   var cache: DynamicCache
   let
     ptable = determine(collection, maxWeight)
@@ -84,11 +90,11 @@ proc bestSelect(collection: seq[Item], maxWeight: int): int =
 
 
   debugDynamic(collection, cache, pall)
-  cache[(collection.high, maxWeight)]
+  cache[collection.high, maxWeight]
 
 # go -----------------------------------
 
-when isMainModule: 
+when isMainModule:
   let items: seq[Item] = @[
     newItem(50, 5),
     newItem(60, 10),
