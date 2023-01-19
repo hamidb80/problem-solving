@@ -72,7 +72,7 @@ func `<`[N: SomeNumber](a, b: Option[N]): bool =
   elif a.isNone: false
   else: a.get < b.get
 
-# implementation --------------------------
+# debug -----------------------------------
 
 proc debugMatrix[T](m: Matrix[T]) =
   {.cast(nosideEffect).}:
@@ -91,7 +91,7 @@ proc debugShortestFloyd(v: int, sm: ShortestPathGraph, cs: ShortestPathCursor) =
   debugEcho "cursor"
   debugMatrix cs
 
-# debug -----------------------------------
+# implementation --------------------------
 
 func setSelfLoop(m: var ShortestPathGraph) =
   assert m.height == m.width
@@ -105,8 +105,9 @@ func initCursorMatrix(m: ShortestPathGraph): ShortestPathCursor =
     result[path] = some path.a
     result[path] = some path.b
 
-func allShortestPath(initialMatrix: ShortestPathGraph): (ShortestPathGraph,
-    ShortestPathCursor) =
+func allShortestPath(initialMatrix: ShortestPathGraph
+  ): (ShortestPathGraph, ShortestPathCursor) =
+
   var
     shortest = initialMatrix
     cursors = initCursorMatrix shortest
@@ -128,19 +129,20 @@ func allShortestPath(initialMatrix: ShortestPathGraph): (ShortestPathGraph,
 
   (shortest, cursors)
 
-let sm = allShortestPath initGraph @[
-  initConn(1, 2, 5),
+when isMainModule:
+  discard allShortestPath initGraph @[
+    initConn(1, 2, 5),
 
-  initConn(2, 1, 50),
-  initConn(2, 3, 15),
-  initConn(2, 4, 5),
+    initConn(2, 1, 50),
+    initConn(2, 3, 15),
+    initConn(2, 4, 5),
 
-  initConn(3, 1, 30),
-  initConn(3, 4, 15),
+    initConn(3, 1, 30),
+    initConn(3, 4, 15),
 
-  initConn(4, 1, 15),
-  initConn(4, 3, 5),
-]
+    initConn(4, 1, 15),
+    initConn(4, 3, 5),
+  ]
 
 #[
 === Using Vertex -1 ===
