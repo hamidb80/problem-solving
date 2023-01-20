@@ -1,73 +1,84 @@
-import std/[sequtils, algorithm, math]
+import std/[algorithm, strutils]
 import ../common
 
 # utils --------------------------------
 
+func `[]`[T](items: seq[T], indexes: seq[int]): seq[T] =
+  for i in indexes:
+    result.add items[i]
+
+# debug --------------------------------
+
 # main ---------------------------------
 
-func initPotentialLookup(items: seq[Item]): seq[int] =
-  let profits = items.map(selectProfit)
-  var temp = profits.sum
-  result.setlen items.len
+func isPromising(items: seq[Item], index, maxWeight, bestAnswer: int): bool =
+  var
+    www = maxWeight
+    profit = 0
 
-  for s in 0..items.high:
-    result[s] = temp
-    temp -= items[items.high - s].profit
+  for i in index..items.high:
+    let
+      w = items[i].weight
+      p = items[i].profit
 
-func isPromising(potential, bestAnswer: int): bool =
-  (bestAnswer < potential)
-  # FIXME 
+    if w <= www:
+      www -= w
+      profit += p
+    else:
+      www = 0
+      profit += www * toInt(p/w)
+      break
 
-template `|=`(name, value): untyped =
-  ## defines an alias
-  template name: untyped = value
+  profit > bestAnswer
 
 func solveImpl(
-    items: seq[Item], potentials: seq[int],
-    maxWeight: int, i: int,
-    bestAnswer: int, selectedIndexes: seq[int]
-  ): tuple[bestAnswer: int, selectedIndexes: seq[int]] =
+    items: seq[Item], i,
+    profitSoFar, maxWeight: int, selectedSoFar: seq[int],
+    bestAnswer: var int, selectedIndexes: var seq[int]
+  ) =
 
-  w |= items[i].weight
-  p |= items[i].profit
+  if bestAnswer < profitSoFar:
+    bestAnswer = profitSoFar
+    selectedIndexes = selectedSoFar
 
-  debugEcho "called ", (bestAnswer, selectedIndexes, i)
+  when defined debug:
+    debugEcho indent("called ", i*2),
+        (profitSoFar, maxWeight, bestAnswer, selectedSofar, i), ": ",
+        (i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar))
 
-  if i == items.len or w > maxWeight:
-    (bestAnswer, selectedIndexes)
-
-  elif isPromising(bestAnswer + potentials[i], bestAnswer):
+  if i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar):
     solveImpl(
-      items, potentials, 
-      maxWeight - w, i+1,
-      bestAnswer + p, selectedIndexes & i)
+      items, i+1,
+      profitSoFar + items[i].profit,
+      maxWeight - items[i].weight,
+      selectedSoFar & i,
+      bestAnswer, selectedIndexes)
 
-  else:
     solveImpl(
-      items, potentials, 
-      maxWeight, i+1,
+      items, i+1,
+      profitSoFar, maxWeight, selectedSoFar,
       bestAnswer, selectedIndexes)
 
 func solve*(items: seq[Item], maxWeight: int): seq[Item] =
-  let
-    localItems = sorted(items, byProfitPerUnit, Descending)
-    potentials = initPotentialLookup localItems
+  let localItems = sorted(items, byProfitPerUnit, Descending)
+  var
+    best = 0
+    indexes: seq[int]
 
-  debugEcho items
-  debugEcho localItems
-  debugEcho potentials
-
-  let (_, selectedIndexes) = solveImpl(localItems, potentials, maxWeight, 0, 0, @[])
-  selectedIndexes.mapit localItems[it]
+  solveImpl(localItems, 0, 0, maxWeight, @[], best, indexes)
+  localItems[indexes]
 
 # go -----------------------------------
 
 when isMainModule:
-  let items = @[
-    newItem(50, 5),
-    newItem(60, 10),
-    newItem(140, 2),
-  ]
+  let
+    items = @[
+      newItem(50, 5),
+      newItem(60, 10),
+      newItem(140, 20),
+    ]
 
-  echo solve(items, 30)
-  echo solve(items, 30).report
+    ans = solve(items, 30)
+
+  echo ans
+  echo ans.report
