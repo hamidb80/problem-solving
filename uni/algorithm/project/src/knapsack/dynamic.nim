@@ -1,4 +1,4 @@
-import std/[sequtils, tables, algorithm]
+import std/[sequtils, tables, algorithm, strformat]
 import ../common
 import terminaltables
 
@@ -9,7 +9,13 @@ type
     index: int
     capacity: int
 
-  DynamicCache = Table[Position, int]
+  PositionTable[T] = Table[Position, T]
+
+  ProfitTable = PositionTable[int]
+  SelectTable = PositionTable[SelectionInfo]
+  SelectionInfo = tuple
+    selected: bool
+    next: Position
 
 # utils --------------------------------
 
@@ -18,81 +24,113 @@ func flatten[T](s: seq[seq[T]]): seq[T] =
     for i in r:
       result.add i
 
-func `[]`(d: DynamicCache, index, capacity: int): int =
+func `[]`[T](d: PositionTable[T], index, capacity: int): T =
   d.getOrDefault((index, capacity))
 
-func `[]=`(d: var DynamicCache, index, capacity, value: int) =
+func `[]=`[T](d: var PositionTable[T], index, capacity: int, value: T) =
   d[(index, capacity)] = value
 
 # debug --------------------------------
 
-func debugDynamic(collection: seq[Item], cache: DynamicCache, pall: seq[int]) =
-  when defined debug:
-    {.cast(nosideEffect).}:
-      let ttab = newUnicodeTable()
-      ttab.setHeaders @["item/cap"] & mapIt(pall, $it)
+func `$`(p: Item): string =
+  fmt"${p.profit}/{p.weight}Kg"
 
-      for i in 0..collection.high:
-        ttab.addRow @['#' & $(i+1) & $collection[i]] & pall.mapIt(
-          if (i, it) in cache: $cache[i, it]
-          else: ""
-        )
+func `$`(p: Position): string =
+  fmt"({p.index}, {p.capacity})"
 
-      printTable ttab
+func humanize(b: bool): string =
+  case b
+  of true: "yes"
+  of false: "no"
+
+func `$`(si: SelectionInfo): string =
+  fmt"{humanize si.selected} ->{si.next}"
+
+func debugDynamic[T](items: seq[Item], header: string,
+  cache: PositionTable[T], pall: seq[int]) {.used.} =
+
+  {.cast(nosideEffect).}:
+    let ttab = newUnicodeTable()
+    ttab.setHeaders @[header] & mapIt(pall, $it)
+
+    for i in 0..items.high:
+      ttab.addRow @['#' & $i & ' ' & $items[i]] & pall.mapIt(
+        if (i, it) in cache: $cache[i, it]
+        else: ""
+      )
+
+    printTable ttab
 
 # implementation -----------------------
 
-func determineImpl(result: var seq[seq[int]], collection: seq[Item],
+func determineImpl(result: var seq[seq[int]], items: seq[Item],
   itemIndex, freeWieght: int) =
 
   let
-    item = collection[itemIndex]
+    item = items[itemIndex]
     w = item.weight
 
   result[itemIndex-1].add [freeWieght, freeWieght - w]
 
   if itemIndex != 1:
-    determineImpl result, collection, itemIndex - 1, freeWieght
+    determineImpl result, items, itemIndex - 1, freeWieght
 
     if freeWieght - w > 0:
-      determineImpl result, collection, itemIndex - 1, freeWieght - w
+      determineImpl result, items, itemIndex - 1, freeWieght - w
 
-func determine(collection: seq[Item], maxWeight: int): seq[seq[int]] =
-  result.setLen collection.len
-  result[collection.high].add maxWeight
-  determineImpl result, collection, collection.high, maxWeight
+func determine(items: seq[Item], maxWeight: int): seq[seq[int]] =
+  result.setLen items.len
+  result[items.high].add maxWeight
+  determineImpl result, items, items.high, maxWeight
 
 # main ---------------------------------
 
-func bestSelectImpl(collection: seq[Item],
-  index, capacity: int, cache: var DynamicCache) =
+func extractSelections(items: seq[Item], maxCap: int, st: SelectTable): seq[Item] =
+  var cursor: Position = (items.high, maxCap)
+
+  while cursor.index != -1:
+    let (selected, next) = st[cursor]
+    if selected: result.add items[cursor.index]
+    cursor = next
+
+func bestSelectImpl(items: seq[Item], index, capacity: int,
+  profitTable: var ProfitTable, selectionTable: var SelectTable) =
 
   let
-    item = collection[index]
-    put = capacity - item.weight
+    item = items[index]
+    putCapacity = capacity - item.weight
 
-  var acc = @[cache[index-1, capacity]]
+    putProfit = profitTable[index-1, putCapacity] + item.profit
+    dontPutProfit = profitTable[index-1, capacity]
 
-  if put >= 0:
-    acc.add cache[index-1, put] + item.profit
+    shouldPut = (putCapacity >= 0) and (dontPutProfit < putProfit)
 
-  cache[index, capacity] = max(acc)
+    bestChoice =
+      if shouldPut: (index-1, putCapacity)
+      else: (index-1, capacity)
 
-func bestSelect(collection: seq[Item], maxWeight: int): int =
-  var cache: DynamicCache
-  let
-    ptable = determine(collection, maxWeight)
-    pall = sorted deduplicate flatten ptable
+  selectionTable[index, capacity] = (shouldPut, bestChoice)
+  profitTable[index, capacity] =
+    if shouldPut: putProfit
+    else: dontPutProfit
 
-  for i in 0..collection.high:
-    for p in ptable[i]:
-      bestSelectImpl collection, i, p, cache
+func bestSelect(items: seq[Item], maxWeight: int): seq[Item] =
+  var
+    profitTable: ProfitTable
+    selectionTable: SelectTable
 
+  let neededWeightsEachRow = determine(items, maxWeight)
 
-  debugDynamic(collection, cache, pall)
-  cache[collection.high, maxWeight]
+  for i in 0..items.high:
+    for p in neededWeightsEachRow[i]:
+      bestSelectImpl items, i, p, profitTable, selectionTable
 
-#TODO you have to create a direction matrix to keep track of selected ones
+  when defined debug:
+    let allNeededWeights = sorted deduplicate flatten neededWeightsEachRow
+    debugDynamic(items, "item/cap", profitTable, allNeededWeights)
+    debugDynamic(items, "item/(selected ->next)", selectionTable, allNeededWeights)
+
+  extractSelections(items, maxWeight, selectionTable)
 
 # go -----------------------------------
 
