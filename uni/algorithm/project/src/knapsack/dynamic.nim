@@ -138,7 +138,8 @@ when isMainModule:
   let items: seq[Item] = @[
     newItem(50, 5),
     newItem(60, 10),
-    newItem(140, 20),
+    newItem(140, 2),
   ]
 
   echo items.bestSelect(30)
+  echo items.bestSelect(30).report
