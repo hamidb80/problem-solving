@@ -1,6 +1,6 @@
 import std/macros
 
-macro `<..`(containers, value) =
+macro `:=`(containers, value) =
   # expectKind containers, nnkTupleConstr
   result = newStmtList()
 
@@ -25,7 +25,7 @@ macro `<..`(containers, value) =
 
 let holder = [1, 2, 3, 4, 5]
 
-(a, b, ..c) <.. holder
+(a, b, ..c) := holder
 
 echo "a = ", a
 echo "b = ", b
