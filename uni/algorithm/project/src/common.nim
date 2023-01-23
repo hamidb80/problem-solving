@@ -13,10 +13,13 @@ type
 
   Comparator*[T] = proc(a, b: T): int
 
+  Map[A, B] = proc(a: A): B
+
 # utils --------------------------------
 
-template compareGenertor*(name, fn): untyped =
-  proc name*(a, b: Item): int =
+# https://github.com/nim-lang/Nim/issues/21286
+proc compareGenerator*[N: SomeNumber](fn: static Map[Item, N]): auto =
+  return proc(a, b: Item): int =
     cmp(fn(a), fn(b))
 
 # definition --------------------------
@@ -26,9 +29,9 @@ const
   selectProfit* = (i: Item) => i.profit
   selectProfitPerUnit* = (i: Item) => i.profit/i.weight
 
-compareGenertor byWeight, selectWeight
-compareGenertor byProfit, selectProfit
-compareGenertor byProfitPerUnit, selectProfitPerUnit
+  byWeight* = compareGenerator selectWeight
+  byProfit* = compareGenerator selectProfit
+  byProfitPerUnit* = compareGenerator selectProfitPerUnit
 
 # functionalitites --------------------------------
 
