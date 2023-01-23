@@ -11,9 +11,18 @@ type
   Area = tuple
     xs, ys: Slice[int]
 
+  WallKind = enum
+    normal, inf
+
   Wall = object
-    area: Area
-    points: seq[Point]
+    case kind: WallKind
+    of inf:
+      axis: Axis
+      value: int
+
+    of normal:
+      area: Area
+      points: seq[Point]
 
   Axis = enum
     vertical
@@ -55,22 +64,37 @@ func noDest: Destination =
 func dest(p: Point): Destination =
   Destination(kind: exact, position: p)
 
-func contains(a: Area, p: Point): bool =
-  p.x in a.xs and p.y in a.ys
-
-func expandToIncl(a: Area, p: Point): Area =
-  (
-    min(a.xs.a, p.x)..max(a.xs.b, p.x),
-    min(a.ys.a, p.y)..max(a.ys.b, p.y),
-  )
-
 # utils --------------------------------------
 
-func `+`(a, b: Point): Point = (a.x+b.x, a.y+b.y)
+func `+`(a, b: Point): Point =
+  (a.x+b.x, a.y+b.y)
 
 func axis(c: Segment): Axis =
   if c.a.x == c.b.x: vertical
   else: horizontal
+
+
+func contains(a: Area, p: Point): bool =
+  p.x in a.xs and p.y in a.ys
+
+func area(p: Point): Area =
+  (p.x..p.x, p.y..p.y)
+
+func area(a, b: Area): Area =
+  (
+    min(a.xs.a, b.xs.a, )..max(a.xs.b, b.xs.b),
+    min(a.ys.a, b.ys.a, )..max(a.ys.b, b.ys.b),
+  )
+
+func area(a: Area, p: Point): Area =
+  area(a, p.area)
+
+func area(walls: seq[Wall]): Area =
+  result = walls[0].area
+
+  for i in 1..walls.high:
+    result = area(result, walls[i].area)
+
 
 func sorted[T](s: Slice[T]): Slice[T] =
   if s.a <= s.b: s
@@ -86,7 +110,14 @@ func intersects(p: Point, c: Segment): bool =
   of vertical: (p.x == c.a.x) and (p.y in sorted c.a.y..c.b.y)
 
 func intersects(p: Point, wall: Wall): bool =
-  (p in wall.area) and ifAny(wall.segments, p.intersects it)
+  case wall.kind
+  of inf:
+    case wall.axis
+    of horizontal: p.y == wall.value
+    of vertical: p.x == wall.value
+
+  of normal:
+    (p in wall.area) and ifAny(wall.segments, p.intersects it)
 
 func intersects(p: Point, walls: seq[Wall]): bool =
   ifAny walls, p.intersects it
@@ -97,11 +128,22 @@ func parsePoint(s: string): Point =
   var r: bool
   (r, result.x, result.y) = s.scanTuple("$i,$i")
 
-func parseWall(line: string): Wall =
+iterator points(line: string): Point =
   for s in line.split " -> ":
-    let p = parsePoint s
+    yield parsePoint s
+
+func parseWall(line: string): Wall =
+  result = Wall(kind: normal)
+
+  var seen = false
+  for p in line.points:
     result.points.add p
-    result.area = expandToIncl(result.area, p)
+
+    result.area =
+      if seen: area(result.area, p)
+      else: area p
+
+    seen = true
 
 iterator parseWalls(data: string): Wall =
   for l in data.splitLines:
@@ -139,8 +181,16 @@ func go(p: Point, walls: seq[Wall], filled: HashSet[Point]): Option[Point] =
     if isValid(p + m, walls, filled):
       return some p + m
 
-func isOffside(p: Point, walls: seq[Wall]): bool =
-  ifAll walls, p.y >= it.area.ys.b
+func afterOf(p: Point, w: Wall): bool =
+  case w.kind
+  of inf:
+    assert w.axis == horizontal
+    p.y > w.value
+  of normal:
+    p.y >= w.area.ys.b
+
+func isFallingToEndlessVoid(p: Point, walls: seq[Wall]): bool =
+  ifAll walls, afterOf(p, it)
 
 func fallSand(source: Point, walls: seq[Wall], filled: HashSet[Point]
   ): Destination =
@@ -150,13 +200,13 @@ func fallSand(source: Point, walls: seq[Wall], filled: HashSet[Point]
     # debugecho debugMap(p, source, (494..503, 0..9), walls, filled)
     let n = go(p, walls, filled)
     if isSome n:
-      # debugecho n, n.get.isOffside(walls)
       p = n.get
-      if p.isOffside(walls): return noDest()
+      if p.isFallingToEndlessVoid(walls): return noDest()
     else: return dest p
 
+# main -----------------------------------------
 
-func part1(source: Point, walls: seq[Wall]): int =
+func stopsAfterHowManySteps(source: Point, walls: seq[Wall]): int =
   var restedSands: HashSet[Point]
 
   while true:
@@ -167,7 +217,14 @@ func part1(source: Point, walls: seq[Wall]): int =
       restedSands.incl d.position
       result.inc
 
+      if d.position == source: return
+
 # go -----------------------------------------
 
-let data = "./input.txt".readFile.parseWalls.toseq
-echo part1((500, 0), data) # 892
+let
+  walls = "./input.txt".readFile.parseWalls.toseq
+  world = walls.area
+  floor = Wall(kind: inf, axis: horizontal, value: world.ys.b + 2)
+
+echo stopsAfterHowManySteps((500, 0), walls) # 892
+echo stopsAfterHowManySteps((500, 0), walls & floor) # 892
