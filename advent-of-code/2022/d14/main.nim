@@ -51,11 +51,14 @@ template ifAny(iter, cond): untyped =
   acc
 
 template ifAll(iter, cond): untyped =
+  var acc = true
+
   for it{.inject.} in iter:
     if not cond:
-      return false
+      acc = false
+      break
 
-  true
+  acc
 
 
 func noDest: Destination =
@@ -73,6 +76,10 @@ func axis(c: Segment): Axis =
   if c.a.x == c.b.x: vertical
   else: horizontal
 
+func sorted[T](s: Slice[T]): Slice[T] =
+  if s.a <= s.b: s
+  else: s.b..s.a
+
 
 func contains(a: Area, p: Point): bool =
   p.x in a.xs and p.y in a.ys
@@ -82,8 +89,8 @@ func area(p: Point): Area =
 
 func area(a, b: Area): Area =
   (
-    min(a.xs.a, b.xs.a, )..max(a.xs.b, b.xs.b),
-    min(a.ys.a, b.ys.a, )..max(a.ys.b, b.ys.b),
+    min(a.xs.a, b.xs.a)..max(a.xs.b, b.xs.b),
+    min(a.ys.a, b.ys.a)..max(a.ys.b, b.ys.b),
   )
 
 func area(a: Area, p: Point): Area =
@@ -93,12 +100,17 @@ func area(walls: seq[Wall]): Area =
   result = walls[0].area
 
   for i in 1..walls.high:
-    result = area(result, walls[i].area)
+    let w = walls[i]
+    case w.kind
+    of normal:
+      result = area(result, w.area)
+    of inf:
+      case w.axis
+      of vertical:
+        result.xs = min(result.xs.a, w.value)..max(result.xs.b, w.value)
+      of horizontal:
+        result.ys = min(result.ys.a, w.value)..max(result.ys.b, w.value)
 
-
-func sorted[T](s: Slice[T]): Slice[T] =
-  if s.a <= s.b: s
-  else: s.b..s.a
 
 iterator segments(wall: Wall): Segment =
   for i in 1..wall.points.high:
@@ -134,11 +146,10 @@ iterator points(line: string): Point =
 
 func parseWall(line: string): Wall =
   result = Wall(kind: normal)
-
   var seen = false
+
   for p in line.points:
     result.points.add p
-
     result.area =
       if seen: area(result.area, p)
       else: area p
@@ -151,7 +162,7 @@ iterator parseWalls(data: string): Wall =
 
 # debug --------------------------------------
 
-proc debugMap(sand, source: Point, view: Area,
+proc reprMap(sand, source: Point, view: Area,
   walls: seq[Wall], filled: HashSet[Point]): string =
 
   for y in view.ys:
@@ -181,39 +192,46 @@ func go(p: Point, walls: seq[Wall], filled: HashSet[Point]): Option[Point] =
     if isValid(p + m, walls, filled):
       return some p + m
 
-func afterOf(p: Point, w: Wall): bool =
-  case w.kind
-  of inf:
-    assert w.axis == horizontal
-    p.y > w.value
-  of normal:
-    p.y >= w.area.ys.b
-
-func isFallingToEndlessVoid(p: Point, walls: seq[Wall]): bool =
-  ifAll walls, afterOf(p, it)
-
-func fallSand(source: Point, walls: seq[Wall], filled: HashSet[Point]
+func fallSand(source: Point, walls: seq[Wall], worldArea: Option[Area],
+    filled: HashSet[Point]
   ): Destination =
   var p = source
 
   while true:
-    # debugecho debugMap(p, source, (494..503, 0..9), walls, filled)
     let n = go(p, walls, filled)
+
     if isSome n:
       p = n.get
-      if p.isFallingToEndlessVoid(walls): return noDest()
-    else: return dest p
+      if worldArea.isSome and (p notin worldArea.get):
+        return noDest()
+
+    else:
+      return dest p
 
 # main -----------------------------------------
 
 func stopsAfterHowManySteps(source: Point, walls: seq[Wall]): int =
-  var restedSands: HashSet[Point]
+  var
+    restedSands: HashSet[Point]
+    view = area(walls.area, source)
+
+  let
+    isFinite = ifAll(walls, it.kind == normal)
+    worldLimit =
+      if isFinite: some view
+      else: none Area
 
   while true:
-    let d = fallSand(source, walls, restedSands)
+    let d = fallSand(source, walls, worldLimit, restedSands)
     case d.kind
     of endlessVoid: return
     of exact:
+      when defined debug:
+        view = area(view, d.position)
+        if result mod 100 == 0 or d.position == source:
+          debugecho "\n", $result, " ==========="
+          debugecho reprMap(d.position, source, view, walls, restedSands)
+
       restedSands.incl d.position
       result.inc
 
