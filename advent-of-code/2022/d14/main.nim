@@ -227,4 +227,4 @@ let
   floor = Wall(kind: inf, axis: horizontal, value: world.ys.b + 2)
 
 echo stopsAfterHowManySteps((500, 0), walls) # 892
-echo stopsAfterHowManySteps((500, 0), walls & floor) # 892
+echo stopsAfterHowManySteps((500, 0), walls & floor) # 27155
