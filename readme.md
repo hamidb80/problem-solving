@@ -11,8 +11,10 @@
     3. [Michal Marsalek](https://github.com/MichalMarsalek/Advent-of-code/)
     4. [clojure](https://github.com/motform/advent-of-clojure/)
     
-    videos:
+  - **2022**
+     [Clojure](https://github.com/abyala/advent-2022-clojure)
+
+   videos:
     [AOC 2020 in Nim](https://www.youtube.com/playlist?list=PL9Yd0XwsGAqzeDak6qtp6hQ4m7Qo_XA_4)
     [AOC 2020 in clojure](https://www.youtube.com/watch?v=b0a5siw85N4)
   
-- `intern++` 
