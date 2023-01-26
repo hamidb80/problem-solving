@@ -135,11 +135,6 @@ func solve*(items: seq[Item], maxWeight: int): seq[Item] =
 # go -----------------------------------
 
 when isMainModule:
-  let items: seq[Item] = @[
-    newItem(50, 5),
-    newItem(60, 10),
-    newItem(140, 2),
-  ]
-
-  echo items.bestSelect(30)
-  echo items.bestSelect(30).report
+  let ans = testItems.solve(30)
+  echo ans
+  echo ans.makeReport

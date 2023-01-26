@@ -1,4 +1,4 @@
-import std/[strutils]
+import std/[strutils, sugar, jsconsole]
 import common
 from knapsack/greedy import nil
 from knapsack/backtracking import nil
@@ -8,21 +8,14 @@ from knapsack/dynamic import nil
 
 type
   SolveMethod = enum
-    smGreedy = "greedy"
-    smDynamicProgramming = "dynamic programming"
-    smBackTracking = "back tracking"
+    smGreedy = "Greedy"
+    smDynamicProgramming = "Dynamic Programming"
+    smBackTracking = "Back Tracking"
 
-  GreedyCriterias = enum
+  GreedyCriteria = enum
     gcProfit = "Profit"
     gcCost = "Cost"
-    gcProfitPerCost = "Profit Per Cost"
-
-  # ItemFields = enum
-  #   ifName
-  #   ifProfit
-  #   ifWieght
-
-# func `[]=`(i: var Item, f: ItemFields)
+    gcProfitPerCost = "Profit per Cost"
 
 # core -------------------------------------
 
@@ -30,8 +23,11 @@ include karax/prelude
 
 # utils -----------------------------------
 
-func str(c: cstring): string =
+func str[T](c: T): string =
   $c
+
+func toNumber(i: int): string = 
+  i.str.insertSep
 
 # states -----------------------------------
 
@@ -40,14 +36,13 @@ var
   items: seq[Item]
   budget: int
   solveMethod: SolveMethod
-  greedyCriteria: GreedyCriterias
+  greedyCriteria: GreedyCriteria
 
   # --- outputs
   selected: seq[Item]
   report: Report
 
 # actions ---------------------------------
-
 
 proc solve =
   selected =
@@ -65,54 +60,102 @@ proc solve =
         of gcCost: byWeight
         of gcProfitPerCost: byProfitPerWeight
 
+  report = selected.makeReport
+
+proc loadPreDefined =
+  budget = 100_000_000
+  items = preDefinedItems
+
+proc clearResult =
+  selected.reset
+
+template ev(body): untyped =
+  let temp = proc(e: Event, vn: VNode) =
+    let s {.inject.} = vn.value.str
+    body
+
+  temp
+
+func set[T](wrapper: var T, value: T) =
+  wrapper = value
 
 # components ------------------------------
 
-proc reportC(budget: int, report: Report): VNode =
-  buildHtml tdiv:
-    text "profit"
-    text $report.totalProfit
+proc itemInput(i: int, item: Item): VNode =
+  buildHtml tdiv(class = "my-2 d-flex align-items-center"):
+    span:
+      text "#"
+      text $(i+1)
 
-    text "cost"
-    text $report.totalWeight
+    input(class = "form-control d-inline-block",
+      placeholder = "name",
+      value = $items[i].name,
+      onchange = ev(items[i].name.set s))
 
-    text "remaining"
-    text $(budget - report.totalWeight)
+    input(class = "form-control d-inline-block",
+      placeholder = "profit",
+      value = $items[i].profit,
+      onchange = ev(items[i].profit.set parseInt s))
 
+    input(class = "form-control d-inline-block",
+      placeholder = "cost",
+      value = $items[i].weight,
+      onchange = ev(items[i].weight.set parseInt s))
 
-proc selectedItemC(n: int, item: Item): VNode =
-  buildHtml tdiv:
-    text $n
-    text item.name
-    text $item.weight
-    text $item.profit
+    button(class = "btn btn-danger"):
+      proc onclick =
+        clearResult()
+        items.delete i
+      text "delete"
 
+proc selectedItemsTable: VNode =
+  buildHtml table(class = "table table-hover"):
+    thead:
+      tr(class = "table-primary"):
+        th: text "#"
+        th: text "name"
+        th: text "profit"
+        th: text "cost"
+        th: text "profit/cost"
+
+    tbody:
+      for i, s in selected:
+        tr(class = "table-" & (if i mod 2 == 0: "light" else: "")):
+          td: text $(i+1)
+          td: text s.name
+          td: text s.profit.toNumber
+          td: text s.weight.toNumber
+          td: text $(s.profit/s.weight)
 
 proc app: VNode =
-  buildHtml tdiv:
-    h1: text "Stock Market Project"
-    h2: text "data"
+  buildHtml tdiv(class = "p-4"):
+    h1(class = "text-center"): text "Stock Market Project"
+    h2(class = "mt-4"): text "Input Data"
 
     tdiv:
-      text "budget: "
-      input(placeholder = "budget"):
-        proc onchange(e: Event, vn: VNode) =
-          budget = vn.value.str.parseInt
+      button(class = "btn btn-warning w-100 my-2"):
+        proc onclick = loadPreDefined()
+        text "Load Pre Defined Data"
+
+      tdiv(class = "d-flex align-items-center"):
+        text "budget: "
+        input(class = "form-control", placeholder = "budget", value = $budget):
+          proc onchange(e: Event, vn: VNode) =
+            clearResult()
+            budget = vn.value.str.parseInt
 
       for i, item in items:
-        tdiv:
-          text $(i+1)
-          input(placeholder = "name", onchange = _)
-          input(placeholder = "cost", onchange = _)
-          input(placeholder = "profit", onchange = _)
+        itemInput(i, item)
 
-      button:
-        proc onclick = discard
+      button(class = "btn btn-success w-100 my-2"):
         text "add"
+        proc onclick =
+          clearResult()
+          items.add Item.default
 
-    h2: text "methods"
+    h2(class = "mt-4"): text "Method"
 
-    select:
+    select(class = "form-select"):
       proc onchange(e: Event, vn: VNode) =
         solveMethod = parseEnum[SolveMethod](vn.value.str)
 
@@ -122,31 +165,57 @@ proc app: VNode =
 
     if solveMethod == smGreedy:
       tdiv:
-        select:
+        select(class = "form-select"):
+          proc onchange(e: Event, vn: VNode) =
+            greedyCriteria = parseEnum[GreedyCriteria](vn.value.str)
+
           proc onchange(e: Event, vn: VNode) =
             discard
 
-          for o in GreedyCriterias:
+          for o in GreedyCriteria:
             option:
               text $o
 
-    text $solveMethod
+    tdiv(class = "my-3"):
+      button(class = "btn w-100 btn-info"):
+        text "solve"
+        proc onclick =
+          clearResult()
+          solve()
 
-    button:
-      text "solve"
-      proc onclick = solve()
+    if budget != 0:
+      h2(class = "mt-4"): text "Result"
 
-    h2: text "results"
-    h3: text "report"
-    reportC budget, report
+      if selected.len == 0:
+        text "nothing"
 
-    h3: text "items"
+      else:
+        tdiv:
+          h3: text "Selected Items"
+          selectedItemsTable()
 
-    for i, s in selected:
-      selectedItemC i+1, s
+          h3: text "Report"
+          ul:
+            li:
+              bold: text "Total Profit: "
+              text report.totalProfit.toNumber
 
-    footer:
-      text "avaible on guthub"
+            li:
+              bold: text "Total Cost: "
+              text report.totalWeight.toNumber
+
+            li:
+              bold: text "Remaining Budget: "
+              text (budget - report.totalWeight).toNumber
+
+    footer(class = "mt-4"):
+      hr()
+
+      span:
+        text "created by "
+
+      a(href = "https://github.com/@hamidb80"):
+        text "@hamidb80"
 
 
 # init -----------------------------------

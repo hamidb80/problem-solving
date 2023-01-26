@@ -1,4 +1,4 @@
-import std/[algorithm, strutils]
+import std/[algorithm, strutils, math]
 import ../common
 
 # utils --------------------------------
@@ -13,20 +13,20 @@ func `[]`[T](items: seq[T], indexes: seq[int]): seq[T] =
 
 func isPromising(items: seq[Item], index, maxWeight, bestAnswer: int): bool =
   var
-    www = maxWeight
+    capacity = maxWeight
     profit = 0
 
   for i in index..items.high:
     let
       w = items[i].weight
       p = items[i].profit
+      diff = capacity - w
 
-    if w <= www:
-      www -= w
+    if diff >= 0:
+      capacity = diff
       profit += p
     else:
-      www = 0
-      profit += www * toInt(p/w)
+      profit += ((w + diff).toFloat * (p/w)).ceil.toInt
       break
 
   profit > bestAnswer
@@ -47,12 +47,13 @@ func solveImpl(
         (i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar))
 
   if i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar):
-    solveImpl(
-      items, i+1,
-      profitSoFar + items[i].profit,
-      maxWeight - items[i].weight,
-      selectedSoFar & i,
-      bestAnswer, selectedIndexes)
+    if maxWeight - items[i].weight >= 0:
+      solveImpl(
+        items, i+1,
+        profitSoFar + items[i].profit,
+        maxWeight - items[i].weight,
+        selectedSoFar & i,
+        bestAnswer, selectedIndexes)
 
     solveImpl(
       items, i+1,
@@ -60,7 +61,7 @@ func solveImpl(
       bestAnswer, selectedIndexes)
 
 func solve*(items: seq[Item], maxWeight: int): seq[Item] =
-  let localItems = sorted(items, byProfitPerWeight, Descending)
+  let localItems = items.sorted(byProfitPerWeight, Descending)
   var
     best = 0
     indexes: seq[int]
@@ -71,14 +72,6 @@ func solve*(items: seq[Item], maxWeight: int): seq[Item] =
 # go -----------------------------------
 
 when isMainModule:
-  let
-    items = @[
-      newItem(50, 5),
-      newItem(60, 10),
-      newItem(140, 20),
-    ]
-
-    ans = solve(items, 30)
-
+  let ans = solve(testItems, 30)
   echo ans
-  echo ans.report
+  echo ans.makeReport

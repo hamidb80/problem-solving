@@ -5,9 +5,9 @@ func
 
 suite "correctness":
   let items: seq[Item] = @[
-    newItem(50, 5),
-    newItem(60, 10),
-    newItem(140, 20),
+    initItem(50, 5),
+    initItem(60, 10),
+    initItem(140, 20),
   ]
 
   dynamic.
