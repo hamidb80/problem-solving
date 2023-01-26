@@ -36,6 +36,7 @@ template compareGenerator(fn): untyped =
 # definition --------------------------
 
 const
+  # --- functions
   selectWeight* = (i: Item) => i.weight
   selectProfit* = (i: Item) => i.profit
   selectProfitPerUnit* = (i: Item) => i.profit/i.weight
@@ -44,12 +45,15 @@ const
   byProfit* = compareGenerator selectProfit
   byProfitPerWeight* = compareGenerator selectProfitPerUnit
 
+  # --- data
+  testCapacity* = 30
   testItems* = @[
     initItem("i1", 50, 5),
     initItem("i2", 60, 10),
     initItem("i3", 140, 20),
   ]
 
+  preDefinedBudget* = 100_000_000
   preDefinedItems* = @[
     initItem("ولساپا", 560_000, 6_012_037),
     initItem("نوری", 240_000, 15_011_070),

@@ -1,4 +1,4 @@
-import std/[algorithm, strutils, math]
+import std/[algorithm, math, strutils, strformat]
 import ../common
 
 # utils --------------------------------
@@ -8,6 +8,14 @@ func `[]`[T](items: seq[T], indexes: seq[int]): seq[T] =
     result.add items[i]
 
 # debug --------------------------------
+
+proc decisionRepr(lvl: int, item: Item, isAccepted: bool): string =
+  let
+    space = 3
+    name = fmt"{item.name} (${item.profit}/{item.weight})"
+    sign = if isAccepted: "" else: "✘"
+
+  ("└─ " & name & " " & sign).indent lvl * space
 
 # main ---------------------------------
 
@@ -41,24 +49,24 @@ func solveImpl(
     bestAnswer = profitSoFar
     selectedIndexes = selectedSoFar
 
-  when defined debug:
-    debugEcho indent("called ", i*2),
-        (profitSoFar, maxWeight, bestAnswer, selectedSofar, i), ": ",
-        (i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar))
+  if i != items.len:
+    when defined debug:
+      debugecho decisionRepr(i, items[i],
+        isPromising(items, i, maxWeight, bestAnswer - profitSoFar))
 
-  if i != items.len and isPromising(items, i, maxWeight, bestAnswer - profitSoFar):
-    if maxWeight - items[i].weight >= 0:
+    if isPromising(items, i, maxWeight, bestAnswer - profitSoFar):
+      if maxWeight - items[i].weight >= 0:
+        solveImpl(
+          items, i+1,
+          profitSoFar + items[i].profit,
+          maxWeight - items[i].weight,
+          selectedSoFar & i,
+          bestAnswer, selectedIndexes)
+
       solveImpl(
         items, i+1,
-        profitSoFar + items[i].profit,
-        maxWeight - items[i].weight,
-        selectedSoFar & i,
+        profitSoFar, maxWeight, selectedSoFar,
         bestAnswer, selectedIndexes)
-
-    solveImpl(
-      items, i+1,
-      profitSoFar, maxWeight, selectedSoFar,
-      bestAnswer, selectedIndexes)
 
 func solve*(items: seq[Item], maxWeight: int): seq[Item] =
   let localItems = items.sorted(byProfitPerWeight, Descending)
@@ -68,10 +76,3 @@ func solve*(items: seq[Item], maxWeight: int): seq[Item] =
 
   solveImpl(localItems, 0, 0, maxWeight, @[], best, indexes)
   localItems[indexes]
-
-# go -----------------------------------
-
-when isMainModule:
-  let ans = solve(testItems, 30)
-  echo ans
-  echo ans.makeReport

@@ -131,10 +131,3 @@ func solve*(items: seq[Item], maxWeight: int): seq[Item] =
     debugDynamic(items, "item/(selected ->next)", selectionTable, allNeededWeights)
 
   extractSelections(items, maxWeight, selectionTable)
-
-# go -----------------------------------
-
-when isMainModule:
-  let ans = testItems.solve(30)
-  echo ans
-  echo ans.makeReport

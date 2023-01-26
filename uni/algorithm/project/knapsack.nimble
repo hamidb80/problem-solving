@@ -13,5 +13,5 @@ bin           = @["project"]
 requires "nim >= 1.6.10"
 requires "https://github.com/xmonader/nim-terminaltables"
 
-task gen, "":
-  exec "nim -o:build/script.js js src/webapp.nim"
+task web, "builds web app in ./build directory":
+  exec "nim -o:build/script.js -d:release js src/webapp.nim"

@@ -1,8 +1,6 @@
-import std/[strutils, sugar, jsconsole]
+import std/[strutils]
 import common
-from knapsack/greedy import nil
-from knapsack/backtracking import nil
-from knapsack/dynamic import nil
+import knapsack/[greedy, backtracking, dynamic]
 
 # defs -------------------------------------
 
@@ -17,10 +15,6 @@ type
     gcCost = "Cost"
     gcProfitPerCost = "Profit per Cost"
 
-# core -------------------------------------
-
-include karax/prelude
-
 # utils -----------------------------------
 
 func str[T](c: T): string =
@@ -28,6 +22,9 @@ func str[T](c: T): string =
 
 func toNumber(i: int): string = 
   i.str.insertSep
+
+func set[T](wrapper: var T, value: T) =
+  wrapper = value
 
 # states -----------------------------------
 
@@ -63,7 +60,7 @@ proc solve =
   report = selected.makeReport
 
 proc loadPreDefined =
-  budget = 100_000_000
+  budget = preDefinedBudget
   items = preDefinedItems
 
 proc clearResult =
@@ -76,10 +73,9 @@ template ev(body): untyped =
 
   temp
 
-func set[T](wrapper: var T, value: T) =
-  wrapper = value
-
 # components ------------------------------
+
+include karax/prelude
 
 proc itemInput(i: int, item: Item): VNode =
   buildHtml tdiv(class = "my-2 d-flex align-items-center"):
@@ -103,9 +99,7 @@ proc itemInput(i: int, item: Item): VNode =
       onchange = ev(items[i].weight.set parseInt s))
 
     button(class = "btn btn-danger"):
-      proc onclick =
-        clearResult()
-        items.delete i
+      proc onclick = items.delete i
       text "delete"
 
 proc selectedItemsTable: VNode =
@@ -141,7 +135,6 @@ proc app: VNode =
         text "budget: "
         input(class = "form-control", placeholder = "budget", value = $budget):
           proc onchange(e: Event, vn: VNode) =
-            clearResult()
             budget = vn.value.str.parseInt
 
       for i, item in items:
@@ -150,7 +143,6 @@ proc app: VNode =
       button(class = "btn btn-success w-100 my-2"):
         text "add"
         proc onclick =
-          clearResult()
           items.add Item.default
 
     h2(class = "mt-4"): text "Method"
@@ -214,9 +206,8 @@ proc app: VNode =
       span:
         text "created by "
 
-      a(href = "https://github.com/@hamidb80"):
+      a(href = "https://github.com/hamidb80"):
         text "@hamidb80"
-
 
 # init -----------------------------------
 

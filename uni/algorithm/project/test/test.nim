@@ -3,5 +3,9 @@ import knapsack/[dynamic, greedy, backtracking]
 import common
 
 test "correctness":
-  discard
-  # ?
+  let ans = 
+    # solve(testItems, testCapacity)
+    solve(preDefinedItems, preDefinedBudget)
+
+  echo ans
+  echo ans.makeReport
