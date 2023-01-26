@@ -8,3 +8,4 @@ test "correctness":
     r2 = backtracking.solve(preDefinedItems, preDefinedBudget)
 
   check r1.makeReport == r2.makeReport
+  check r1.len == r2.len

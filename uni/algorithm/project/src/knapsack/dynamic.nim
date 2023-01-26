@@ -18,20 +18,12 @@ type
   ProfitTable = PositionTable[int]
   SelectTable = PositionTable[SelectionInfo]
 
-# utils --------------------------------
+# debug --------------------------------
 
 func flatten[T](s: seq[seq[T]]): seq[T] =
   for r in s:
     for i in r:
       result.add i
-
-func `[]`[T](d: PositionTable[T], index, capacity: int): T =
-  d.getOrDefault((index, capacity))
-
-func `[]=`[T](d: var PositionTable[T], index, capacity: int, value: T) =
-  d[(index, capacity)] = value
-
-# debug --------------------------------
 
 func `$`(p: Item): string =
   fmt"${p.profit}/{p.weight}Kg"
@@ -101,8 +93,8 @@ func solveImpl(items: seq[Item], index, capacity: int,
     item = items[index]
     putCapacity = capacity - item.weight
 
-    putProfit = profitTable[index-1, putCapacity] + item.profit
-    dontPutProfit = profitTable[index-1, capacity]
+    putProfit = profitTable.getOrDefault((index-1, putCapacity)) + item.profit
+    dontPutProfit = profitTable.getOrDefault((index-1, capacity))
 
     shouldPut = (putCapacity >= 0) and (dontPutProfit < putProfit)
 
@@ -110,8 +102,8 @@ func solveImpl(items: seq[Item], index, capacity: int,
       if shouldPut: (index-1, putCapacity)
       else: (index-1, capacity)
 
-  selectionTable[index, capacity] = (shouldPut, bestChoice)
-  profitTable[index, capacity] =
+  selectionTable[(index, capacity)] = (shouldPut, bestChoice)
+  profitTable[(index, capacity)] =
     if shouldPut: putProfit
     else: dontPutProfit
 
