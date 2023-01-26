@@ -1,4 +1,8 @@
+import std/[strutils]
 import common
+from knapsack/greedy import nil
+from knapsack/backtracking import nil
+from knapsack/dynamic import nil
 
 # defs -------------------------------------
 
@@ -8,9 +12,26 @@ type
     smDynamicProgramming = "dynamic programming"
     smBackTracking = "back tracking"
 
+  GreedyCriterias = enum
+    gcProfit = "Profit"
+    gcCost = "Cost"
+    gcProfitPerCost = "Profit Per Cost"
+
+  # ItemFields = enum
+  #   ifName
+  #   ifProfit
+  #   ifWieght
+
+# func `[]=`(i: var Item, f: ItemFields)
+
 # core -------------------------------------
 
 include karax/prelude
+
+# utils -----------------------------------
+
+func str(c: cstring): string =
+  $c
 
 # states -----------------------------------
 
@@ -19,64 +40,113 @@ var
   items: seq[Item]
   budget: int
   solveMethod: SolveMethod
-  criteria: Comparator[Item]
+  greedyCriteria: GreedyCriterias
 
-  # --- outputs 
+  # --- outputs
   selected: seq[Item]
   report: Report
 
+# actions ---------------------------------
 
-# components -------------------------------
+
+proc solve =
+  selected =
+    case solveMethod
+    of smBackTracking:
+      backtracking.solve items, budget
+
+    of smDynamicProgramming:
+      dynamic.solve items, budget
+
+    of smGreedy:
+      greedy.solve items, budget:
+        case greedyCriteria
+        of gcProfit: byProfit
+        of gcCost: byWeight
+        of gcProfitPerCost: byProfitPerWeight
+
+
+# components ------------------------------
+
+proc reportC(budget: int, report: Report): VNode =
+  buildHtml tdiv:
+    text "profit"
+    text $report.totalProfit
+
+    text "cost"
+    text $report.totalWeight
+
+    text "remaining"
+    text $(budget - report.totalWeight)
+
+
+proc selectedItemC(n: int, item: Item): VNode =
+  buildHtml tdiv:
+    text $n
+    text item.name
+    text $item.weight
+    text $item.profit
+
 
 proc app: VNode =
-  buildHtml(tdiv):
-    h1 "Stock Market Project"
+  buildHtml tdiv:
+    h1: text "Stock Market Project"
+    h2: text "data"
 
-    
-    h2 "data"
-    row:
+    tdiv:
       text "budget: "
-      input value = $budget, onchange = _
+      input(placeholder = "budget"):
+        proc onchange(e: Event, vn: VNode) =
+          budget = vn.value.str.parseInt
 
-    for i, item in items:
-      row:
-        text $(i+1)
-        input placeholder="name", onchange = ..
-        input placeholder="cost", onchange = ..
-        input placeholder="profit", onchange = ..
-        
-        # TODO delete on delete the name
+      for i, item in items:
+        tdiv:
+          text $(i+1)
+          input(placeholder = "name", onchange = _)
+          input(placeholder = "cost", onchange = _)
+          input(placeholder = "profit", onchange = _)
 
+      button:
+        proc onclick = discard
+        text "add"
 
-    text $(items.len + 1)
-    input placeholder="name", onchange = add new
-    input placeholder="cost", onchange = add new
-    input placeholder="profit", onchange = add new
+    h2: text "methods"
 
-    h2 "methods"
+    select:
+      proc onchange(e: Event, vn: VNode) =
+        solveMethod = parseEnum[SolveMethod](vn.value.str)
 
-    select onchane = ...
-    
-      for o in options:
-        text $o
+      for o in SolveMethod:
+        option:
+          text $o
 
-    h2 "results"
-    h3 "report"
-      profit report.totalProfit
-      cost report.totalWeight
-      remaining budget - report.totalWeight
+    if solveMethod == smGreedy:
+      tdiv:
+        select:
+          proc onchange(e: Event, vn: VNode) =
+            discard
 
+          for o in GreedyCriterias:
+            option:
+              text $o
 
-    h3 "items"
+    text $solveMethod
+
+    button:
+      text "solve"
+      proc onclick = solve()
+
+    h2: text "results"
+    h3: text "report"
+    reportC budget, report
+
+    h3: text "items"
+
     for i, s in selected:
-      row:
-        text (i+1)
-        span s.name
-        span s.cost
-        span s.profit
+      selectedItemC i+1, s
 
     footer:
-      avaible on guthub
+      text "avaible on guthub"
 
 
 # init -----------------------------------

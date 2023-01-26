@@ -93,7 +93,7 @@ func extractSelections(items: seq[Item], maxCap: int, st: SelectTable): seq[Item
     if selected: result.add items[cursor.index]
     cursor = next
 
-func bestSelectImpl(items: seq[Item], index, capacity: int,
+func solveImpl(items: seq[Item], index, capacity: int,
   profitTable: var ProfitTable, selectionTable: var SelectTable) =
 
   let
@@ -114,7 +114,7 @@ func bestSelectImpl(items: seq[Item], index, capacity: int,
     if shouldPut: putProfit
     else: dontPutProfit
 
-func bestSelect(items: seq[Item], maxWeight: int): seq[Item] =
+func solve*(items: seq[Item], maxWeight: int): seq[Item] =
   var
     profitTable: ProfitTable
     selectionTable: SelectTable
@@ -123,7 +123,7 @@ func bestSelect(items: seq[Item], maxWeight: int): seq[Item] =
 
   for i in 0..items.high:
     for p in neededWeightsEachRow[i]:
-      bestSelectImpl items, i, p, profitTable, selectionTable
+      solveImpl items, i, p, profitTable, selectionTable
 
   when defined debug:
     let allNeededWeights = sorted deduplicate flatten neededWeightsEachRow

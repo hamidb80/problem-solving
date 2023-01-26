@@ -60,7 +60,7 @@ func solveImpl(
       bestAnswer, selectedIndexes)
 
 func solve*(items: seq[Item], maxWeight: int): seq[Item] =
-  let localItems = sorted(items, byProfitPerUnit, Descending)
+  let localItems = sorted(items, byProfitPerWeight, Descending)
   var
     best = 0
     indexes: seq[int]

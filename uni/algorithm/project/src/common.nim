@@ -30,7 +30,7 @@ const
 
   byWeight* = compareGenerator selectWeight
   byProfit* = compareGenerator selectProfit
-  byProfitPerUnit* = compareGenerator selectProfitPerUnit
+  byProfitPerWeight* = compareGenerator selectProfitPerUnit
 
 # functionalitites --------------------------------
 

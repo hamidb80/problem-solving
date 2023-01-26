@@ -11,4 +11,7 @@ bin           = @["project"]
 # Dependencies
 
 requires "nim >= 1.6.10"
-requires "nimterminaltables"
+requires "https://github.com/xmonader/nim-terminaltables"
+
+task build, "":
+  exec "nim -o:build/script.js js src/webapp.nim"
