@@ -9,13 +9,14 @@ type
     index: int
     capacity: int
 
+  SelectionInfo = tuple
+    selected: bool
+    next: Position
+
   PositionTable[T] = Table[Position, T]
 
   ProfitTable = PositionTable[int]
   SelectTable = PositionTable[SelectionInfo]
-  SelectionInfo = tuple
-    selected: bool
-    next: Position
 
 # utils --------------------------------
 

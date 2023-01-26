@@ -5,7 +5,6 @@ author        = "hamidb80"
 description   = "final algorithm project - Shahed University fall 1401-1402"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["project"]
 
 
 # Dependencies
