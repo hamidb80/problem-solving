@@ -4,6 +4,7 @@ import std/[sugar]
 
 type
   Item* = object
+    name*: string
     profit*: int
     weight*: int
 
@@ -13,12 +14,10 @@ type
 
   Comparator*[T] = proc(a, b: T): int
 
-  Map[A, B] = proc(a: A): B
-
 # utils --------------------------------
 
 # https://github.com/nim-lang/Nim/issues/21286
-proc compareGenerator*[N: SomeNumber](fn: static Map[Item, N]): auto =
+proc compareGenerator*[N: SomeNumber](fn: static Item -> N): auto =
   return proc(a, b: Item): int =
     cmp(fn(a), fn(b))
 
@@ -35,8 +34,8 @@ const
 
 # functionalitites --------------------------------
 
-func newItem*(p, w: int): Item =
-  Item(profit: p, weight: w)
+func newItem*(n: string, p, w: int): Item =
+  Item(name: n, profit: p, weight: w)
 
 func report*(items: seq[Item]): Report =
   for item in items:
