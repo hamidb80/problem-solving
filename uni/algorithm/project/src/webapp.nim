@@ -20,7 +20,7 @@ type
 func str[T](c: T): string =
   $c
 
-func toNumber(i: int): string = 
+func toNumber(i: int): string =
   i.str.insertSep
 
 func set[T](wrapper: var T, value: T) =
@@ -136,6 +136,12 @@ proc app: VNode =
         input(class = "form-control", placeholder = "budget", value = $budget):
           proc onchange(e: Event, vn: VNode) =
             budget = vn.value.str.parseInt
+
+      tdiv(class = "d-flex justify-content-between"):
+        for s in ["#number", "name", "profit", "cost", "delete"]:
+          label:
+            bold:
+              text s
 
       for i, item in items:
         itemInput(i, item)
