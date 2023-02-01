@@ -51,18 +51,26 @@ h5 {
 }
 
 pre,
-.formula {
+.terminal {
   font-family: 'Fira Code';
-  padding: 18px;
+}
+
+.bold{
+  font-weight: bold;
+}
+
+pre,
+.formula {
+  padding: 16px;
+  margin-top: 4px;
   border-radius: 11px;
-  background: #ecf7f5;
+  background: #ffee91;
   color: #090909;
   direction: ltr;
 }
 
 pre *,
 .formula * {
-  font-family: 'Fira Code';
   direction: ltr;
 }
 
@@ -80,6 +88,7 @@ div.colorblock {
   height: 20px;
   border-radius: 4px;
   margin: 0 4px;
+  margin-bottom: -5px;
 }
 
 .purple {
@@ -119,5 +128,13 @@ div.colorblock {
 @media print {
   .break {
     page-break-before: always;
+  }
+
+  .formula {
+    font-size: 0.8rem;
+  }
+
+  .no-break{
+    break-inside: avoid;
   }
 }

@@ -5,12 +5,12 @@ wrappers:
     - body
 
   time:
-  - sec:
+  - sec.time-complexity.no-break:
     - title: پیچیدگی زمانی
     - body
   
   space:
-  - sec:
+  - sec.space-complexity.no-break:
     - title: پیچیدگی فضایی
     - body
 
@@ -23,7 +23,8 @@ wrappers:
   - sec.$:
     - title: 
       - text: " تابع "
-      - var: 0
+      - span.terminal.bold:
+        - var: 0
 
     - body
 
@@ -31,6 +32,11 @@ wrappers:
   - div.same-row:
     - empty.colorblock.$: 0
     - body
+
+  par:
+  - text: (
+  - body
+  - text: )
 
 
 doc:
@@ -133,7 +139,7 @@ doc:
   - p:
     - همانطور که در قسمت قبل گفته شد، فایل رابط کاربری در پوشه
     - " "
-    - build
+    - build/web
     - " "
     - وجود دارد.
   
@@ -153,7 +159,10 @@ doc:
     - سود 50 با وزن 5
     - سود 60 با وزن 10
     - سود 140 با وزن 20 
-
+  
+  - p:
+      پیچیدگی زمانی تابع های وابسته، در ادامه محاسبه شده اند.
+            
 - sec.break#analysis:
   - title: توضیح – تحلیل زمان و حافظه
 
@@ -162,9 +171,9 @@ doc:
     - image.rounded: ./assets/greedy_solve.png
 
     - parts:
-      - list:
+      - list: 
         - colored.pink-red: 
-            مرتب سازی آیتم ها ( merge sort )
+            مرتب سازی آیتم ها
         
         - div:
           - colored.purple:
@@ -173,86 +182,176 @@ doc:
           - list:
             - colored.light-orange:
                 اضافه کردن شرطی آن‌ها به لیست نتیجه  
-        
+          
     - time:
+      - p:
+          الگوریتم مرتب سازی زبان 
+          Nim،
+          الگوریتم
+          merge sort
+          مییباشد.
+
       - formula: |
-          O(S(n)) =
-          O(n) + O(determineImpl(n)) =
-          O(n) + O(n) = O(n)
+          O(T(n)) = O(mergeSort(n)) + n×O(listAppend)
+          = O(n.log(n)) + n×O(1) = 
+          = O(n.log(n))
 
     - space:
-      - formula: O(n)
+      - p:
+          برای مرتب سازی به فضایی به اندازه آرایه ورودی نیاز داریم.
+          برای انتخاب نیز در بدترین حالت ممکن، همه آیتم هارا انتخاب میکنیم.
+
+      - formula: |
+          O(S(n)) = O(mergeSort(n)) + O(select(n))
+          = O(n) + O(n)
+          = O(n)
 
   - sec#method#dynamic.break:
     - title: الگوریتم برنامه نویسی پویا
 
+    - explain: ????
+
     - fn(solve):
       - image.rounded: ./assets/dynamic_solve.png
 
+      - parts:
+        - list:
+          - colored.light-orange: 
+              پیدا کردن ستون های مورد نیاز برای هر سطر
+        
+          - colored.pink-red: 
+              پر کردن سلول های مورد نیاز در جدول
+
+          - colored.light-green:
+              جمع آوری بهترین انتخاب ها 
+
       - time:
         - formula: |
-            O(T(n)) = 
-            O(1) + O(determine(n)) + n×w×O(solveImpl(n)) + O(extractSelections(n)) =
-            O(1) + O(2^n) + O(n×w) + O(n) = 
-            O(2^n) + O(n×w)
+            O(T(n)) 
+            = 2×O(1) + O(determine(n)) + n×w×O(solveImpl(n)) + O(extractSelections(n))
+            = O(1) + O(2^n) + n×w×O(1) + O(n)
+            = O(2^n) + O(n×w)
         
       - space:
-        - formula: O(n)
+        - formula: |
+            O(S(n)) = O(determine(n)) + O(extractSelections(n))
+            = ...
 
     - fn(solveImpl).break:
       - image.rounded: ./assets/dynamic_solveImpl.png
-      
-      - parts:
-        - list:
-          - مرتب سازی ( merge sort )
-          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
         
       - time:
+        - text:
+            عملیات های خواندن یک 
+            index
+            از آرایه
+        
+        - par:
+          - empty.colorblock.light-orange: 0
+
+        - text: 
+            ، و خواندن و نوشتن اطلاعات از 
+            Hash Table
+        
+        - par:
+          - empty.colorblock.light-green: 0
+        
+        - text:
+            همگی در یک زمان ثابت انجام میشوند.
+            بقیه عملیات ها هم جمع و 
+            and
+            هستند که آن ها هم در زمان ثابت انجام میشوند.
+        
         - formula: O(1)
         
       - space:
+        - p:
+           این تابع بازگشتی نیست
+           و فقط چند متغیر با اندازه ثابت
+           بدون توجه به اندازه ورودی تعریف میکند
+
         - formula: O(1)
 
     - fn(extractSelections).break:
       - image.rounded: ./assets/dynamic_extractSelections.png
     
-      - parts:
-        - list:
-          - مرتب سازی ( merge sort )
-          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
-        
       - time:
-        - formula: O(T(n)) = O(1) + n×O(1) = O(n)
+        - text:
+            عملیات های خواندن از یک 
+            Hash Table
+        
+        - par:
+          - empty.colorblock.pink-red: 0
+
+        - text:
+            و خواندن یک 
+            index
+            از آرایه
+
+        - par:
+          - empty.colorblock.light-orange: 0
+
+        - text:
+            و اضافه کردن به آرایه
+
+        - par:
+          - empty.colorblock.light-green: 0
+
+        - text:
+            همگی در زمان ثابت اجرا میشوند.
+            این حقله به تعداد آیتم ها تکرار میشود.
+
+        - formula: |
+            O(T(n)) = n×O(1) = O(n)
 
       - space:
-        - formula: O(n)
+        - text:
+            این تابع فقط یک متغیر با اندازه یکسان به نام
+            cursor 
+            تعریف میکند.
+            همچنین آیتم های انتخاب شده را در متغیر نتیجه
+            (result)
+            میریزد که با توجه به اینکه در بدترین حالت همه آیتم ها انتخاب میشوند،
+            میتواند طولی به اندازه
+            n
+            داشته باشد.
+
+        - formula: |
+            O(S(n)) = O(1) + O(n) = O(n)
 
     - fn(determine).break:
       - image.rounded: ./assets/dynamic_determine.png
 
-      - parts:
-        - list:
-          - مرتب سازی ( merge sort )
-          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
-        
       - time:
-        - formula:
-            O(T(n)) = O(n) + O(2^n) = O(2^n)
+        - formula: |
+            O(T(n)) = O(n) + O(determineImpl(n))
+            = O(n) + O(2^n)
+            = O(2^n)
         
       - space:
-        - formula: O(n)
+        - formula: |
+            O(S(n)) = O(n) + O(determineImpl(n))
+            = O(n) + O(n)
+            = O(n)
 
     - fn(determineImpl).break:
       - image.rounded: ./assets/dynamic_determineImpl.png
 
-      - parts:
-        - list:
-          - مرتب سازی ( merge sort )
-          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
-        
       - time:
         - formula:
             O(T(n)) = 2×O(T(n-1)) + O(1) = O(2^n)
         
       - space:
-        - formula: O(n)
+        - text:
+            یک تابع بازگشتی است که دو متغیر ثابت بدون توجه به اندازه ورودی تعریف میکند.
+            با توجه به اینکه طول شاخه بازگشت 
+            n
+            است، پس
+
+        - formula: |
+            O(S(n)) = n×O(1) = O(n)
+
+  - sec#method#backtracking.break:
+    - title: الگوریتم عقبگرد
+    - fn(solve): 0
+    
