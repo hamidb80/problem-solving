@@ -29,7 +29,7 @@ func `$`(p: Item): string =
   fmt"${p.profit}/{p.weight}Kg"
 
 func `$`(p: Position): string =
-  if p.index == -1: "✘"
+  if p.index == -1: "_"
   else: fmt"({p.index}, {p.capacity})"
 
 func humanize(b: bool): string =

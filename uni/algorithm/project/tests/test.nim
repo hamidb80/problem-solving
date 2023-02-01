@@ -7,7 +7,7 @@ when defined debug:
   discard dynamic.solve(testItems, testCapacity)
 
   echo "=== Back Tracking ==="
-  discard backtracking.solve(testItems, testCapacity)
+  discard backtracking.solve(preDefinedItems, preDefinedBudget)
 
 else:
   test "correctness":

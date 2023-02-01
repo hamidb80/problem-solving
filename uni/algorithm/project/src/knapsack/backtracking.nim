@@ -76,4 +76,4 @@ func solve*(items: seq[Item], maxWeight: int): seq[Item] =
     indexes: seq[int] # O(1)
 
   solveImpl(localItems, 0, 0, maxWeight, @[], best, indexes)
-  localItems.select(indexes) # O(n)
+  localItems.select(indexes)
