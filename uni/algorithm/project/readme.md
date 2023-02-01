@@ -1,1 +1,1 @@
-# Knapsack project
+# check `docs/`

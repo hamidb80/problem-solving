@@ -67,10 +67,10 @@ func determineImpl(result: var seq[seq[int]], items: seq[Item],
   result[itemIndex-1].add [freeWieght, freeWieght - w] # O(1)
 
   if itemIndex != 1:
-    determineImpl result, items, itemIndex - 1, freeWieght
+    determineImpl result, items, itemIndex - 1, freeWieght # O(T(n-1))
 
     if freeWieght - w > 0:
-      determineImpl result, items, itemIndex - 1, freeWieght - w
+      determineImpl result, items, itemIndex - 1, freeWieght - w # O(T(n-1))
 
 func determine(items: seq[Item], maxWeight: int): seq[seq[int]] =
   result.setLen items.len # O(n)

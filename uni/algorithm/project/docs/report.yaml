@@ -1,0 +1,251 @@
+wrappers:
+  parts:
+  - sec: 
+    - title: اجزا
+    - body
+
+  time:
+  - sec:
+    - title: پیچیدگی زمانی
+    - body
+  
+  space:
+  - sec:
+    - title: پیچیدگی فضایی
+    - body
+
+  explain:
+  - sec:
+    - title: توضیح
+    - body
+
+  fn(name):
+  - sec.$:
+    - title: 
+      - text: " تابع "
+      - var: 0
+
+    - body
+
+  colored:
+  - div.same-row:
+    - empty.colorblock.$: 0
+    - body
+
+
+doc:
+- title: 
+    گزارش پروژه انتخاب بهینه سهام بورس
+
+- sec#details:
+  - title: مشخصات
+  - lkv:
+      - موضوع پروژه
+      - سرمایه‌گذاری در بورس
+
+      - نام و نام خانوادگی
+      - حمیدرضا بلوری کاشانی
+
+      - کد دانشجویی
+      - 992164019
+      
+      - تاریخ
+      - ترم اول 1401-1402
+      
+      - استاد
+      - دکتر احسان خدنگی
+      
+      - دستیار استاد
+      - فاطمه شوشتری زاده / امیررضا توکلی
+      
+      - درس
+      - طراحی الگوریتم ( رشته مهندسی کامپیوتر )
+      
+      - دانشگاه
+      - شاهد تهران
+
+  - lkv:
+    - رابط کاربری
+    - دارد – تحت وب
+
+    - زبان برنامه نویسی
+    - link: 
+        text: Nim
+        url: https://nim-lang.org/
+
+- sec.break#structure:
+  - title: ساختار پروژه  
+
+  - raw: |
+      │   .gitignore
+      │   ysmd.nimble
+      │
+      ├───assets
+      │       demo.png
+      │
+      ├───build
+      │       index.html
+      │       style.css
+      │
+      ├───examples
+      │       multiline.yaml
+      │       report.yaml
+      │
+      ├───src
+      │   │   ysmd.nim
+      │   │
+      │   └───ysmd
+      │           transfns.nim
+      │           types.nim
+      │           utils.nim
+      │
+      └───tests
+              config.nims
+              test1.nim
+
+  - lkv:
+    - پوشه build
+    - فایل رابط کابری
+
+    - پوشه docs
+    - فایل تعریف پروژه
+
+    - پوشه src
+    - lkv:
+      - پوشه knapsack
+      - حل مسئله با الگوریتم های مختلف
+    
+    - پوشه tests
+    - چک کردن درستی برنامه
+
+    - فایل knapsack.nimble
+    - فایل پروژه زبان Nim
+  
+- sec.break#demo:
+  - title: دموی رابط کاربری
+  - p:
+    - همانطور که در قسمت قبل گفته شد، فایل رابط کاربری در پوشه
+    - " "
+    - build
+    - " "
+    - وجود دارد.
+  
+  - image.rounded: ./assets/demo.png
+
+- sec.break#types:
+  - title: ساختمان داده
+  - image.rounded: ./assets/data_structure.png
+
+- sec#notes:
+  - title: نکات قابل توجه
+
+  - p:
+      مثال برای الگوریتم ها، با آیتم های زیر و با حداکثر وزن 30 فرض شده
+  
+  - list:
+    - سود 50 با وزن 5
+    - سود 60 با وزن 10
+    - سود 140 با وزن 20 
+
+- sec.break#analysis:
+  - title: توضیح – تحلیل زمان و حافظه
+
+  - sec#method#greedy:
+    - title: الگوریتم حریصانه
+    - image.rounded: ./assets/greedy_solve.png
+
+    - parts:
+      - list:
+        - colored.pink-red: 
+            مرتب سازی آیتم ها ( merge sort )
+        
+        - div:
+          - colored.purple:
+              پیمایش ترتیبی روی آیتم های مرتب شده
+
+          - list:
+            - colored.light-orange:
+                اضافه کردن شرطی آن‌ها به لیست نتیجه  
+        
+    - time:
+      - formula: |
+          O(S(n)) =
+          O(n) + O(determineImpl(n)) =
+          O(n) + O(n) = O(n)
+
+    - space:
+      - formula: O(n)
+
+  - sec#method#dynamic.break:
+    - title: الگوریتم برنامه نویسی پویا
+
+    - fn(solve):
+      - image.rounded: ./assets/dynamic_solve.png
+
+      - time:
+        - formula: |
+            O(T(n)) = 
+            O(1) + O(determine(n)) + n×w×O(solveImpl(n)) + O(extractSelections(n)) =
+            O(1) + O(2^n) + O(n×w) + O(n) = 
+            O(2^n) + O(n×w)
+        
+      - space:
+        - formula: O(n)
+
+    - fn(solveImpl).break:
+      - image.rounded: ./assets/dynamic_solveImpl.png
+      
+      - parts:
+        - list:
+          - مرتب سازی ( merge sort )
+          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
+        
+      - time:
+        - formula: O(1)
+        
+      - space:
+        - formula: O(1)
+
+    - fn(extractSelections).break:
+      - image.rounded: ./assets/dynamic_extractSelections.png
+    
+      - parts:
+        - list:
+          - مرتب سازی ( merge sort )
+          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
+        
+      - time:
+        - formula: O(T(n)) = O(1) + n×O(1) = O(n)
+
+      - space:
+        - formula: O(n)
+
+    - fn(determine).break:
+      - image.rounded: ./assets/dynamic_determine.png
+
+      - parts:
+        - list:
+          - مرتب سازی ( merge sort )
+          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
+        
+      - time:
+        - formula:
+            O(T(n)) = O(n) + O(2^n) = O(2^n)
+        
+      - space:
+        - formula: O(n)
+
+    - fn(determineImpl).break:
+      - image.rounded: ./assets/dynamic_determineImpl.png
+
+      - parts:
+        - list:
+          - مرتب سازی ( merge sort )
+          - پیمایش ترتیبی روی آیتم های مرتب شده و اضافه کردن شرطی آن‌ها به لیست نتیجه
+        
+      - time:
+        - formula:
+            O(T(n)) = 2×O(T(n-1)) + O(1) = O(2^n)
+        
+      - space:
+        - formula: O(n)
