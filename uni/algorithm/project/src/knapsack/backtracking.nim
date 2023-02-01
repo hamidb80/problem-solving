@@ -3,10 +3,11 @@ import ../common
 
 # debug --------------------------------
 
-proc decisionRepr(lvl: int, item: Item, isAccepted: bool): string =
+proc decisionRepr(lvl: int, item: Item, isAccepted, isSelected: bool): string =
   let
     space = 3
-    name = fmt"{item.name} (${item.profit}/{item.weight})"
+    exists = if isSelected: '1' else: '0'
+    name = fmt"{exists} {item.name} (${item.profit}/{item.weight})"
     sign = if isAccepted: "" else: "✘"
 
   ("└─ " & name & " " & sign).indent lvl * space
@@ -53,7 +54,7 @@ func solveImpl(
   if i != items.len:
     when defined debug:
       debugecho decisionRepr(i, items[i],
-        isPromising(items, i, maxWeight, bestAnswer - profitSoFar))
+        isPromising(items, i, maxWeight, bestAnswer - profitSoFar), i-1 in selectedSoFar)
 
     if isPromising(items, i, maxWeight, bestAnswer - profitSoFar):
       if maxWeight - items[i].weight >= 0: # O(1)
