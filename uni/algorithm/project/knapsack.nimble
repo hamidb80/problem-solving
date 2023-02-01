@@ -13,8 +13,8 @@ requires "nim >= 1.6.10"
 requires "karax >= 1.2.2"
 requires "https://github.com/xmonader/nim-terminaltables"
 
-task web, "builds web app in ./build directory":
-  exec "nim -o:build/script.js -d:release js src/webapp.nim"
+task web, "builds app app in ./build directory":
+  exec "nim -o:build/app/script.js -d:release js src/webapp.nim"
 
-task debug, "builds web app in ./build directory":
+task debug, "show steps on example data":
   exec "nim -d:debug r tests/test.nim"

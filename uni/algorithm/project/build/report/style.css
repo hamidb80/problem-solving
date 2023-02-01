@@ -1,0 +1,123 @@
+* {
+  max-width: 100%;
+  font-family: "Vazir";
+  direction: rtl;
+  /* padding: 0;
+  margin: 0; */
+}
+
+h1,
+h2,
+h3 {
+  text-align: center;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+h5 {
+  font-size: 17px;
+}
+
+.level-2 {
+  padding: 0 16px;
+}
+
+.level-3 {
+  padding: 0 40px;
+}
+
+
+.formula {
+  direction: ltr;
+  word-wrap: break-word;
+}
+
+.output {
+  direction: ltr;
+}
+
+pre,
+.formula {
+  font-family: 'Fira Code';
+  padding: 18px;
+  border-radius: 11px;
+  background: #ecf7f5;
+  color: #090909;
+  direction: ltr;
+}
+
+pre *,
+.formula * {
+  font-family: 'Fira Code';
+  direction: ltr;
+}
+
+.formula {
+  font-size: 0.9rem;
+}
+
+.rounded {
+  border-radius: 8px;
+}
+
+div.colorblock {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin: 0 4px;
+}
+
+.purple {
+  background-color: #3d00b8;
+}
+
+.light-purple {
+  background-color: #60c;
+}
+
+.pink {
+  background-color: #ec7bec;
+}
+
+.pink-red {
+  background-color: #b31564;
+}
+
+.orange {
+  background-color: #f50;
+}
+
+.light-orange {
+  background-color: #faa700;
+}
+
+.light-green {
+  background-color: #80ff9e;
+}
+
+.same-row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+@media print {
+  .break {
+    page-break-before: always;
+  }
+}

@@ -78,34 +78,41 @@ doc:
 
   - raw: |
       │   .gitignore
-      │   ysmd.nimble
-      │
-      ├───assets
-      │       demo.png
+      │   knapsack.nimble
+      │   readme.md
       │
       ├───build
-      │       index.html
-      │       style.css
+      │   ├───report/
+      │   └───app/
       │
-      ├───examples
-      │       multiline.yaml
-      │       report.yaml
-      │
-      ├───src
-      │   │   ysmd.nim
+      ├───docs/
+      │   │   project-description.pdf
+      │   │   report.yaml
       │   │
-      │   └───ysmd
-      │           transfns.nim
-      │           types.nim
-      │           utils.nim
+      │   └───assets/
       │
-      └───tests
-              config.nims
-              test1.nim
+      ├───src/
+      │   │   common.nim
+      │   │   webapp.nim
+      │   │   webapp.nims
+      │   │
+      │   └───knapsack/
+      │           backtracking.nim
+      │           dynamic.nim
+      │           greedy.nim
+      │
+      └───tests/
+              test.nim
+              test.nims
 
   - lkv:
     - پوشه build
-    - فایل رابط کابری
+    - lkv:
+      - پوشه app
+      - فایل رابط کاربری
+      
+      - پوشه report
+      - فایل گزارش
 
     - پوشه docs
     - فایل تعریف پروژه

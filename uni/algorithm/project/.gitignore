@@ -1,2 +1,4 @@
-build/*.js
-build/*.css
+build/web/*.css
+build/web/*.js
+
+build/report/*.html
