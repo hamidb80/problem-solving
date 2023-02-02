@@ -55,7 +55,7 @@ pre,
   font-family: 'Fira Code';
 }
 
-.bold{
+.bold {
   font-weight: bold;
 }
 
@@ -119,6 +119,14 @@ div.colorblock {
   background-color: #80ff9e;
 }
 
+.yellow {
+  background-color: #fdfd7f;
+}
+
+.light-blue {
+  background-color: #00a8c9;
+}
+
 .same-row {
   display: flex;
   align-items: center;
@@ -134,7 +142,7 @@ div.colorblock {
     font-size: 0.8rem;
   }
 
-  .no-break{
+  .no-break {
     break-inside: avoid;
   }
 }

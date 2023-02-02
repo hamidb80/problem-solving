@@ -29,7 +29,7 @@ wrappers:
     - body
 
   colored:
-  - div.same-row:
+  - span:
     - empty.colorblock.$: 0
     - body
 
@@ -136,16 +136,32 @@ doc:
   
 - sec.break#demo:
   - title: دموی رابط کاربری
-  - span:
-      همانطور که در قسمت قبل گفته شد، فایل رابط کاربری در پوشه
-      build/web
-      وجود دارد.
-  
+  - list:
+    - span:
+        همانطور که در قسمت قبل گفته شد، فایل رابط کاربری در پوشه
+        build/web
+        وجود دارد.
+    
+    - span:
+        با کلیک روی دکمه
+        Load Pre Defined Data
+        داده های موجود در تعریف پروژه نمایان میشود.
+    
+    - span:
+        برای دیدن نتیجه،
+        بعد از انتخاب روش مورد نظر روی دکمه
+        solve
+        کلیک کنید.
+
   - image.rounded: ./assets/demo.png
 
 - sec.break#types:
   - title: ساختمان داده
   - image.rounded: ./assets/data_structure.png
+  - p:
+      این ساختمان داده یک آیتم است که به 
+      عنوان ورودی به همراه حداکثر وزن
+      به تابع های نوشته شده داده میشود.
 
 - sec.break#analysis:
   - title: توضیح – تحلیل زمان و حافظه
@@ -181,7 +197,7 @@ doc:
           دو ورودی از نوع آیتم گرفته و آن ها را باهم مقایسه میکند.
 
       - formula: |
-          O(T(n)) = O(mergeSort(n) × O(criterial(2))) + n×O(listAppend)
+          O(T(n)) = O(mergeSort(n) × O(criterial(2))) + n × O(listAppend(1))
           = O(n.log(n) × 1) + n×O(1) = 
           = O(n.log(n))
 
@@ -264,7 +280,8 @@ doc:
       - space:
         - formula: |
             O(S(n)) = O(determine(n)) + O(extractSelections(n))
-            = ...
+            = O(n) + O(n) 
+            = O(n)
 
     - fn(solveImpl).break:
       - image.rounded: ./assets/dynamic_solveImpl.png
@@ -351,10 +368,18 @@ doc:
     - fn(determine).break:
       - image.rounded: ./assets/dynamic_determine.png
 
+      - parts:
+        - list:
+          - colored.light-blue: 
+              افزایش اندازه آرایه به اندازه آرایه ورودی
+          
+          - colored.light-orange:
+              اضافه کردن یک آیتم به آرایه
+
       - time:
         - formula: |
-            O(T(n)) = O(n) + O(determineImpl(n))
-            = O(n) + O(2^n)
+            O(T(n)) = O(extendArray(n)) + O(appendArray) + O(determineImpl(n))
+            = O(n) + O(1) + O(2^n)
             = O(2^n)
         
       - space:
@@ -365,6 +390,19 @@ doc:
 
     - fn(determineImpl).break:
       - image.rounded: ./assets/dynamic_determineImpl.png
+
+      - parts:
+        - list:
+          - colored.light-blue:
+              انتخاب یک 
+              index
+              از آرایه
+
+          - colored.light-orange:
+              اضافه کردن دو عنصر به آرایه مورد نظر
+
+          - colored.pink:
+              فراخوانی خود (بازگشت)
 
       - time:
         - formula:
@@ -378,7 +416,7 @@ doc:
             است، پس
 
         - formula: |
-            O(S(n)) = n×O(1) = O(n)
+            O(S(n)) = depth × O(1) = n × O(1) = O(n)
 
   - sec#method#backtracking.break:
     - title: الگوریتم عقبگرد
@@ -440,23 +478,176 @@ doc:
                   └─ 0 دارایکم ($578000/11800530) ✘
                 └─ 0 ولساپا ($560000/6012037) ✘
             └─ 0 شاروم ($1700000/17736990) ✘
+    
     - fn(solve).break: 
       - image.rounded: ./assets/back_solve.png
 
+      - explain: 
+          این تابع اصلی است که فقط ورودی ها را 
+          به بقیه تابع ها پاس میدهد
+
+          البته اول آیتم ها را براساس سود واحد
+          مرتب میکند تا برای تابع 
+          isPromising
+          قابل استفاده باشد.
+
+      - time:
+        - formula: |
+            O(T(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
+            = O(n.log(n)) + O(n×2^n) + O(n)
+            = O(n×2^n)
+
+      - space:
+        - formula: |
+            O(S(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
+            = O(n) + O(n^2) + O(n)
+            = O(n^2)
+
     - fn(solveImpl).break: 
       - image.rounded: ./assets/back_solveImpl.png
+      - explain:
+          این تابع که قلب الگوریتم میباشد، 
+          بود و نبود آیتم ها را به صورت عقبگرد بررسی میکند
+          و در آخرین بهینه ترین ترکیب را
+          در متغیر ورودی 
+          selectedIndexes 
+          ذخیره میکند.
+
+      - time:
+        - list: 
+          - colored.yellow: 
+              عملیات های ریاضی ساده
+              در زمان ثابت اجرا میشوند
+
+          - colored.pink-red:
+              ریختن یک مقدار در متغیر عددی
+              در زمان ثابت اجرا میشود
+
+          - colored.pink:
+              کپی یک آرایه به طول حداکثر
+              n
+        
+        - formula: |
+            O(T(n)) = O(math(n)) + O(n) + O(isPromising(n)) + 2×O(T(n-1))
+            = O(1) + O(n) + O(n) + 2×O(T(n-1))
+            = O(n) + 2×O(T(n-1))
+            = O(n × 2^n) 
+
+      - space:
+        - p:
+            عمق بازگشت این تابع حداکثر 
+            n
+            است و باتوجه به اینکه حداکثر
+            1
+            کپی از آرایه اندیس های انتخاب شده را در خود نگه میدارد
+            و این آرایه نیز حداکثر طول 
+            n 
+            دارد، پس
+
+        - formula: |
+            O(S(n)) = depth × O(copyArray(n))
+            = n × O(n)
+            = O(n^2)
 
     - fn(isPromising).break:
       - image.rounded: ./assets/back_isPromising.png
     
+      - explain: 
+        - p:
+            این تابع از
+            index
+            داده شده تا آخر لیست مرتب شده آیتم ها
+            براساس سود واحد،
+            بهترین حالت ممکن ( که حتی مجاز به برداشتن بخضی از آیتم باشیم)
+            را حساب میکند.
+        
+        - p:
+            این تابع در آخر چک میکند که آیا بهترین نتیجه ممکن در صورت ادامه این شاخه،
+            بهتر از نتیجه فعلی است یا نه
+
+      - parts:
+        - list:
+          - colored.light-green:
+              خواندن از آرایه با
+              index
+
+          - colored.pink:
+              عملیات های ریاضی
+
+      - time:
+        - p:
+            همه اجزای درون حلقه با در زمان ثابت اجرا میشوند.
+            با توجه به اینک حلقه حداکثر به تعداد آیتم ها ممکن است تکرار شود، پس
+
+        - formula: O(T(n)) = n×O(1) = O(n)
+
+      - space:
+        - p:
+            با توجه به اینکه این تابع  فقط تعداد محدودی متغیر از نوع عدد تغریف میکند
+            ، پس داریم
+
+        - formula: O(S(n)) = O(1)
+    
     - fn(select).break: 
       - image.rounded: ./assets/back_select.png
+        
+      - explain:
+          این تابع با گرفتن
+          لیست آیتم ها و 
+          لیستی از
+          index
+          های انتخاب شده،
+          لیست آیتم های انتخاب شده را برمیگرداند
+
+      - parts:
+        - list:
+          - colored.light-green:
+              انتخاب یک 
+              index
+              از آرایه
+
+          - colored.pink:
+              اضافه کردن به آرایه
+
+      - time:
+        - p:
+            با توجه به اینکه در بدترین حالت تمام
+            index
+            ها در لیست باشند،
+            حلقه 
+            n
+            بار تکرار میشود.
+        
+        - formula: |
+            O(T(n)) = n × O(appendList(n) + selectIndex(n))
+            = n × O(1 + 1) 
+            = O(n)
+
+      - space:
+        - p:
+            در بدترین حالت همه آیتم ها انتخاب شده اند.
+            یعنی لیست نتیجه به اندازه لیست ورودی میشود.
+
+        - formula: O(S(n)) = O(n)
+
 
 - sec.break#run:
   - title:
       راهنمای اجرا و تولید نتیجه های مشاهده شده در این فایل
 
-  - sec.tests:
+  - p:
+      تست شده روی
+      nim
+      ورژن 
+      1.6.10
+
+  - sec#init:
+    - p: 
+        نصب پکیج های وابسته
+    
+    - raw: nimble install
+
+  - sec#tests:
     - p:
         چک کردن یکسان بودن خورجی الگوریتم های
         dynamic programming
@@ -466,7 +657,7 @@ doc:
 
     - raw: nimble test
 
-  - sec.debug:
+  - sec#debug:
     - p:
         دیدن خروجی تست الگوریتم های
         dynamic programming
@@ -476,7 +667,7 @@ doc:
 
     - raw: nimble debug
     
-  - sec.debug:
+  - sec#debug:
     - p:
         ساخت رابط کاربری در پوشه
         build/web.

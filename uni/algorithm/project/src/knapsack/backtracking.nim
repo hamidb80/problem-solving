@@ -47,11 +47,11 @@ func solveImpl(
     bestAnswer: var int, selectedIndexes: var seq[int]
   ) =
 
-  if bestAnswer < profitSoFar:
+  if bestAnswer < profitSoFar: # O(1)
     bestAnswer = profitSoFar
-    selectedIndexes = selectedSoFar
+    selectedIndexes = selectedSoFar # O(n)
 
-  if i != items.len:
+  if i != items.len: # O(1)
     when defined debug:
       debugecho decisionRepr(i, items[i],
         isPromising(items, i, maxWeight, bestAnswer - profitSoFar), i-1 in selectedSoFar)
