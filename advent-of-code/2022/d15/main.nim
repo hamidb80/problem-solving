@@ -138,7 +138,5 @@ func missingBeacon(reports: seq[Report], mapLimit: Slice[int]): Position =
 # go -----------------------------------------
 
 let reports = "./input.txt".readFile.splitLines.map(parseSensorReport)
-# echo placesCantBe(reports, 10, true).card # 26
-# echo missingBeacon(reports, 0..20).tuningFrequency # 56000011
 echo placesCantBe(reports, 2000000, true).card # 5716881
 echo missingBeacon(reports, 0..4000000).tuningFrequency # 10852583132904
