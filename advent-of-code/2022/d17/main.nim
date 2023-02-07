@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, tables, enumerate, sets]
+import std/[sequtils, strutils, enumerate]
 
 # def ----------------------------------------
 
@@ -15,10 +15,83 @@ type
     right
 
   Tetris = object
-    width, height: int
-    filled: HashSet[Point]
+    width: int
+    rows: seq[seq[bool]]
 
 # utils --------------------------------------
+
+func any(s: seq[bool]): bool =
+  for i in s:
+    if i:
+      return true
+
+
+func `+`(a, b: Point): Point =
+  (a.x + b.x, a.y + b.y)
+
+func `+`(s: seq[Point], p: Point): seq[Point] =
+  s.mapit it + p
+
+func left(p: Point): Point =
+  p + (-1, 0)
+
+func right(p: Point): Point =
+  p + (+1, 0)
+
+func down(p: Point): Point =
+  p + (0, -1)
+
+
+func height(tet: Tetris): int =
+  var empties = 0
+
+  for i in countdown(tet.rows.high, 1):
+    if not any tet.rows[i]:
+      inc empties
+
+  tet.rows.len - empties - 1
+
+func addRowIfNecessary(tet: var Tetris, y: int) =
+  if tet.rows.high < y:
+    let diff = y - tet.rows.high
+    for i in 1..diff:
+      tet.rows.add repeat(false, tet.width)
+
+func fill(tet: var Tetris, p: Point) =
+  tet.rows[p.y][p.x] = true
+
+func fill(tet: var Tetris, ps: seq[Point]) =
+  for p in ps:
+    tet.fill p
+
+func contains(tet: Tetris, p: Point): bool =
+  if p.y < tet.rows.len:
+    tet.rows[p.y][p.x]
+  else:
+    false
+
+func intersects(ps: seq[Point], tet: Tetris): bool =
+  for p in ps:
+    if p in tet:
+      return true
+
+func initTetris(width: int): Tetris =
+  result.width = width
+  result.rows = @[repeat(true, width)]
+
+# debug -------------------------------------
+
+func debugRepr(tet: Tetris, newPoints: seq[Point]): string =
+  for y in countdown(tet.rows.high, 0):
+    for x in 0..<tet.width:
+      result.add:
+        if tet.rows[y][x]: '#'
+        elif (x, y) in newPoints: '@'
+        else: '.'
+
+    result.add '\n'
+
+# impl -------------------------------------
 
 func parseShape(s: string): Shape =
   for y, line in enumerate(s.split):
@@ -37,42 +110,6 @@ func parseMove(ch: char): Direction =
   of '<': left
   of '>': right
   else: raise newException(ValueError, "invalid direction char: " & ch)
-
-func `+`(a, b: Point): Point =
-  (a.x + b.x, a.y + b.y)
-
-func `+`(s: seq[Point], p: Point): seq[Point] =
-  s.mapit it + p
-
-func fill(tet: var Tetris, p: Point) =
-  tet.height = max(tet.height, p.y+1)
-  tet.filled.incl p
-
-func fill(tet: var Tetris, ps: seq[Point]) =
-  for p in ps:
-    tet.fill p
-
-func initTetris(width: int): Tetris =
-  result.width = width
-  result.height = 0
-
-  for i in 0..<width:
-    result.filled.incl (i, -1) # floor
-
-# debug -------------------------------------
-
-# import std/algorithm
-
-# func debugRepr(tet: Tetris, newPoints: seq[Point]): string =
-#   var acc = reversed newSeqWith(tet.height+10, "|" & repeat('.', tet.width) & "|")
-
-#   for p in tet.filled:
-#     acc[p.y+1][p.x+1] = '#'
-
-#   for p in newPoints:
-#     acc[p.y+1][p.x+1] = '@'
-
-#   acc.reversed.join "\n"
 
 # data --------------------------------------
 
@@ -96,7 +133,7 @@ const shapes = parseShapes dedent"""
   ##
 """
 
-# implement ----------------------------------
+# main ----------------------------------
 
 func heightAfter(forces: seq[Direction], width: int, turns: int64): int =
   var
@@ -104,40 +141,39 @@ func heightAfter(forces: seq[Direction], width: int, turns: int64): int =
     i = 0
 
   for t in 0..<turns:
-    debugEcho t
-    
+    # debugEcho "\n", t
+
     let sh = shapes[t mod shapes.len]
-    var offset: Point = (2, tet.height + sh.height + 3 - 1)
+    var offset: Point = (2, tet.height + sh.height + 3)
+    addRowIfNecessary tet, offset.y
 
     while true:
       case forces[i mod forces.len]
       of left:
-        if offset.x - 1 >= 0:
+        if (0 <= offset.x - 1) and
+          not intersects(sh.points + offset.left, tet):
           dec offset.x
-          if (sh.points + offset).anyIt it in tet.filled:
-            inc offset.x
-
 
       of right:
-        if sh.width + offset.x + 1 <= tet.width:
+        if (sh.width + offset.x + 1 <= tet.width) and
+          not intersects(sh.points + offset.right, tet):
           inc offset.x
-          if (sh.points + offset).anyIt it in tet.filled:
-            dec offset.x
 
       inc i
 
-      if (sh.points + (offset + (0, -1))).anyIt it in tet.filled:
+      # debugecho "\n", debugRepr(tet, (sh.points + offset))
+
+      if (sh.points + offset.down).intersects tet:
         tet.fill sh.points + offset
-        # debugecho "\n", debugRepr(tet, @[])
         # debugEcho "\n... REST ..."
         break
 
       dec offset.y
-      
+
   tet.height
 
 # go -----------------------------------------
 
 let moves = "./test.txt".readFile.map(parseMove)
 echo heightAfter(moves, 7, 2022) # 3227
-echo heightAfter(moves, 7, 1_000_000_000_000) # seems like it needs some optimization
+# echo heightAfter(moves, 7, 1_000_000_000_000) # seems like it needs some optimization
