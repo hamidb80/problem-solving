@@ -41,11 +41,6 @@ func right(p: Point): Point =
 func down(p: Point): Point =
   p + (0, -1)
 
-func toVec(d: Direction): Point =
-  case d
-  of left: (-1, 0)
-  of right: (+1, 0)
-
 
 func height(tet: Tetris): int =
   var empties = 0
@@ -146,7 +141,8 @@ const shapes = parseShapes dedent"""
 
 # main ----------------------------------
 
-proc heightAfter(forces: seq[Direction], width, turns: int, cycleDetector: bool): int =
+proc heightAfter(forces: seq[Direction], width, turns: int,
+    cycleDetector: bool): int =
   var
     tet = initTetris width
     fi = 0
@@ -165,19 +161,20 @@ proc heightAfter(forces: seq[Direction], width, turns: int, cycleDetector: bool)
       if index in cache:
         let
           prev = cache[index]
-          hnew = heightAfter(forces, width, t, false)
-          hold = heightAfter(forces, width, prev, false)
-          parts = (turns - prev) div (t - prev)
-          rem = (turns - prev) mod (t - prev)
-          hrem = heightAfter(forces, width, prev + rem, false) - hold
-          dh = hnew - hold
+          h2 = heightAfter(forces, width, t, false)
+          h1 = heightAfter(forces, width, prev, false)
+          dh = h2 - h1
+          period = t - prev
+          parts = (turns - prev) div period
+          rem = (turns - prev) mod period
+          hrem = heightAfter(forces, width, prev + rem, false) - h1
 
         # dump dh
         # dump t..prev
         # dump hrem
         # dump rem
 
-        return hrem + (dh * parts) + hold
+        return hrem + (dh * parts) + h1
       else:
         cache[index] = t
 
@@ -202,11 +199,12 @@ proc heightAfter(forces: seq[Direction], width, turns: int, cycleDetector: bool)
       dec offset.y
 
       # debugecho debugRepr(tet, @[])
-  
+
   tet.height
 
 # go -----------------------------------------
 
-let moves = "./test.txt".readFile.map(parseMove)
+# FIXME only works on test data
+let moves = "./test.txt".readFile.map(parseMove) 
 echo heightAfter(moves, 7, 2022, true) # 3227
 echo heightAfter(moves, 7, 1_000_000_000_000.int, true) # ....?
