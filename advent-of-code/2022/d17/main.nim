@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, enumerate, tables]
+import std/[sequtils, strutils, enumerate, tables, sugar]
 
 # def ----------------------------------------
 
@@ -146,14 +146,11 @@ const shapes = parseShapes dedent"""
 
 # main ----------------------------------
 
-import sugar
-
-proc heightAfter(forces: seq[Direction], width, turns: int, wtf: bool): int =
+proc heightAfter(forces: seq[Direction], width, turns: int, cycleDetector: bool): int =
   var
     tet = initTetris width
     fi = 0
     cache: Table[(seq[bool], int, int), int]
-    found = false
 
   for t in 1..turns:
     let
@@ -164,9 +161,23 @@ proc heightAfter(forces: seq[Direction], width, turns: int, wtf: bool): int =
     var offset: Point = (2, tet.height + sh.height + 3)
     tet.addRowIfNecessary offset.y
 
-    if wtf:
+    if cycleDetector:
       if index in cache:
-        found = true
+        let
+          prev = cache[index]
+          hnew = heightAfter(forces, width, t, false)
+          hold = heightAfter(forces, width, prev, false)
+          parts = (turns - prev) div (t - prev)
+          rem = (turns - prev) mod (t - prev)
+          hrem = heightAfter(forces, width, prev + rem, false) - hold
+          dh = hnew - hold
+
+        # dump dh
+        # dump t..prev
+        # dump hrem
+        # dump rem
+
+        return hrem + (dh * parts) + hold
       else:
         cache[index] = t
 
@@ -190,25 +201,12 @@ proc heightAfter(forces: seq[Direction], width, turns: int, wtf: bool): int =
 
       dec offset.y
 
-    if wtf:
-      if found:
-        let
-          prev = cache[index]
-          hnew = heightAfter(forces, width, t, false)
-          hold =  heightAfter(forces, width, prev, false)
-          h = hnew - hold
-          r = t - prev
-
-        dump (hnew, hold, h)
-        dump r
-        return
-        # return h * ((turns - prev.number) div dn) # + prev.height # + r ...
-
       # debugecho debugRepr(tet, @[])
+  
   tet.height
 
 # go -----------------------------------------
 
 let moves = "./test.txt".readFile.map(parseMove)
 echo heightAfter(moves, 7, 2022, true) # 3227
-# echo heightAfter(moves, 7, 1_000_000_000_000.int) # seems like it needs some optimization
+echo heightAfter(moves, 7, 1_000_000_000_000.int, true) # ....?
