@@ -2,46 +2,48 @@ wrappers:
   parts:
   - sec: 
     - title: اجزا
-    - body
+    - ...
 
   time:
   - sec.time-complexity.no-break:
     - title: پیچیدگی زمانی
-    - body
+    - ...
   
   space:
   - sec.space-complexity.no-break:
     - title: پیچیدگی فضایی
-    - body
+    - ...
 
   explain:
   - sec:
     - title: توضیح
-    - body
+    - ...
 
-  fn(name):
+  fn:
   - sec.$:
     - title: 
       - text: " تابع "
       - span.terminal.bold:
-        - var: 0
+        - var: name
 
-    - body
+    - var: body
 
   colored:
   - span:
     - empty.colorblock.$: 0
-    - body
+    - ...
 
   par:
   - text: (
-  - body
+  - ...
   - text: )
 
 
 doc:
 - title: 
     گزارش پروژه انتخاب بهینه سهام بورس
+
+- summary: null
 
 - sec#details:
   - title: مشخصات
@@ -256,167 +258,177 @@ doc:
           این الگوریتم از اولین (بالاترین) سطر شروع کرده تا به سطر آخر برسد،
           که جواب در ستون آخر سطر آخر قرار دارد.
 
-    - fn(solve).break:
-      - image.rounded: ./assets/dynamic_solve.png
+    - fn.break:
+        name: solve
+        body:
+        - image.rounded: ./assets/dynamic_solve.png
 
-      - parts:
-        - list:
-          - colored.light-orange: 
-              پیدا کردن ستون های مورد نیاز برای هر سطر
-        
-          - colored.pink-red: 
-              پر کردن سلول های مورد نیاز در جدول
-
-          - colored.light-green:
-              جمع آوری بهترین انتخاب ها 
-
-      - time:
-        - formula: |
-            O(T(n)) 
-            = 2×O(1) + O(determine(n)) + n×w×O(solveImpl(n)) + O(extractSelections(n))
-            = O(1) + O(2^n) + n×w×O(1) + O(n)
-            = O(2^n) + O(n×w)
-        
-      - space:
-        - formula: |
-            O(S(n)) = O(determine(n)) + O(extractSelections(n))
-            = O(n) + O(n) 
-            = O(n)
-
-    - fn(solveImpl).break:
-      - image.rounded: ./assets/dynamic_solveImpl.png
-        
-      - time:
-        - text:
-            عملیات های خواندن یک 
-            index
-            از آرایه
-        
-        - par:
-          - empty.colorblock.light-orange: 0
-
-        - text: 
-            ، و خواندن و نوشتن اطلاعات از 
-            Hash Table
-        
-        - par:
-          - empty.colorblock.light-green: 0
-        
-        - text:
-            همگی در یک زمان ثابت انجام میشوند.
-            بقیه عملیات ها هم جمع و 
-            and
-            هستند که آن ها هم در زمان ثابت انجام میشوند.
-        
-        - formula: O(1)
-        
-      - space:
-        - p:
-           این تابع بازگشتی نیست
-           و فقط چند متغیر با اندازه ثابت
-           بدون توجه به اندازه ورودی تعریف میکند
-
-        - formula: O(1)
-
-    - fn(extractSelections).break:
-      - image.rounded: ./assets/dynamic_extractSelections.png
-    
-      - time:
-        - text:
-            عملیات های خواندن از یک 
-            Hash Table
-        
-        - par:
-          - empty.colorblock.pink-red: 0
-
-        - text:
-            و خواندن یک 
-            index
-            از آرایه
-
-        - par:
-          - empty.colorblock.light-orange: 0
-
-        - text:
-            و اضافه کردن به آرایه
-
-        - par:
-          - empty.colorblock.light-green: 0
-
-        - text:
-            همگی در زمان ثابت اجرا میشوند.
-            این حقله به تعداد آیتم ها تکرار میشود.
-
-        - formula: |
-            O(T(n)) = n×O(1) = O(n)
-
-      - space:
-        - text:
-            این تابع فقط یک متغیر با اندازه یکسان به نام
-            cursor 
-            تعریف میکند.
-            همچنین آیتم های انتخاب شده را در متغیر نتیجه
-            (result)
-            میریزد که با توجه به اینکه در بدترین حالت همه آیتم ها انتخاب میشوند،
-            میتواند طولی به اندازه
-            n
-            داشته باشد.
-
-        - formula: |
-            O(S(n)) = O(1) + O(n) = O(n)
-
-    - fn(determine).break:
-      - image.rounded: ./assets/dynamic_determine.png
-
-      - parts:
-        - list:
-          - colored.light-blue: 
-              افزایش اندازه آرایه به اندازه آرایه ورودی
+        - parts:
+          - list:
+            - colored.light-orange: 
+                پیدا کردن ستون های مورد نیاز برای هر سطر
           
-          - colored.light-orange:
-              اضافه کردن یک آیتم به آرایه
+            - colored.pink-red: 
+                پر کردن سلول های مورد نیاز در جدول
 
-      - time:
-        - formula: |
-            O(T(n)) = O(extendArray(n)) + O(appendArray) + O(determineImpl(n))
-            = O(n) + O(1) + O(2^n)
-            = O(2^n)
-        
-      - space:
-        - formula: |
-            O(S(n)) = O(n) + O(determineImpl(n))
-            = O(n) + O(n)
-            = O(n)
+            - colored.light-green:
+                جمع آوری بهترین انتخاب ها 
 
-    - fn(determineImpl).break:
-      - image.rounded: ./assets/dynamic_determineImpl.png
+        - time:
+          - formula: |
+              O(T(n)) 
+              = 2×O(1) + O(determine(n)) + n×w×O(solveImpl(n)) + O(extractSelections(n))
+              = O(1) + O(2^n) + n×w×O(1) + O(n)
+              = O(2^n) + O(n×w)
+          
+        - space:
+          - formula: |
+              O(S(n)) = O(determine(n)) + O(extractSelections(n))
+              = O(n) + O(n) 
+              = O(n)
 
-      - parts:
-        - list:
-          - colored.light-blue:
-              انتخاب یک 
+    - fn.break:
+        name: solveImpl
+        body:
+        - image.rounded: ./assets/dynamic_solveImpl.png
+          
+        - time:
+          - text:
+              عملیات های خواندن یک 
+              index
+              از آرایه
+          
+          - par:
+            - empty.colorblock.light-orange: 0
+
+          - text: 
+              ، و خواندن و نوشتن اطلاعات از 
+              Hash Table
+          
+          - par:
+            - empty.colorblock.light-green: 0
+          
+          - text:
+              همگی در یک زمان ثابت انجام میشوند.
+              بقیه عملیات ها هم جمع و 
+              and
+              هستند که آن ها هم در زمان ثابت انجام میشوند.
+          
+          - formula: O(1)
+          
+        - space:
+          - p:
+              این تابع بازگشتی نیست
+              و فقط چند متغیر با اندازه ثابت
+              بدون توجه به اندازه ورودی تعریف میکند
+
+          - formula: O(1)
+
+    - fn.break:
+        name: extractSelections
+        body:
+        - image.rounded: ./assets/dynamic_extractSelections.png
+      
+        - time:
+          - text:
+              عملیات های خواندن از یک 
+              Hash Table
+          
+          - par:
+            - empty.colorblock.pink-red: 0
+
+          - text:
+              و خواندن یک 
               index
               از آرایه
 
-          - colored.light-orange:
-              اضافه کردن دو عنصر به آرایه مورد نظر
+          - par:
+            - empty.colorblock.light-orange: 0
 
-          - colored.pink:
-              فراخوانی خود (بازگشت)
+          - text:
+              و اضافه کردن به آرایه
 
-      - time:
-        - formula:
-            O(T(n)) = 2×O(T(n-1)) + O(1) = O(2^n)
-        
-      - space:
-        - text:
-            یک تابع بازگشتی است که دو متغیر ثابت بدون توجه به اندازه ورودی تعریف میکند.
-            با توجه به اینکه طول شاخه بازگشت 
-            n
-            است، پس
+          - par:
+            - empty.colorblock.light-green: 0
 
-        - formula: |
-            O(S(n)) = depth × O(1) = n × O(1) = O(n)
+          - text:
+              همگی در زمان ثابت اجرا میشوند.
+              این حقله به تعداد آیتم ها تکرار میشود.
+
+          - formula: |
+              O(T(n)) = n×O(1) = O(n)
+
+        - space:
+          - text:
+              این تابع فقط یک متغیر با اندازه یکسان به نام
+              cursor 
+              تعریف میکند.
+              همچنین آیتم های انتخاب شده را در متغیر نتیجه
+              (result)
+              میریزد که با توجه به اینکه در بدترین حالت همه آیتم ها انتخاب میشوند،
+              میتواند طولی به اندازه
+              n
+              داشته باشد.
+
+          - formula: |
+              O(S(n)) = O(1) + O(n) = O(n)
+
+    - fn.break:
+        name: determine
+        body:
+        - image.rounded: ./assets/dynamic_determine.png
+
+        - parts:
+          - list:
+            - colored.light-blue: 
+                افزایش اندازه آرایه به اندازه آرایه ورودی
+            
+            - colored.light-orange:
+                اضافه کردن یک آیتم به آرایه
+
+        - time:
+          - formula: |
+              O(T(n)) = O(extendArray(n)) + O(appendArray) + O(determineImpl(n))
+              = O(n) + O(1) + O(2^n)
+              = O(2^n)
+          
+        - space:
+          - formula: |
+              O(S(n)) = O(n) + O(determineImpl(n))
+              = O(n) + O(n)
+              = O(n)
+
+    - fn.break:
+        name: determineImpl
+        body:
+        - image.rounded: ./assets/dynamic_determineImpl.png
+
+        - parts:
+          - list:
+            - colored.light-blue:
+                انتخاب یک 
+                index
+                از آرایه
+
+            - colored.light-orange:
+                اضافه کردن دو عنصر به آرایه مورد نظر
+
+            - colored.pink:
+                فراخوانی خود (بازگشت)
+
+        - time:
+          - formula:
+              O(T(n)) = 2×O(T(n-1)) + O(1) = O(2^n)
+          
+        - space:
+          - text:
+              یک تابع بازگشتی است که دو متغیر ثابت بدون توجه به اندازه ورودی تعریف میکند.
+              با توجه به اینکه طول شاخه بازگشت 
+              n
+              است، پس
+
+          - formula: |
+              O(S(n)) = depth × O(1) = n × O(1) = O(n)
 
   - sec#method#backtracking.break:
     - title: الگوریتم عقبگرد
@@ -479,156 +491,164 @@ doc:
                 └─ 0 ولساپا ($560000/6012037) ✘
             └─ 0 شاروم ($1700000/17736990) ✘
     
-    - fn(solve).break: 
-      - image.rounded: ./assets/back_solve.png
+    - fn.break: 
+        name: solve
+        body:
+        - image.rounded: ./assets/back_solve.png
 
-      - explain: 
-          این تابع اصلی است که فقط ورودی ها را 
-          به بقیه تابع ها پاس میدهد
+        - explain: 
+            این تابع اصلی است که فقط ورودی ها را 
+            به بقیه تابع ها پاس میدهد
 
-          البته اول آیتم ها را براساس سود واحد
-          مرتب میکند تا برای تابع 
-          isPromising
-          قابل استفاده باشد.
+            البته اول آیتم ها را براساس سود واحد
+            مرتب میکند تا برای تابع 
+            isPromising
+            قابل استفاده باشد.
 
-      - time:
-        - formula: |
-            O(T(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
-            = O(n.log(n)) + O(n×2^n) + O(n)
-            = O(n×2^n)
+        - time:
+          - formula: |
+              O(T(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
+              = O(n.log(n)) + O(n×2^n) + O(n)
+              = O(n×2^n)
 
-      - space:
-        - formula: |
-            O(S(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
-            = O(n) + O(n^2) + O(n)
-            = O(n^2)
+        - space:
+          - formula: |
+              O(S(n)) = O(mergeSort(n)) + O(solveImpl(n)) + O(select(n))
+              = O(n) + O(n^2) + O(n)
+              = O(n^2)
 
-    - fn(solveImpl).break: 
-      - image.rounded: ./assets/back_solveImpl.png
-      - explain:
-          این تابع که قلب الگوریتم میباشد، 
-          بود و نبود آیتم ها را به صورت عقبگرد بررسی میکند
-          و در آخرین بهینه ترین ترکیب را
-          در متغیر ورودی 
-          selectedIndexes 
-          ذخیره میکند.
+    - fn.break: 
+        name: solveImpl
+        body:
+        - image.rounded: ./assets/back_solveImpl.png
+        - explain:
+            این تابع که قلب الگوریتم میباشد، 
+            بود و نبود آیتم ها را به صورت عقبگرد بررسی میکند
+            و در آخرین بهینه ترین ترکیب را
+            در متغیر ورودی 
+            selectedIndexes 
+            ذخیره میکند.
 
-      - time:
-        - list: 
-          - colored.yellow: 
-              عملیات های ریاضی ساده
-              در زمان ثابت اجرا میشوند
+        - time:
+          - list: 
+            - colored.yellow: 
+                عملیات های ریاضی ساده
+                در زمان ثابت اجرا میشوند
 
-          - colored.pink-red:
-              ریختن یک مقدار در متغیر عددی
-              در زمان ثابت اجرا میشود
+            - colored.pink-red:
+                ریختن یک مقدار در متغیر عددی
+                در زمان ثابت اجرا میشود
 
-          - colored.pink:
-              کپی یک آرایه به طول حداکثر
+            - colored.pink:
+                کپی یک آرایه به طول حداکثر
+                n
+          
+          - formula: |
+              O(T(n)) = O(math(n)) + O(n) + O(isPromising(n)) + 2×O(T(n-1))
+              = O(1) + O(n) + O(n) + 2×O(T(n-1))
+              = O(n) + 2×O(T(n-1))
+              = O(n × 2^n) 
+
+        - space:
+          - p:
+              عمق بازگشت این تابع حداکثر 
               n
-        
-        - formula: |
-            O(T(n)) = O(math(n)) + O(n) + O(isPromising(n)) + 2×O(T(n-1))
-            = O(1) + O(n) + O(n) + 2×O(T(n-1))
-            = O(n) + 2×O(T(n-1))
-            = O(n × 2^n) 
+              است و باتوجه به اینکه حداکثر
+              1
+              کپی از آرایه اندیس های انتخاب شده را در خود نگه میدارد
+              و این آرایه نیز حداکثر طول 
+              n 
+              دارد، پس
 
-      - space:
-        - p:
-            عمق بازگشت این تابع حداکثر 
-            n
-            است و باتوجه به اینکه حداکثر
-            1
-            کپی از آرایه اندیس های انتخاب شده را در خود نگه میدارد
-            و این آرایه نیز حداکثر طول 
-            n 
-            دارد، پس
+          - formula: |
+              O(S(n)) = depth × O(copyArray(n))
+              = n × O(n)
+              = O(n^2)
 
-        - formula: |
-            O(S(n)) = depth × O(copyArray(n))
-            = n × O(n)
-            = O(n^2)
-
-    - fn(isPromising).break:
-      - image.rounded: ./assets/back_isPromising.png
-    
-      - explain: 
-        - p:
-            این تابع از
-            index
-            داده شده تا آخر لیست مرتب شده آیتم ها
-            براساس سود واحد،
-            بهترین حالت ممکن ( که حتی مجاز به برداشتن بخضی از آیتم باشیم)
-            را حساب میکند.
-        
-        - p:
-            این تابع در آخر چک میکند که آیا بهترین نتیجه ممکن در صورت ادامه این شاخه،
-            بهتر از نتیجه فعلی است یا نه
-
-      - parts:
-        - list:
-          - colored.light-green:
-              خواندن از آرایه با
+    - fn.break:
+        name: isPromising
+        body:
+        - image.rounded: ./assets/back_isPromising.png
+      
+        - explain: 
+          - p:
+              این تابع از
               index
+              داده شده تا آخر لیست مرتب شده آیتم ها
+              براساس سود واحد،
+              بهترین حالت ممکن ( که حتی مجاز به برداشتن بخضی از آیتم باشیم)
+              را حساب میکند.
+          
+          - p:
+              این تابع در آخر چک میکند که آیا بهترین نتیجه ممکن در صورت ادامه این شاخه،
+              بهتر از نتیجه فعلی است یا نه
 
-          - colored.pink:
-              عملیات های ریاضی
+        - parts:
+          - list:
+            - colored.light-green:
+                خواندن از آرایه با
+                index
 
-      - time:
-        - p:
-            همه اجزای درون حلقه با در زمان ثابت اجرا میشوند.
-            با توجه به اینک حلقه حداکثر به تعداد آیتم ها ممکن است تکرار شود، پس
+            - colored.pink:
+                عملیات های ریاضی
 
-        - formula: O(T(n)) = n×O(1) = O(n)
+        - time:
+          - p:
+              همه اجزای درون حلقه با در زمان ثابت اجرا میشوند.
+              با توجه به اینک حلقه حداکثر به تعداد آیتم ها ممکن است تکرار شود، پس
 
-      - space:
-        - p:
-            با توجه به اینکه این تابع  فقط تعداد محدودی متغیر از نوع عدد تغریف میکند
-            ، پس داریم
+          - formula: O(T(n)) = n×O(1) = O(n)
 
-        - formula: O(S(n)) = O(1)
-    
-    - fn(select).break: 
-      - image.rounded: ./assets/back_select.png
-        
-      - explain:
-          این تابع با گرفتن
-          لیست آیتم ها و 
-          لیستی از
-          index
-          های انتخاب شده،
-          لیست آیتم های انتخاب شده را برمیگرداند
+        - space:
+          - p:
+              با توجه به اینکه این تابع  فقط تعداد محدودی متغیر از نوع عدد تغریف میکند
+              ، پس داریم
 
-      - parts:
-        - list:
-          - colored.light-green:
-              انتخاب یک 
-              index
-              از آرایه
-
-          - colored.pink:
-              اضافه کردن به آرایه
-
-      - time:
-        - p:
-            با توجه به اینکه در بدترین حالت تمام
+          - formula: O(S(n)) = O(1)
+      
+    - fn.break: 
+        name: select
+        body:
+        - image.rounded: ./assets/back_select.png
+          
+        - explain:
+            این تابع با گرفتن
+            لیست آیتم ها و 
+            لیستی از
             index
-            ها در لیست باشند،
-            حلقه 
-            n
-            بار تکرار میشود.
-        
-        - formula: |
-            O(T(n)) = n × O(appendList(n) + selectIndex(n))
-            = n × O(1 + 1) 
-            = O(n)
+            های انتخاب شده،
+            لیست آیتم های انتخاب شده را برمیگرداند
 
-      - space:
-        - p:
-            در بدترین حالت همه آیتم ها انتخاب شده اند.
-            یعنی لیست نتیجه به اندازه لیست ورودی میشود.
+        - parts:
+          - list:
+            - colored.light-green:
+                انتخاب یک 
+                index
+                از آرایه
 
-        - formula: O(S(n)) = O(n)
+            - colored.pink:
+                اضافه کردن به آرایه
+
+        - time:
+          - p:
+              با توجه به اینکه در بدترین حالت تمام
+              index
+              ها در لیست باشند،
+              حلقه 
+              n
+              بار تکرار میشود.
+          
+          - formula: |
+              O(T(n)) = n × O(appendList(n) + selectIndex(n))
+              = n × O(1 + 1) 
+              = O(n)
+
+        - space:
+          - p:
+              در بدترین حالت همه آیتم ها انتخاب شده اند.
+              یعنی لیست نتیجه به اندازه لیست ورودی میشود.
+
+          - formula: O(S(n)) = O(n)
 
 
 - sec.break#run:

@@ -119,6 +119,10 @@ div.colorblock {
   background-color: #80ff9e;
 }
 
+.image-wrapper{
+  text-align: center;
+}
+
 .yellow {
   background-color: #fdfd7f;
 }
