@@ -1,19 +1,21 @@
-import std/[sequtils, strutils, math]
-import terminaltables
+import std/[sequtils, strutils, math, strformat]
+# import terminaltables
 
 type Matrix[T] = seq[seq[T]]
 
 
 proc draw(s: Matrix[int]) =
-  let t = newUnicodeTable()
+  # let t = newUnicodeTable()
 
-  t.setHeaders(s[0].mapIt $it)
+  # t.setHeaders(s[0].mapIt $it)
 
-  for i in 1..s.high:
-    t.addRow(s[i].mapIt $it)
+  # for i in 1..s.high:
+  #   t.addRow(s[i].mapIt $it)
 
-  printTable(t)
+  # printTable(t)
 
+  for r in s:
+    echo r.mapIt( fmt"{it:3}").join " "
 
 func newMatrix[T](w, h: int, default: T): Matrix[T] =
   repeat repeat(default, w), h
