@@ -21,7 +21,7 @@ func newMatrix[T](w, h: int, default: T): Matrix[T] =
 func isOdd(n: int): bool =
   n mod 2 == 1
 
-func isMagicSquare[T](m: Matrix[T]): bool = 
+func isMagicSquare[T](m: Matrix[T]): bool =
   let s0 = m[0].sum
   for row in m:
     if row.sum != s0:
@@ -47,15 +47,14 @@ func magicSquare(n: int): Matrix[int] =
 
     inc i
 
-    if result[ny][nx] == -1:
-      result[ny][nx] = i
-      (x, y) = (nx, ny)
+    (x, y) =
+      if result[ny][nx] == -1: (nx, ny)
+      else: (x, euclMod(y+1, n))
 
-    else:
-      y = euclMod(y+1, n)
-      result[y][x] = i
+    result[y][x] = i
 
   assert isMagicSquare result
+
 
 when isMainModule:
   stdout.write "enter n: "
