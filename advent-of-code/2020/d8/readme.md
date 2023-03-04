@@ -81,20 +81,22 @@ acc +6  |
 #### 5. `jmp +4`
 
 
-#### 4. `acc +1`
+#### 6. `acc +1`
 
-#### 5. `jmp -4`
+#### 7. `jmp -4`
 
-#### 4. `acc +3`
+#### 8. `acc +3`
 
-#### 5. `jmp -3`
+#### 9. `jmp -3`
 
+اینجا برتامه توی ی حلقه بینهایت گیر افتاده.
+به این نتیجه میرسیم که احتمالا به شرایط آب و هوایی، احتمالا یکی از دستور ها توی 
+BIOS
+عوض شده.
 
-This is an **infinite loop**: with this sequence of jumps, the program will run forever. The moment the program tries to run any instruction a second time, you know it will never terminate.
+زهرا حدس میزند که احتمالا یکی از 
 
 After some careful analysis, you believe that exactly one instruction is corrupted.
-
-Somewhere in the program, either a jmp is supposed to be a nop, or a nop is supposed to be a jmp. (No acc instructions were harmed in the corruption of this boot code.)
 
 The program is supposed to terminate by attempting to execute an instruction immediately after the last instruction in the file. By changing exactly one jmp or nop, you can repair the boot code and make it terminate correctly.
 
@@ -109,6 +111,7 @@ acc -99
 acc +1
 jmp -4
 acc +6
+
 If you change the first instruction from nop +0 to jmp +0, it would create a single-instruction infinite loop, never leaving that instruction. If you change almost any of the jmp instructions, the program will still eventually find another jmp instruction and loop forever.
 
 However, if you change the second-to-last instruction (from jmp -4 to nop -4), the program terminates! The instructions are visited in this order:
