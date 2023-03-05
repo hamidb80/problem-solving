@@ -1,11 +1,38 @@
 
---- Day 8: Seven Segment Search ---
-You barely reach the safety of the cave when the whale smashes into the cave mouth, collapsing it. Sensors indicate another exit to this cave at a much greater depth, so you have no choice but to press on.
+# 7-segment خراب
 
-As your submarine slowly makes its way through the cave system, you notice that the four-digit seven-segment displays in your submarine are malfunctioning; they must have been damaged during the escape. You'll be in a lot of trouble without them, so you'd better figure out what's wrong.
+عموی چاق بنده یک ترازوی عقربه ای داشت.
+او که معتقد بود ترازو های عقربه ای وزن او را 
+بسیار غیر واقعی و بیشتر نشان میدهند، تصمیم گرفت تا 
+یک ترازوی دیجیتال بخرد.
 
-Each digit of a seven-segment display is rendered by turning on or off any **of** seven segments named a through g:
+فردای آن روز، عموی چاق داستان ما ترازوی دیجیتال
+را از خریده و به خانه می آورد.
+آن را از جعبه در می آورد و روی زمین میگذارد.
 
+در این هنگام، همه خانواده دور ترازوی دیجیتال جمع میشوند
+تا به قول عمو، "اندازه واقعی" وزن او را ببینند.
+
+![بابای چاق](./fat-dad.png)
+
+وقتی عموی گرامی روی ترازو میرود، به دلیل وزن بسیار زیاد او،
+نمایشگر دیجیال
+(7-segment)
+دچار اختلال میشود و هیچکس از اعضای خانواده نمیتواند وزن او را ببیند.
+
+زن عمو به شما دستور میدهد تا
+روشی برای خواندن
+seven segment 
+خراب شده پیدا کنید تا بالاخره "وزن واقعی" عمو جان برملا شود.
+
+در حالت عادی،
+هر رقم در نمایشگر 
+seven segment
+با روشن و خاموش شدن هر یک از هفت بخش از
+a تا g
+تولید میشود: 
+
+```
   0:      1:      2:      3:      4:
  aaaa    ....    aaaa    aaaa    ....
 b    c  .    c  .    c  .    c  b    c
@@ -23,59 +50,81 @@ b    .  b    .  .    c  b    c  b    c
 .    f  e    f  .    f  e    f  .    f
 .    f  e    f  .    f  e    f  .    f
  gggg    gggg    ....    gggg    gggg
-So, to render a 1, only segments c and f would be turned on; the rest would be off. To render a 7, only segments a, c, and f would be turned on.
+```
 
-The problem is that the signals which control the segments have been mixed up on each display. The submarine is still trying to display numbers by producing output on signal wires a through g, but those wires are connected to segments randomly. Worse, the wire/segment connections are mixed up separately for each four-digit display! (All of the digits within a display use the same connections, though.)
+پس برای نمایش 
+رقم 1، فقط بخش
+c و f
+روشن میشن و بقیه همگی خاموش هستن
+.و برای نمایش عدد 7 بخش 
+a،c و f 
+روشن میشن.
 
-So, you might know that only signal wires b and g are turned on, but that doesn't mean segments b and g are turned on: the only digit that uses two segments is 1, so it must mean segments c and f are meant to be on. With just that information, you still can't tell which wire (b/g) goes to which segment (c/f). For that, you'll need to collect more information.
+مشکل اونجاییه که سیگنال هایی که هربخش رو کنترل می کنن باهم قاطی شدن.
+ترازو هنوزم سعی می کنه که اعدادی که توسط سیگنال های 
+a تا g
+ایجاد میشه رو نشون بده،
+ولی این سیگنال ها از طریق سیم به طور تصادفی به هر بخش متصل میشن.
 
-For each display, you watch the changing signals for a while, make a note of all ten unique signal patterns you see, and then write down a single four digit output value (your puzzle input). Using the signal patterns, you should be able to work out which pattern corresponds to which digit.
+پس تا الان باید متوجه شده باشید که وقتی سیم های 
+b و g
+روشن میشن الزاما به این معنی نیست که بخش 
+b و g
+در 
+seven segment
+روشن میشن.
+تنها عددی که از دو بخش فعال استفاده میکنه عدد 1 هست
+پس یعنی بخش
+c و f
+باید روشن باشن. 
 
-For example, here is what you might see in a single entry in your notes:
+با این اطلاعات بازم شما نمیتونید بگید کدوم سیم 
+(b یا g)
+برای کدوم بخشه
+(c یا f)
+برای همین باید اطلاعات بیشتری جمع کنید.
 
-acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab |
-cdfeb fcadb cdfeb cdbaf
-(The entry is wrapped here to two lines so it fits; in your notes, it will all be on a single line.)
+برای مدتی سیگنال هاییکه برای هر نمایش، تغییر میکنن رو رصد می کنید.
+و از تمام ده الگوی منحصر به فردی که دیدید یادداشت برداری می کنید
+.در نهایت خروجی چهاررقمی رو که اولین تکه پازل شماست یادداشت می کنید
 
-Each entry consists of ten unique signal patterns, a | delimiter, and finally the four digit output value. Within an entry, the same wire/segment connections are used (but you don't know what the connections actually are). The unique signal patterns correspond to the ten different ways the submarine tries to render a digit using the current wire/segment connections. Because 7 is the only digit that uses three segments, dab in the above example means that to render a 7, signal lines d, a, and b are on. Because 4 is the only digit that uses four segments, eafb means that to render a 4, signal lines e, a, f, and b are on.
+.با استفاده از الگوهای سیگنال باید تشخیص بدین که کدوم الگو با کدوم رقم مطابقت داره. 
 
-Using this information, you should be able to work out which combination of signal wires corresponds to each of the ten digits. Then, you can decode the four digit output value. Unfortunately, in the above example, all of the digits in the output value (cdfeb fcadb cdfeb cdbaf) use five segments and are more difficult to deduce.
+برای مثال ممکنه یکی از یادداشت های شما به شکل زیر باشه:
+```
+acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf
+```
+هر ورودی شامل 10 الگوی سیگنال منحصر به فرد،
+یک جدا کننده
+`|`
+و در نهایت مقدار خروجی است. 
 
-For now, focus on the easy digits. Consider this larger example:
 
-be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb |
-fdgacbe cefdb cefbgd gcbe
-edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec |
-fcgedb cgb dgebacf gc
-fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef |
-cg cg fdcagb cbg
-fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega |
-efabcd cedba gadfec cb
-aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga |
-gecf egdcabf bgf bfgea
-fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf |
-gebdcfa ecba ca fadegcb
-dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf |
-cefg dcbef fcge gbcadfe
-bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd |
-ed bcgafe cdgba cbgef
-egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg |
-gbdfcae bgc cg cgb
-gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc |
-fgae cfgab fg bagce
-Because the digits 1, 4, 7, and 8 each use a unique number of segments, you should be able to tell which combinations of signals correspond to those digits. Counting only digits in the output values (the part after | on each line), in the above example, there are 26 instances of digits that use a unique number of segments (highlighted above).
+این الگوها مربوط به 10 روش متفاوته که ترازو سعی می کنه یه رقم های
+0 تا 9
+رو با این اتصالات فعلی نشون بده.
 
-In the output values, how many times do digits 1, 4, 7, or 8 appear?
+عدد 7 تنها عددیه که از سه تا بخش فعال استفاده می کنه.
+پس توی مثال بالا برای تولید 7،
+سیگنال های 
+dab
+باید روشن بشن.
+عدد 4 تنها عددیه که 4 تا بخش فعال نیاز داره و برای اون باید 4 تا سیگنال 
+eafb
+روشن بشن. 
 
-Your puzzle answer was 274.
+با این اطلاعات باید بتونید متوجه بشید کدوم ترکیب از این سیگنال ها به کدوم یکی از این 10 رقم مربوط میشه،
+بعدش میتونید خروجی 4 رقمی رو رمز گشایی کنید.
 
---- Part Two ---
-Through a little deduction, you should now be able to determine the remaining digits. Consider again the first example above:
+از اونجاییکه ارقام 1، 4، 7 و 8 هر کدوم
+از تعداد مشخصی از بخش فعال ها استفاده می کنند، 
+باید بتونید تشخیص بدید که کدوم یکی از این ترکیب سیگنال ها با کدوم ارقام مطابقت دارن.
 
-acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab |
-cdfeb fcadb cdfeb cdbaf
-After some careful analysis, the mapping between signal wires and segments only make sense in the following configuration:
+-------
 
+برای مثال باالا، بعد از یکم بررسی 
+متوجه میشید که رابطه بین سیگنال های جدید و قدیم به این صورته:
+```
  dddd
 e    a
 e    a
@@ -83,8 +132,10 @@ e    a
 g    b
 g    b
  cccc
-So, the unique signal patterns would correspond to the following digits:
+```
 
+**پس رقم متناظر هر کدوم رو پیدا کردیم:**
+```
 acedgfb: 8
 cdfbe: 5
 gcdfa: 2
@@ -95,28 +146,46 @@ cdfgeb: 6
 eafb: 4
 cagedb: 0
 ab: 1
-Then, the four digits of the output value can be decoded:
-
+```
+و بعد خروجی ها به این صورت تعیین میشن:
+```
 cdfeb: 5
 fcadb: 3
 cdfeb: 5
 cdbaf: 3
-Therefore, the output value for this entry is 5353.
+```
+که یعنی جواب 5353 هست
 
-Following this same process for each entry in the second, larger example above, the output value of each entry can be determined:
+## مثال 1
+### ورودی
+```
+be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+```
 
-fdgacbe cefdb cefbgd gcbe: 8394
-fcgedb cgb dgebacf gc: 9781
-cg cg fdcagb cbg: 1197
-efabcd cedba gadfec cb: 9361
-gecf egdcabf bgf bfgea: 4873
-gebdcfa ecba ca fadegcb: 8418
-cefg dcbef fcge gbcadfe: 4548
-ed bcgafe cdgba cbgef: 1625
-gbdfcae bgc cg cgb: 8717
-fgae cfgab fg bagce: 4315
-Adding all of the output values in this larger example produces 61229.
+### خروجی
+```
+8394
+```
 
-For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 
-Your puzzle answer was 1012089.
+## مثال 2
+### ورودی
+```
+edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+```
+
+### خروجی
+```
+9781
+```
+
+## مثال 3
+### ورودی
+```
+fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+```
+
+### خروجی
+```
+1197
+```
