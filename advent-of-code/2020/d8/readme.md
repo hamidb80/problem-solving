@@ -10,22 +10,24 @@
 
 سعی میکند آن را روشن کند ولی از شانس بد او، 
 موقع روشن شدن، دستگاه در 
-Loading ...
+Loading...
 گیر میکند.
 
+![زهرا آتاری بدست](./header.jpg)
 
-اگر شما به جای او بودید، احتمالا دستگاه را دور می انداختید، ولی ا  که یک 
+اگر شما به جای او بودید، احتمالا دستگاه را دور می انداختید، ولی زهرا یک 
 Geek
-است، دستگاه را در کوله پشتی اش میگذارد تا
-در خانه آتاری را باز کرده و  
-BIOS
-آن را دیباگ کند.
+است و تا مشکل دستگاه را حل نکند، تسلیم نمیشود!
 
-زهرا به کد های زیر در 
+او دستگاه را به خانه میبرد تا عملیات مشکل یابی را شروع کند.
+
+در خانه آتاری را باز کرده سعی میکند کد های
 BIOS
-آتاری برمیخورد:
+آن را بخواند! شاید مشکل از این قسمت باشد؟
+
+اون چنین کد هایی را مشاهده میکند:
 ```ruby
-nop
+nop +0
 acc +1
 jmp +4
 acc +3
@@ -36,9 +38,10 @@ jmp -4
 acc +6
 ```
 
-آنطور که به نظر میرسد، این یک کد اسمبلی خاص است که:
+آنطور که به نظر میرسد، این یک کد اسمبلی خاص است که
+تنها 3 نوع دستور دارد:
 
-- `nop` (No OPeration): هیچکاری نمیکند
+- `nop n` (No OPeration): هیچکاری نمیکند
 - `acc n` (ACCumulate): تنها متغیر در برنامه را به اندازه n اضافه میکند
 - `jmp n`: دستور به بالا یا پایین حرکت میکند `n` 
 
@@ -48,7 +51,12 @@ acc +6
 است
 
 
-برای مثال، کد های اسمبلی بالا به این ترتیب اجرا میشوند:
+برای مثال، کد های اسمبلی بالا به این ترتیب اجرا میشوند: 
+(
+ترتیب اجرا کنار هر دستور بعد از کاراکتر 
+`|` 
+نوشته شده
+)
 ```ruby
 nop +0  | 1
 acc +1  | 2, 8(!)
@@ -61,11 +69,11 @@ jmp -4  | 5
 acc +6  |
 ```
 
-#### 1. `nop`  اول کار، دستور
+#### 1. `nop +0`  اول کار، دستور
 کاری انجام نمیدهد و به بعد بعد میرود.
 
 #### 2. `acc +1`
- در خط بعد به متغیر مقدار 
+در خط بعد به متغیر مقدار 
 `1`
 اضافه میشود.
 
@@ -73,35 +81,39 @@ acc +6  |
 بعد 4 دستور به پایین جهش میکند
 
 #### 4. `acc +1`
-دیگری اجرا شده و به متغیر یکی اضافه میکند.
-مقدار متغیر الان
+مقدار متغیر
 `2` 
-است.
+میشود
 
-#### 5. `jmp +4`
+#### 5. `jmp -4`
+`4`
+خط به بالا میرود
+
+#### 6. `acc +3`
+مقدار متغیر 
+`5`
+میشود
+
+#### 7. `jmp -3`
+`3`
+خط به بالا میرود
+
+در این مرحله، برنامه به خطی میرسد که قبلا آن را اجرا کرده
+و در صورت ادامه اجرا، دوباره به این نقطه باز میگردد. 
+(به اصطلاح در حلقه بینهایت گیر افتاده)
 
 
-#### 6. `acc +1`
+زهرا پس از بررسی های زیاد، به این نتیجه میرسد که احتمالا یکی از دستور های
+`nop`
+به دلیل رعد و برق، تبدیل به 
+`jmp`
+شده یا برعکس.
+که اگر آن یک دستور اجرا شود، برنامه دیگر در حلقه بینهایت نمی افتد و پایان میابد.
 
-#### 7. `jmp -4`
 
-#### 8. `acc +3`
+برای مثال در قطعه کد زیر:
 
-#### 9. `jmp -3`
-
-اینجا برتامه توی ی حلقه بینهایت گیر افتاده.
-به این نتیجه میرسیم که احتمالا به شرایط آب و هوایی، احتمالا یکی از دستور ها توی 
-BIOS
-عوض شده.
-
-زهرا حدس میزند که احتمالا یکی از 
-
-After some careful analysis, you believe that exactly one instruction is corrupted.
-
-The program is supposed to terminate by attempting to execute an instruction immediately after the last instruction in the file. By changing exactly one jmp or nop, you can repair the boot code and make it terminate correctly.
-
-For example, consider the same program from above:
-
+```ruby
 nop +0
 acc +1
 jmp +4
@@ -111,11 +123,26 @@ acc -99
 acc +1
 jmp -4
 acc +6
+```
+اگر اولین دستور 
+`nop +0`
+را به 
+`jmp +0`
+تبدیل کنید، یک حلقه بینهایت اجرا میکند که فقط همین خط تکرار میشود.
 
-If you change the first instruction from nop +0 to jmp +0, it would create a single-instruction infinite loop, never leaving that instruction. If you change almost any of the jmp instructions, the program will still eventually find another jmp instruction and loop forever.
+اگر هر کدام از دستور های 
+`jmp`
+را به 
+`nop`
+تبدیل کنید، برنامه همچنان در حلقه بینهایت گیر می افتد.
 
-However, if you change the second-to-last instruction (from jmp -4 to nop -4), the program terminates! The instructions are visited in this order:
-
+ولی اگر دستور یکی به آخر را از 
+`jmp -4`
+به 
+`nop -4`
+تغییر دهید، برنامه با پایان میابد!
+دستورات به این ترتیب اجرا میشوند:
+```ruby
 nop +0  | 1
 acc +1  | 2
 jmp +4  | 3
@@ -125,14 +152,20 @@ acc -99 |
 acc +1  | 4
 nop -4  | 5
 acc +6  | 6
-After the last instruction (acc +6), the program terminates by attempting to run the instruction below the last instruction in the file. With this change, after the program terminates, the accumulator contains the value 8 (acc +1, acc +1, acc +6).
+```
+بعد از آخرین دستور
+(`acc +6`)
+برنامه با مقدار متغیر 
+`8`
+تمام میشود.
 
-Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to jmp). What is the value of the accumulator after the program terminates?
+(
+این مقدار توسط دستور های 
+`acc +1` و `acc +1` و `acc +6`
+تولید شده
+)
 
-Your puzzle answer was 662.
+-----------
+به زهرا کمک کنید تا دستور مشکل دار را پیدا و آن را اصلاح کند.
 
-Both parts of this puzzle are complete! They provide two gold stars: **
-
-At this point, you should return to your Advent calendar and try another puzzle.
-
-If you still want to see it, you can get your puzzle input.
+بعد از اجرای برنامه اصلاح شده، مقدار متغیر چند خواهد شد؟
