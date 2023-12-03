@@ -52,6 +52,7 @@ func part1(games: seq[Game]): int =
     if g.sets.allIt(it.red <= 12 and it.green <= 13 and it.blue <= 14):
       inc result, g.id
 
+
 func max(a, b: GameSet): GameSet =
   GameSet(
     red: max(a.red, b.red),
@@ -68,5 +69,5 @@ func part2(games: seq[Game]): int =
 # go -----------------------------------------
 
 let games = readFile"./input.txt".splitlines.map(parseGame)
-echo part1 games # 2913
+echo part1 games #  2913
 echo part2 games # 55593
