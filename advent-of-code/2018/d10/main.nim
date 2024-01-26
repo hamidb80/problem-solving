@@ -3,10 +3,10 @@ import std/[
   nre,
   sequtils,
   sugar,
-  options,
   math]
 
-import prettyvec, questionable
+import prettyvec
+
 
 type
   Vec2 = Vec2Obj
@@ -32,23 +32,20 @@ func parseStar(line: string): Star =
 func solveLinearEq(p1, p2, m1, m2: float): float =
   (p1 - p2) / (m2 - m1)
 
-func collide(a, b: Star): Option[float] =
+func collide(a, b: Star): float =
   let
     t1 = solveLinearEq(a.pos.x, b.pos.x, a.vel.x, b.vel.x)
     t2 = solveLinearEq(a.pos.y, b.pos.y, a.vel.y, b.vel.y)
 
-  if t1 == t2: some t1
-  else: none float
+  if t1 == t2: t1
+  else: Inf
 
 func specialTime(stars: seq[Star]): int =
   for i, a in stars:
     for j, b in stars:
-      if i != j and
-        c =? collide(a, b) and
-        classify(c) == fcNormal
-        :
+      let c = collide(a, b)
+      if classify(c) == fcNormal:
         return toInt c
-
   assert false
 
 func area(vs: seq[Vec2]): Area =
@@ -80,7 +77,6 @@ proc draw(points: seq[Vec2]) =
 
     write stdout, '\n'
   write stdout, "\n\n"
-
 
 proc drawProbableMoments(stars: seq[Star]) =
   let t = specialTime stars
