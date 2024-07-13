@@ -61,7 +61,7 @@ PartOne ← (
 )
 
 PartOne Words
-## ".\\d5.ua:2:8: Opening files is not supported in this environment" 
+## ".\\d5.ua:2:8: Opening files is not supported in this environment"
 
 # --- part 2 ----------------------------
 

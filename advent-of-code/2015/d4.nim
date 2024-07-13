@@ -1,3 +1,5 @@
+# AoC 2015 day 4
+
 import std/strutils
 import checksums/md5
 

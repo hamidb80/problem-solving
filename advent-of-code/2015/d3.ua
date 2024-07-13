@@ -1,3 +1,5 @@
+# AoC 2015 day 3
+
 Moves ← map "^v<>" [[0 1] [0 ¯1] [¯1 0] [1 0]]
 Steps ← &fras "./d3.dat" # real data
 # Steps ← "^v^v^v^v^v" # test data
