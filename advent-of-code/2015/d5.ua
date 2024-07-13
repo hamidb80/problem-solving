@@ -1,5 +1,5 @@
 Text ← "ugknbfddgicrmopn aaa jchzalrnumimnmhp haegwjzuvuyypxyu dvszwmarrgswjxmb"
-# Text ← &fras "./d5.dat"
+Text ← &fras "./d5.dat"
 Words ← ♭ regex "\\w+" Text
 
 CountChar ← /+ °□ =
@@ -16,36 +16,18 @@ CountOfDisAllowed ← (
   /+
 )
 
-Last ← ⊏ -1 ⧻ .
+High ← - 1 ⧻ # similar to high function in Nim
+Last ← ⊏ High .
 
 IsHeadAndTailEq ← (
-  .
-  ⊢
+  ⊢ .
   Last
   =
 )
 
 HasRepeativeChars ← (
-  ## ⌜ugknbfddgicrmopn⌟ ⌜aaa⌟ ⌜jchzalrnumimnmhp⌟ ⌜haegwjzuvuyypxyu⌟ ⌜dvszwmarrgswjxmb⌟ 
   °□
-  ## "ugknbfddgicrmopn" "aaa" "jchzalrnumimnmhp" "haegwjzuvuyypxyu" "dvszwmarrgswjxmb" 
   ◫ 2
-  ## ╭─       ╭─       ╭─       ╭─       ╭─       
-  ## ╷ "ug"   ╷ "aa"   ╷ "jc"   ╷ "ha"   ╷ "dv"   
-  ##   "gk"     "aa"     "ch"     "ae"     "vs"   
-  ##   "kn"          ╯   "hz"     "eg"     "sz"   
-  ##   "nb"              "za"     "gw"     "zw"   
-  ##   "bf"              "al"     "wj"     "wm"   
-  ##   "fd"              "lr"     "jz"     "ma"   
-  ##   "dd"              "rn"     "zu"     "ar"   
-  ##   "dg"              "nu"     "uv"     "rr"   
-  ##   "gi"              "um"     "vu"     "rg"   
-  ##   "ic"              "mi"     "uy"     "gs"   
-  ##   "cr"              "im"     "yy"     "sw"   
-  ##   "rm"              "mn"     "yp"     "wj"   
-  ##   "mo"              "nm"     "px"     "jx"   
-  ##   "op"              "mh"     "xy"     "xm"   
-  ##    ⋮⋮                ⋮⋮       ⋮⋮       ⋮⋮    
   ≡IsHeadAndTailEq
   /+
   /×
@@ -54,34 +36,33 @@ HasRepeativeChars ← (
 
 # --- part 1 ----------------------------
 
-Words
-≡(
-  .
-  .
+PartOne ← (
+  ≡(
+    .
 
-  CountVowels
-  >2
+    CountVowels
+    >2
 
-  :
-  CountOfDisAllowed
-  =0
+    ,
+    CountOfDisAllowed
+    =0
 
-  +
+    +
 
-  :
-  HasRepeativeChars ♭
-  ≠0
+    :
+    HasRepeativeChars ♭
+    ≠0
 
-  +
+    +
+  )
+  =3
+  ⊚
+  ⧻
 )
-=3
-⊚
-⧻
+
+PartOne Words
+## ".\\d5.ua:2:8: Opening files is not supported in this environment" 
 
 # --- part 2 ----------------------------
 
-# Words
-# ≡(
-#   ◫ 3
-#   IsHeadAndTailEq
-# )
+# could not make it work
