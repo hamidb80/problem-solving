@@ -1,17 +1,18 @@
-FuelRequired ← -2 ⌊ ÷ 3
-PartOne ← /+ ∵FuelRequired
-FuelRR ← |1 (
-  FuelRequired
+FuelCalc ← -2 ⌊ ÷ 3
+FuelCalcRec ← |1 (
+  FuelCalc
   .
   <0
-  ⨬(+FuelRR.|0)
+  ⨬⟨+FuelCalcRec.|0⟩
 )
 
-Fact ← |1 ⨬⟨×Fact-1.|1⟩<2.
+PartOne ← /+ ∵FuelCalc
+PartTwo ← /+ FuelCalcRec
 # -----------------------
 
 # Content ← &fras "./d1.dat"
 Content ← "100756"
-Masses ← ♭ ⋕ regex "\\d+" &fras "./d1.dat"
+Masses ← ♭ ⋕ regex "\\d+" Content
+
 PartOne Masses
 PartTwo Masses
