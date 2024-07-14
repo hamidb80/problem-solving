@@ -1,36 +1,37 @@
-# Content ← &fras "./d1.dat"
-Content ← "R5, L5, R5, R3"
-Moves ← map ["L" "R"] [¯1 1]
+Content ← &fras "./d1.dat"
+# Content ← "R5, L5, R5, R3"
+Rotations ← map ["L" "R"] [¯1 1]
 Dirs ← [[1 0] [0 1] [¯1 0] [0 ¯1]] # NESW
 
-# --------------------------------
+⊬ ← ⊏ 1 # Second
 
-regex "[A-Z]|\\d+" Content
-↯ [∞ 2]
-≡(
-  .
-  °□ ⊏ 0
-  get : Moves
-  :
-  ⋕ ⊏ 1
+Manhattan ← /+ ⌵
+
+ParseDataImpl ← (
+  °□ ⊢ .
+  get : Rotations
+
+  ⋕ ⊬ :
   ⊟ :
 )
+ParseData ← (
+  regex "[A-Z]|\\d+"
+  ↯ [∞ 2]
+  ≡ParseDataImpl
+)
 
-## ╭─
-## ╷  1 5
-##   ¯1 5
-##    1 5
-##    1 3
-##        ╯
+Moves ← (
+  ◿4 \+ ≡⊢ .
+  ⊏ : Dirs
+  ≡⊬ :
+  ×
+)
 
-\(
-  ◌
-  ◌
-  [0 0]
-) ≡
-## ╭─
-## ╷ 1 5
-##   0 0
-##   0 0
-##   0 0
-##       ╯
+PartOne ← Manhattan /+
+PartTwo ← (1)
+
+# ---------------------
+
+ParseData Content
+Moves
+⊃PartOne PartTwo
