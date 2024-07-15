@@ -13,15 +13,15 @@ func makeNumber(digits: openArray[int], base = 10): int =
 
 func toDigit(number: string): int =
   case number
-  of "1", "one": 1
-  of "2", "two": 2
+  of "1", "one":   1
+  of "2", "two":   2
   of "3", "three": 3
-  of "4", "four": 4
-  of "5", "five": 5
-  of "6", "six": 6
+  of "4", "four":  4
+  of "5", "five":  5
+  of "6", "six":   6
   of "7", "seven": 7
   of "8", "eight": 8
-  of "9", "nine": 9
+  of "9", "nine":  9
   else: raise newException(ValueError, "invalid number: " & number)
 
 
@@ -32,18 +32,17 @@ func resolver1(line: string): auto =
   [temp[0], temp[^1]]
 
 func resolver2(line: string): auto =
-  {.cast(noSideEffect).}:
-    let
-      rawpat {.global.} = join(numbers, "|")
-      headPattern {.global.} = re fmt"({rawpat}).*$"
-      tailPattern {.global.} = re fmt"^.*({rawpat})"
+  let
+    rawpat      = join(numbers, "|")
+    headPattern = re fmt"({rawpat}).*$"
+    tailPattern = re fmt"^.*({rawpat})"
 
-      first = find(line, headPattern)
-      last = find(line, tailPattern)
-    [first.get.captures[0], last.get.captures[0]]
+    first = find(line, headPattern)
+    last  = find(line, tailPattern)
+  [first.get.captures[0], last.get.captures[0]]
 
 
-func flow(s: string, fn: proc(line: string): array[2, string]): int =
+func flow(s: string, fn: proc(line: string): array[2, string]): int {.effectsOf: fn.} =
   for line in splitLines s:
     inc result, makeNumber map(fn(line), toDigit)
 
