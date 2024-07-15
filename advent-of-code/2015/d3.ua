@@ -1,4 +1,4 @@
-# AoC 2015 day 3
+# Advent of Code 2015 day 3 -- Uiua
 
 Moves ← map "^v<>" [[0 1] [0 ¯1] [¯1 0] [1 0]]
 Steps ← &fras "./d3.dat" # real data

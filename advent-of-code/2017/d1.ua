@@ -1,4 +1,6 @@
-IsEqualPair ← /↧ = ⇌ .
+# Advent of Code 2017 day 1 -- Uiua
+
+IsEqualPair ← ≍ ⇌ .
 
 PartOne ← (
   ⊂ ⟜⊢
@@ -23,7 +25,7 @@ PartTwo ← (
 
 # --------------------
 
-&fras "./d1.dat"
+# &fras "./d1.dat"
 # "1122" # 3
 # "1111" # 4
 # "1234" # 0
@@ -33,7 +35,7 @@ PartTwo ← (
 # "123123" # 12
 ∵⋕
 
-PartOne . 
-## 1223
-PartTwo : 
-## 1284
+PartOne .
+## "34:1: Stack was empty when evaluating argument 1" 
+PartTwo :
+##

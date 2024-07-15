@@ -1,4 +1,4 @@
-# AoC 2015 day 4
+# Advent of Code 2015 day 4 -- Nim
 
 import std/strutils
 import checksums/md5

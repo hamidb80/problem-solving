@@ -1,3 +1,5 @@
+# Advent of Code 2015 day 5 -- Uiua
+
 Text ← "ugknbfddgicrmopn aaa jchzalrnumimnmhp haegwjzuvuyypxyu dvszwmarrgswjxmb"
 Text ← &fras "./d5.dat"
 Words ← ♭ regex "\\w+" Text
