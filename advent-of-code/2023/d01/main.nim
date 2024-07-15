@@ -33,7 +33,7 @@ func resolver1(line: string): auto =
 
 func resolver2(line: string): auto =
   let
-    rawpat      = join(numbers, "|")
+    rawpat      = numbers.join "|"
     headPattern = re fmt"({rawpat}).*$"
     tailPattern = re fmt"^.*({rawpat})"
 
