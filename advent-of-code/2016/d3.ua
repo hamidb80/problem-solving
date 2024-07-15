@@ -1,5 +1,6 @@
 # Advent of Code 2016 day 3 -- Uiua
 
+# input is array of edge lenghs i.e. [a b c]
 CanBeTriangle ← (
   ⊂ ⊢ ⇌ . .
   ◫ 2
