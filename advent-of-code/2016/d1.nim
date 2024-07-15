@@ -1,3 +1,6 @@
+# Advent of Code 2016 day 1 -- Nim
+
+
 import std/[strscans, math, strutils, sequtils, sets]
 
 # --- types --------------------------------

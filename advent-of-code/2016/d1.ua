@@ -1,3 +1,5 @@
+# Advent of Code 2016 day 1 -- Uiua
+
 Content ← &fras "./d1.dat"
 # Content ← "R5, L5, R5, R3"
 Rotations ← map ["L" "R"] [¯1 1]
