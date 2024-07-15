@@ -1,5 +1,6 @@
-⊬ ← ⊏ 1 # second
-² ← ×.  # square
+⊬ ← ⊏ 1  # second
+² ← ×.   # square
+⊶ ← +1/- # length of a range  |[a b]| = b - a + 1
 
 # calculates Delta
 # Δ =  b² - 4(a)(c)
@@ -26,14 +27,15 @@
 # ==> -H² + TH - D > 0
 ⏣ ← (
   # [total_Time Distance] : [T D]
-  ⊍ ¯1 ⊃(⊢|¯⊬)
-  # ⊍ ¯1 T ¯D
 
-  [∘ ¯ . ¯1e-13]
-  +
+  # solve quadradic equation with coefficients of ¯1 T ¯D
+  ⊍ ¯1 ⊃(⊢|¯⊬)
+  # add a tiny number to satisfy `>` condition
+  +[∘ ¯ . ¯1e-13]
+  # [ceil first, floor second] to
   [⌈⊢ : ⌊⊬ .]
-  /-
-  +1
+  # calculate length
+  ⊶ 
 )
 
 PartOne ← (
