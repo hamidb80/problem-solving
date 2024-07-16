@@ -35,7 +35,7 @@
   # [ceil first, floor second] to
   [⌈⊢ : ⌊⊬ .]
   # calculate length
-  ⊶ 
+  ⊶
 )
 
 PartOne ← (
