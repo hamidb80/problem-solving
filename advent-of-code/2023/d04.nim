@@ -45,7 +45,7 @@ func part2(inp: seq[Card]): int =
 
 
 when isMainModule:
-  # stdin.readLine.echo
+
   let data = parseInput:
     readfile"./d04.dat"
     # """
@@ -57,6 +57,5 @@ when isMainModule:
     # Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
     # """
 
-  # stdin.readLine.echo
-  data.part1.echo
-  data.part2.echo
+  stdin.readLine.echo # without this line MS Windows 10 detects the code as virus :-/
+  (data.part1, data.part2).echo
