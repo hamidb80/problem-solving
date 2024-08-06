@@ -1,46 +1,46 @@
-ParseInput ← ≡(=@1°□⊢) regex "\\d+"
-ParseBinary ← /+≡×ⁿ:2⇡⧻.⇌
+ParseInput ← ≡(=@1 °□ ⊢) regex "\\d+"
+ParseBinary ← /+ ≡× ⁿ:2 ⇡⧻ .⇌
 CommonBit ← >0.5÷⧻⟜/+
-PartOne ← ×⊃(ParseBinary|ParseBinary =0)≡CommonBit⍉
-PartTwo ← (
-  ..
-  ⍉
-  ⊢
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] 
-  CommonBit
-  ## 1 
+PartOne ← × ⊃(ParseBinary|ParseBinary =0) ≡CommonBit ⍉
+
+SelectCommonBitForIndex ← (
+  ## 4 
+  ⊙(⍉..)
+  # ?
+  ⟜⊏
+  # ?
   :
+  ## [0 0 0 1 1 1 1 0 0 1 0 0] 
+  CommonBit
+  ## 0 
+  # ?
+  ## 0 
+  ⊃(⋅∘|⋅⋅∘|∘)
+  ?
+  ## 4 
+  ≡(= ⊏)
+  ## [1 1 1 0 0 0 0 1 1 0 1 1] 
+  ⊚
+  ## [0 1 2 7 8 10 11] 
+  ⊏
   ## ╭─            
   ## ╷ 0 0 1 0 0   
   ##   1 1 1 1 0   
   ##   1 0 1 1 0   
-  ##   1 0 1 1 1   
-  ##   1 0 1 0 1   
-  ##   0 1 1 1 1   
-  ##   0 0 1 1 1   
   ##   1 1 1 0 0   
   ##   1 0 0 0 0   
-  ##   1 1 0 0 1   
   ##   0 0 0 1 0   
   ##   0 1 0 1 0   
   ##             ╯ 
-  ≡(=⊢)
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] 
-  ⊚
-  ## [1 2 3 4 7 8 9] 
-  ⊏
-  ## ╭─            
-  ## ╷ 1 1 1 1 0   
-  ##   1 0 1 1 0   
-  ##   1 0 1 1 1   
-  ##   1 0 1 0 1   
-  ##   1 1 1 0 0   
-  ##   1 0 0 0 0   
-  ##   1 1 0 0 1   
-  ##             ╯ 
-  ⊢
-  ## [1 1 1 1 0] 
 )
+
+PartTwo ← (
+  ⇡ ⊏1 △ .
+  ##
+  ⍢(SelectCommonBitForIndex|≠1 ⧻)
+  ##
+)
+# PartTwo ← SelectCommonBitForIndex 4
 
 # ---------------------------------
 
