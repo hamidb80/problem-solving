@@ -1,14 +1,15 @@
-ParseInput ← ≡(=@1 °□ ⊢) regex "\\d+"
-⌭ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌ # parse binary
+# ~~ advent of code 2021 day 3 in Uiua ~~
+# https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
 
-Avg ← ÷ ⧻ ⟜/+ # avg
-⌠ ← ≥0.5 Avg  # most  common bit
-⌡ ← ≤0.5 Avg  # lesat common bit
+⩋ ← ≡(=@1 °□ ⊢) regex "\\d+"
+⏨ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌ # parse binary
+Avg ← ÷ ⧻ ⟜/+       # avg
+⌠ ← ≥0.5 Avg        # most  common bit
+⌡ ← ≤0.5 Avg        # lesat common bit
 
-PartOne ← × ⊃(⌭|⌭ ¬) ≡⌠ ⍉
+PartOne ← × ⊃(⏨|⏨ ¬) ≡⌠ ⍉
 
-SelectMostCommonBitForIndex ← (
-  ?
+SelectCommonBitAtIndex ← (
   ## 0 1 2 3 4
   ⊙(⍉..)
   # ?
@@ -39,12 +40,12 @@ SelectMostCommonBitForIndex ← (
 )
 
 SelectMostCommonBitForIndexState ← (
-  ⟜SelectMostCommonBitForIndex
+  ⟜SelectCommonBitAtIndex
   +1
 )
 
 PartTwo ← (
-  ⌭ ⊢ ◌ ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
+  ⏨ ⊢ ◌ ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
 )
 
 # ---------------------------------
@@ -64,5 +65,5 @@ $ 01010
 
 # &fras "./input.txt"
 
-ParseInput
+⩋
 ⊃PartOne PartTwo
