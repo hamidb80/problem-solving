@@ -1,51 +1,50 @@
 ParseInput ← ≡(=@1 °□ ⊢) regex "\\d+"
-ParseBinary ← /+ ≡× ⁿ:2 ⇡⧻ .⇌
+⌭ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌ # parse binary
 
-Avg ← ÷ ⧻ ⟜/+
-MostCommonBit ← ≥0.5 Avg
-LeastCommonBit ← ≤0.5 Avg
+Avg ← ÷ ⧻ ⟜/+ # avg
+⌠ ← ≥0.5 Avg  # most  common bit
+⌡ ← ≤0.5 Avg  # lesat common bit
 
-PartOne ← × ⊃(ParseBinary|ParseBinary =0) MostCommonBit ⍉
+PartOne ← × ⊃(⌭|⌭ ¬) ≡⌠ ⍉
 
-SelectCommonBitForIndex ← (
+SelectMostCommonBitForIndex ← (
   ?
-  ## 0 1 2 3 4 
+  ## 0 1 2 3 4
   ⊙(⍉..)
   # ?
   ⟜⊏
   # ?
   :
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] [1 0 0 0 1 0 1] [1 1 1 0] [1 1 0] [0 1] 
-  MostCommonBit
-  ## 1 0 1 1 1 
+  ## [0 1 1 1 1 0 0 1 1 1 0 0] [1 0 0 0 1 0 1] [1 1 1 0] [1 1 0] [0 1]
+  ⌠
+  ## 1 0 1 1 1
   # ?
-  ## 1 0 1 1 1 
+  ## 1 0 1 1 1
   ⊃(⋅∘|⋅⋅∘|∘)
-  ## 0 1 2 3 4 
+  ## 0 1 2 3 4
   ≡(= ⊏)
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] [0 1 1 1 0 1 0] [1 1 1 0] [1 1 0] [0 1] 
+  ## [0 1 1 1 1 0 0 1 1 1 0 0] [0 1 1 1 0 1 0] [1 1 1 0] [1 1 0] [0 1]
   ⊚
-  ## [1 2 3 4 7 8 9] [1 2 3 5] [0 1 2] [0 1] [1] 
+  ## [1 2 3 4 7 8 9] [1 2 3 5] [0 1 2] [0 1] [1]
   ⊏
-  ## ╭─            ╭─            ╭─            ╭─            ╭─            
-  ## ╷ 1 1 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 1   
-  ##   1 0 1 1 0     1 0 1 1 1     1 0 1 1 1     1 0 1 1 1               ╯ 
-  ##   1 0 1 1 1     1 0 1 0 1     1 0 1 0 1               ╯ 
-  ##   1 0 1 0 1     1 0 0 0 0               ╯               
-  ##   1 1 1 0 0               ╯                             
-  ##   1 0 0 0 0                                             
-  ##   1 1 0 0 1                                             
-  ##             ╯                                           
+  ## ╭─            ╭─            ╭─            ╭─            ╭─
+  ## ╷ 1 1 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 1
+  ##   1 0 1 1 0     1 0 1 1 1     1 0 1 1 1     1 0 1 1 1               ╯
+  ##   1 0 1 1 1     1 0 1 0 1     1 0 1 0 1               ╯
+  ##   1 0 1 0 1     1 0 0 0 0               ╯
+  ##   1 1 1 0 0               ╯
+  ##   1 0 0 0 0
+  ##   1 1 0 0 1
+  ##             ╯
 )
 
-SelectCommonBitForIndexState ← (
-  ⟜SelectCommonBitForIndex
+SelectMostCommonBitForIndexState ← (
+  ⟜SelectMostCommonBitForIndex
   +1
 )
 
 PartTwo ← (
-  ⍢(SelectCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
-  ?
+  ⌭ ⊢ ◌ ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
 )
 
 # ---------------------------------
