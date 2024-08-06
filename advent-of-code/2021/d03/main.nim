@@ -3,56 +3,81 @@ import strutils, sequtils, sugar
 # utils -------------------------------
 
 func toStr(s: seq[char]): string =
-  cast[string](s)
+cast[string](s)
 
 func toBit(cond: bool): char =
-  if cond: '1'
-  else: '0'
-  
-func reverseBit(b: char): char =
-  toBit b == '0'
 
-func reverseBin(s: string): string =
-  s.map(reverseBit).toStr()
+1
+if cond:
+
+0
+else:
+
+func ⇌Bit(b: char): char =
+
+0
+toBit b ==
+
+func ⇌Bin(s: string): string =
+s.map(⇌Bit).toStr()
 
 func wordLen(ls: seq[string]): int =
-  ls[0].len
+ls[0].⧻
 
 # main ----------------------------------
 
 func test1(list: seq[string]): int =
-  let gammaRate = toStr collect(
-    for i in 0 ..< list.wordLen:
-      toBit list.countIt(it[i] == '1') * 2 >= list.len
-  )
+let gammaRate = toStr collect(
+  ⊃i in 0 ..< list.wordLen:
+  toBit list.countIt(
 
-  gammaRate.parseBinInt * reverseBin(gammaRate).parseBinInt
+    1
+    it[i] ==
+  ) × 2 ≥ list.⧻
+)
 
-func test2Impl(list: seq[string], bit: char, index = 0): int =
-  let
-    condBit = block:
-      let c = list.countIt(it[index] == bit)
+gammaRate.⋕BinInt × ⇌Bin(gammaRate).⋕BinInt
 
-      if (bit == '1' and c * 2 >= list.len) or (bit == '0' and c * 2 <= list.len):
-        bit
-      else:
-        reverseBit bit
+func test2Impl(list: seq[string], ⋯: char, ⊗ = 0): int =
+let
+condBit ← block:
+let c = list.countIt(it[⊗] == ⋯)
 
-    newlist = list.filterIt(it[index] == condBit)
+if (
+  and c × 2 ≥ list.⧻
+  1
+  ⋯ ==
+) or (
+  and c × 2 ≤ list.⧻
+  0
+  ⋯ ==
+):
+⋯
+else:
+⇌Bit ⋯
 
-  # debugecho '[', index, "] = ", condBit
-  # debugEcho list
-  # debugEcho newlist
-  # debugEcho "----------------"
+newlist ← list.filterIt(it[⊗] == condBit)
 
-  if newlist.len == 1:
-    parseBinInt newlist[0]
-  else:
-    test2Impl(newlist, bit, index + 1)
+# debugecho '[', index, "] = ", condBit
+# debugEcho list
+# debugEcho newlist
+# debugEcho "----------------"
 
+if newlist.⧻ == 1:
+⋕BinInt newlist[0]
+else:
+test2Impl(newlist, ⋯, ⊗ + 1)
 
 proc test2(list: seq[string]): int =
-  test2Impl(list, '1') * test2Impl(list, '0')
+test2Impl(
+
+  1
+  list,
+) × test2Impl(
+
+  0
+  list,
+)
 
 # go -------------------------------
 
