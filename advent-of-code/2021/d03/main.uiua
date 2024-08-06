@@ -1,7 +1,11 @@
 ParseInput ← ≡(=@1 °□ ⊢) regex "\\d+"
 ParseBinary ← /+ ≡× ⁿ:2 ⇡⧻ .⇌
-CommonBit ← ≥0.5÷⧻⟜/+
-PartOne ← × ⊃(ParseBinary|ParseBinary =0) ≡CommonBit ⍉
+
+Avg ← ÷ ⧻ ⟜/+
+MostCommonBit ← ≥0.5 Avg
+LeastCommonBit ← ≤0.5 Avg
+
+PartOne ← × ⊃(ParseBinary|ParseBinary =0) MostCommonBit ⍉
 
 SelectCommonBitForIndex ← (
   ?
@@ -12,7 +16,7 @@ SelectCommonBitForIndex ← (
   # ?
   :
   ## [0 1 1 1 1 0 0 1 1 1 0 0] [1 0 0 0 1 0 1] [1 1 1 0] [1 1 0] [0 1] 
-  CommonBit
+  MostCommonBit
   ## 1 0 1 1 1 
   # ?
   ## 1 0 1 1 1 
@@ -41,6 +45,7 @@ SelectCommonBitForIndexState ← (
 
 PartTwo ← (
   ⍢(SelectCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
+  ?
 )
 
 # ---------------------------------
