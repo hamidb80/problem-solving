@@ -1,51 +1,26 @@
 # ~~ advent of code 2021 day 3 in Uiua ~~
 # https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
 
-⩋ ← ≡(=@1 °□ ⊢) regex "\\d+"
-⏨ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌ # parse binary
-Avg ← ÷ ⧻ ⟜/+       # avg
-⌠ ← ≥0.5 Avg        # most  common bit
-⌡ ← ≤0.5 Avg        # lesat common bit
+⩋ ← ≡(=@1 °□ ⊢) regex "\\d+" # parse input
+⏨ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌          # parse binary
+Avg ← ÷ ⧻ ⟜/+                # avg
+⌠ ← ≥0.5 Avg                 # most  common bit
+⌡ ← <0.5 Avg                 # lesat common bit
 
 PartOne ← × ⊃(⏨|⏨ ¬) ≡⌠ ⍉
 
-SelectCommonBitAtIndex ← (
-  ## 0 1 2 3 4
-  ⊙(⍉..)
-  # ?
-  ⟜⊏
-  # ?
-  :
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] [1 0 0 0 1 0 1] [1 1 1 0] [1 1 0] [0 1]
-  ⌠
-  ## 1 0 1 1 1
-  # ?
-  ## 1 0 1 1 1
-  ⊃(⋅∘|⋅⋅∘|∘)
-  ## 0 1 2 3 4
-  ≡(= ⊏)
-  ## [0 1 1 1 1 0 0 1 1 1 0 0] [0 1 1 1 0 1 0] [1 1 1 0] [1 1 0] [0 1]
-  ⊚
-  ## [1 2 3 4 7 8 9] [1 2 3 5] [0 1 2] [0 1] [1]
-  ⊏
-  ## ╭─            ╭─            ╭─            ╭─            ╭─
-  ## ╷ 1 1 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 0   ╷ 1 0 1 1 1
-  ##   1 0 1 1 0     1 0 1 1 1     1 0 1 1 1     1 0 1 1 1               ╯
-  ##   1 0 1 1 1     1 0 1 0 1     1 0 1 0 1               ╯
-  ##   1 0 1 0 1     1 0 0 0 0               ╯
-  ##   1 1 1 0 0               ╯
-  ##   1 0 0 0 0
-  ##   1 1 0 0 1
-  ##             ╯
-)
+SelectMostCommonBitAtIndex ← ⊏⊚≡(= ⊏)⊃(⋅∘|⋅⋅∘|∘)⌠:⟜⊏⊙(⍉..)
+SelectMostCommonBitForIndexState ← +1 ⟜SelectMostCommonBitAtIndex
 
-SelectMostCommonBitForIndexState ← (
-  ⟜SelectCommonBitAtIndex
-  +1
-)
+SelectLeastCommonBitAtIndex ← ⊏⊚≡(= ⊏)⊃(⋅∘|⋅⋅∘|∘)⌡:⟜⊏⊙(⍉..)
+SelectLeastCommonBitForIndexState ← +1 ⟜SelectLeastCommonBitAtIndex
 
 PartTwo ← (
-  ⏨ ⊢ ◌ ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0 ∘
+  ⊃(
+    ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0
+  | ⍢(SelectLeastCommonBitForIndexState|≠1 ⧻ ⋅∘) 0
+  )
+  ×∩(⏨ ⊢ ◌)
 )
 
 # ---------------------------------
