@@ -1,5 +1,5 @@
-# ~~ advent of code 2021 day 3 in Uiua ~~
-# https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
+# ~~~ Advent of Code 2021 day 3 in Uiua ~~~
+# symbols stolen from: https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
 
 ⩋ ← ≡(=@1 °□ ⊢) regex "\\d+" # parse input
 ⏨ ← /+ ≡× ⁿ:2 ⇡⧻ .⇌          # parse binary
@@ -9,16 +9,14 @@ Avg ← ÷ ⧻ ⟜/+                # avg
 
 PartOne ← × ⊃(⏨|⏨ ¬) ≡⌠ ⍉
 
-SelectMostCommonBitAtIndex ← ⊏⊚≡(= ⊏)⊃(⋅∘|⋅⋅∘|∘)⌠:⟜⊏⊙(⍉..)
-SelectMostCommonBitForIndexState ← +1 ⟜SelectMostCommonBitAtIndex
-
-SelectLeastCommonBitAtIndex ← ⊏⊚≡(= ⊏)⊃(⋅∘|⋅⋅∘|∘)⌡:⟜⊏⊙(⍉..)
-SelectLeastCommonBitForIndexState ← +1 ⟜SelectLeastCommonBitAtIndex
+SelectCommonBitAtIndex! ← ⊏⊚≡(= ⊏)⊃(⋅∘|⋅⋅∘|∘)^!:⟜⊏⊙(⍉..)
+SelectMostCommonBitForIndexStateful ← +1 ⟜SelectCommonBitAtIndex!⌠
+SelectLeastCommonBitForIndexStateful ← +1 ⟜SelectCommonBitAtIndex!⌡
 
 PartTwo ← (
   ⊃(
-    ⍢(SelectMostCommonBitForIndexState|≠1 ⧻ ⋅∘) 0
-  | ⍢(SelectLeastCommonBitForIndexState|≠1 ⧻ ⋅∘) 0
+    ⍢(SelectMostCommonBitForIndexStateful|≠1 ⧻ ⋅∘) 0
+  | ⍢(SelectLeastCommonBitForIndexStateful|≠1 ⧻ ⋅∘) 0
   )
   ×∩(⏨ ⊢ ◌)
 )
