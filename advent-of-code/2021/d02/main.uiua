@@ -1,13 +1,14 @@
-Keys ← {"forward" "down" "up"}
-Moves ← [ℂ 0 1 ℂ 1 0 ℂ ¯1 0]
-Dirs ← [0 1 ¯1]
+Keys ← {"up" "forward" "down"}
+# Dirs ← [¯1 0 1]
+Moves ← [ℂ ¯1 0 ℂ 0 1 ℂ 1 0]
+Fidx ← ⊗ □"forward" Keys
 
 ParseInput ← (
   regex "(\\w+) (\\d+)"
   ≡(⊂⊃(⊗ : Keys ⊏ 1|⋕ ⊏ 2))
 )
-PartOne ← ×°ℂ/+≡(×⊃(⊏ : Moves ⊏ 0|⊏ 1))
-PartTwo ← ×∩/+⟜×≡(×⊃(=0 ⊏ 0|⊏ 1)):\+≡(×⊃(⊏ : Dirs ⊏ 0|⊏ 1)) .
+PartOne ← × °ℂ /+≡(×⊏ : Moves °⊟)
+PartTwo ← × ∩/+ ⟜× ≡(× =Fidx °⊟) : \+≡(×-1°⊟) .
 
 # ---------------------------------------------
 
@@ -18,6 +19,6 @@ $ up 3
 $ down 8
 $ forward 2
 
-# &fras "./input.txt"
+&fras "./input.txt"
 ParseInput
 ⊃PartOne PartTwo
