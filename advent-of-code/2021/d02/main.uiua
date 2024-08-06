@@ -1,0 +1,23 @@
+Keys ← {"forward" "down" "up"}
+Moves ← [ℂ 0 1 ℂ 1 0 ℂ ¯1 0]
+Dirs ← [0 1 ¯1]
+
+ParseInput ← (
+  regex "(\\w+) (\\d+)"
+  ≡(⊂⊃(⊗ : Keys ⊏ 1|⋕ ⊏ 2))
+)
+PartOne ← ×°ℂ/+≡(×⊃(⊏ : Moves ⊏ 0|⊏ 1))
+PartTwo ← ×∩/+⟜×≡(×⊃(=0 ⊏ 0|⊏ 1)):\+≡(×⊃(⊏ : Dirs ⊏ 0|⊏ 1)) .
+
+# ---------------------------------------------
+
+$ forward 5
+$ down 5
+$ forward 8
+$ up 3
+$ down 8
+$ forward 2
+
+# &fras "./input.txt"
+ParseInput
+⊃PartOne PartTwo
