@@ -1,14 +1,6 @@
-PartOne ← (
-  ◫ 2
-  ≡/>
-  /+
-)
-
-PartTwo ← (
-  ◫ 3
-  ≡/+
-  PartOne
-)
+ParseInput ← ⋕ ♭ regex "\\d+"
+PartOne ← /+ ≡/> ◫2
+PartTwo ← PartOne ≡/+ ◫3
 
 # --------------------------------------
 
@@ -24,6 +16,5 @@ $ 260
 $ 263
 
 # &fras "./input.txt"
-
-≡⊢ ⋕ regex "\\d+"
-⊃PartOne PartTwo # 1789 1754
+ParseInput
+⊃PartOne PartTwo

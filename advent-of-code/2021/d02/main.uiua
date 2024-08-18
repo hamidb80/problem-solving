@@ -19,6 +19,6 @@ $ up 3
 $ down 8
 $ forward 2
 
-&fras "./input.txt"
+# &fras "./input.txt"
 ParseInput
 ⊃PartOne PartTwo
