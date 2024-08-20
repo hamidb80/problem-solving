@@ -14,5 +14,5 @@ Solve ← {⟨Part1 𝕩, Part2 𝕩⟩}
 
 inp ← "A Y
 B X
-C Z" 
+C Z"
 Solve Parse inp # •FChars "input.txt"

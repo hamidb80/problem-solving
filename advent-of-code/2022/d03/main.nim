@@ -7,7 +7,7 @@ template invalid: untyped =
 
 func priority(ch: char): int =
   case ch
-  of 'a'..'z': 1 + ch.ord - 'a'.ord
+  of 'a'..'z': 01 + ch.ord - 'a'.ord
   of 'A'..'Z': 27 + ch.ord - 'A'.ord
   else: invalid
 
