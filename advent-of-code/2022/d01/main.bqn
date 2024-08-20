@@ -1,3 +1,5 @@
+# BQN solution for advent of code year 2022 day 1 -- without parser
+
 inp ← ⟨
   1000‿2000‿3000, 
   4000‿5000‿6000,
