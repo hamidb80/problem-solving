@@ -1,4 +1,4 @@
-# Advent of Code year 2022 day 02 
+# Advent of Code year 2022 day 02 in BQN
 # ideas from https://www.youtube.com/watch?v=aMm5aionsw8
 # thanks to https://rosettacode.org/wiki/Read_entire_file
 

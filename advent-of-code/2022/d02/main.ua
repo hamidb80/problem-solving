@@ -1,3 +1,5 @@
+# Advent of Code year 2022 day 02 in Uiua
+
 Rule ← map [0 1 ¯2 ¯1 2] [1 2 2 0 0]
 
 ParseInput ← (+1 ≡(- "AX" ⊏ [0 2]) ↯ ∞_4)

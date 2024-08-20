@@ -1,3 +1,5 @@
+# Advent of Code year 2022 day 02 in Nim
+
 import std/[strutils]
 
 # def ----------------------------------------
@@ -79,6 +81,6 @@ func part2(data: string): int =
 
 # go -----------------------------------------
 
-let data = readFile("./input.txt")
+let  data= readFile "./input.txt"
 echo part1 data # 12855
 echo part2 data # 13726
