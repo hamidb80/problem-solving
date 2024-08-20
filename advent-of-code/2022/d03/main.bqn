@@ -1,3 +1,5 @@
+# Advent of Code year 2022 day 03 in BQN
+
 L         ← {𝕩+↕26}        # Letter Set Generator
 p         ← ∾ L¨ "aA"      # priorities
 Pri       ← {1+ p ⊒ 𝕩}     # Priority
