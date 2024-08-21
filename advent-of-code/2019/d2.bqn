@@ -56,7 +56,10 @@ Solve Parse "1,0,0,3,1,1,2,3,1,3,4,3,1,5,0,3,2,10,1,19,1,6,19,23,1,23,13,27,2,6,
 # BQN did do okay in terms of performance. 
 # At times programmers on the forum commented about having slow solutions (tens of seconds) or having to rewrite an obviously unsatisfactory algorithm. 
 # I don't think anyone mentioned having to switch languages for performance reasons, which is good news for an implementation as young as CBQN. 
-# But also not a surprise, as it's pretty fast with scalar code for an interpreter: about 10 times slower than C when I've measured it. Array code is usually faster, but can be slower. A particular problem was that in-place mutation ⌾(i⊸⊑) is only fast for very simple cases. Of course, this problem only arises because BQN's arrays are immutable, highlighting that immutable arrays, despite being perfect in every way, can be a pain.
+# But also not a surprise, as it's pretty fast with scalar code for an interpreter: about 10 times slower than C when I've measured it. 
+# Array code is usually faster, but can be slower. 
+# A particular problem was that in-place mutation ⌾(i⊸⊑) is only fast for very simple cases. 
+# Of course, this problem only arises because BQN's arrays are immutable, highlighting that immutable arrays, despite being perfect in every way, can be a pain.
 # In a serious application you might be willing to endure more pain and use a mutable array object, to ensure good performance.
 
 # me: was amazing !
