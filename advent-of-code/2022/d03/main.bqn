@@ -8,7 +8,7 @@ Intersect ← {𝕩 (∊/⊣) 𝕨}    # stolen from https://mlochbaum.github.io
 PartCommon ← {+´ (Pri·⊏Intersect´) ˘𝕩}
 Part1      ← {PartCommon ∾˘ {<˘ 2‿∘ ⥊ 𝕩} ¨𝕩}
 Part2      ← {PartCommon ↑‿3 ⥊ 𝕩}
-Solve      ← {⟨Part1 𝕩, Part2 𝕩⟩}
+Solve      ← (Part1 ∾ Part2) # read this https://mlochbaum.github.io/BQN/doc/birds.html
 
 Solve ⟨
   "vJrwpWtwJgWrhcsFMMfFFhFp"
