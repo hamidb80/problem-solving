@@ -1,4 +1,4 @@
-# Advent of Code year 2019 day 3 in BQN
+# Advent of Code year 2019 day 2 in BQN
 # ideas taken from https://www.youtube.com/watch?v=NqMmkLgV9lc
 
 Parse ← {{(>⟜«0≤𝕩)/0(0⊸≤××⟜10⊸+)`𝕩}∘-⟜'0' 𝕩} # stolen from https://mlochbaum.github.io/bqncrate/
