@@ -10,7 +10,7 @@ PartOne ← /+ ∵FuelCalc
 PartTwo ← /+ FuelCalcRec
 # -----------------------
 
-# Content ← &fras "./d1.dat"
+# Content ← &fras "./d01.dat"
 Content ← "100756"
 Masses ← ♭ ⋕ regex "\\d+" Content
 

@@ -37,4 +37,4 @@ test "examples":
 
 when isMainModule:
   # echo part1 parseIntsCsv "1,9,10,3,2,3,11,0,99,30,40,50"
-  echo part1 parseIntsCsv readFile "./d2.dat"
+  echo part1 parseIntsCsv readFile "./d02.dat"

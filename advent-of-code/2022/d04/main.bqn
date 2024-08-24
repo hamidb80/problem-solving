@@ -1,6 +1,6 @@
 # Advent of Code 2022 day 4 in BQN
 
-Parse  ← (∘‿2‿2 ⥊ {(>⟜«0≤𝕩)/0(0⊸≤××⟜10⊸+)`𝕩}∘-⟜'0')
+Parse  ← (∘‿2‿2 ⥊ {(>⟜«0≤𝕩)/0(0⊸≤××⟜10⊸+)`𝕩}∘-⟜'0') # stolen from https://mlochbaum.github.io/bqncrate
 MinMax ← (⌊´ ∾ ⌈´)
 HaveFullyIntersect ← {(MinMax 𝕨 ∾ 𝕩) ∊ [𝕩,𝕨]}
 AreDistinct        ← {
