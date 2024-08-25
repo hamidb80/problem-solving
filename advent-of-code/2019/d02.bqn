@@ -28,7 +28,8 @@ RunWhileLoop ← {
 
 RunRecursive ← {
   i‿mem ← Exec 𝕨‿𝕩
-  {99= i⊑mem ?  mem ; i Run2 mem}
+  {99= i⊑mem ?  mem ; 
+                i RunRecursive mem}
 }
 
 # RunWhileLoop & RunRecursive are identical, I just wanted to explore the possiblities
