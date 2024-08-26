@@ -1,7 +1,7 @@
 # Advent of Code year 2020 day 3 in BQN
 GridShape ← ((⊑⊒⟜(@+10)) {𝕨 ∾˜ (𝕩+1)÷(𝕨+1)} ≠) # @+10 is \n
 Swing ← {
-  grid ← w ⋄ m‿n ← 𝕩 ⋄ r‿c ← GridShape grid
+  grid ← 𝕨 ⋄ m‿n ← 𝕩 ⋄ r‿c ← GridShape grid
   +´ '#'= {grid ⊏˜ (c|m×𝕩)+(n×𝕩)×c+1}˘ ↕(⌈r÷n)
 }
 
