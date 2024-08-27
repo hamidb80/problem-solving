@@ -1,3 +1,6 @@
+# Game of Life implementation in BQN
+# thanks to [Game of Life in APL] https://www.youtube.com/watch?v=pMslgySQ8nc
+
 InitRandomGrid ← {𝕩 ⥊ Rand⟜𝕨⌜ ↕×´𝕩}
 Rand      ← {𝕩 <˜ •rand.Range 0}
 XoY       ← {v‿h ← 𝕩 ⋄ h⌽ v⌽ ˘𝕨}
