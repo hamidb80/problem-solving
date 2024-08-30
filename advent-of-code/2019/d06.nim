@@ -2,6 +2,8 @@ import std/[strutils, nre, tables]
 
 type DirectedGraph[T] = Table[T, seq[T]]
 
+template `++`(a): untyped = succ a
+
 template extractRe(s, pat): untyped =
   s.findAll re(pat)
 
@@ -24,12 +26,12 @@ func dfslenImpl[T](g: DirectedGraph[T], root: T, depth: int, result: var int) =
   inc result, depth
   if root in g:
     for n in g[root]:
-      dfslenImpl g, n, succ depth, result
+      dfslenImpl g, n, ++depth, result
 
 func dfslen[T](g: DirectedGraph[T], root: T): int = 
   dfslenImpl g, root, 0, result
 
-func depthTable ...
+# func depthTable ...
 
 
 const testInput = """COM)B
@@ -45,4 +47,5 @@ J)K
 K)L"""
 
 let part1 = readfile"./d06.dat".extractRe"\w+".dgrph.dfslen"COM"
-let part2 = readfile"./d06.dat".extractRe"\w+".dgrph.minPath "YOU".."SAN"
+let part2 = 0 #readfile"./d06.dat".extractRe"\w+".dgrph.minPath "YOU".."SAN"
+echo part1, part2
