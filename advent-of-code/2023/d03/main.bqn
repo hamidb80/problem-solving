@@ -1,36 +1,34 @@
 # Advent of Code 2023 day 3 in BQN
 # ideas from https://www.youtube.com/watch?v=77uUu4vcZ-8
 
-nl ← @+10
+nl ← '
+'
 Stencil3  ← {
   map ←  𝕩
   r‿c ← ≢𝕩
   Impl ← {
-    a ← 0 ⌈ (r-1) ⌊ (𝕨-1)
-    c ← 0 ⌈ (c-1) ⌊ (𝕩-1)
+    a ← 0 ⌈ (𝕨-1)
+    c ← 0 ⌈ (𝕩-1)
     b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
     d ← 3 - (𝕩=0) ∨ (𝕩=c-1)
-    indexes ← ¯1⊸≠ ⊸/ ⍷ ⥊ {d↑ c↓ 𝕩} ˘ b↑ a↓ map
+    {d↑ c↓ 𝕩} ˘ b↑ a↓ map
   }
   (↕r) Impl⌜ ↕c
 }
-SplitGrid ← ((¯1+ (1+`⊢) ∧ ¬) nl⊸=) ⊔ ⊢
 Solve ← {
-  grid      ← > SplitGrid 𝕩
-  relaxed   ← ⥊grid
-  digitsi   ← {𝕩 ∊ "0123456789"} ˘ grid
-  firsts    ← {<´˘ 2↕ 0∾𝕩} ˘ digitsi
-  uniq      ← ¯1 + (+` ⥊firsts) ∧ ⥊digitsi
-  numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
-  map       ← uniq ⥊˜ ≢grid
-  adjacencyMapR ← ⥊ Stencil3 map
-  part1  ← +´       numbers ⊏˜ ∾            (¬ relaxed ∊ ".0123456789") / adjacencyMapR  
-  part2  ← +´ ×´ ˘ (numbers ⊏˜ > {2=≠∘>˘𝕩} ⊸/ (relaxed ∊ "*")           / adjacencyMapR)
+  raw     ← 𝕩 ∾ nl
+  digitsi ← raw ∊ "0123456789"
+  ids     ← ¯1 + ((+` »<⊢) ∧ ⊢) digitsi
+  numbers ← •ParseFloat ¨  ids ⊔ raw
+  adj   ← ⥊ (¯1⊸≠ ⊸/·⍷⥊) ¨ Stencil3 (⊑ 𝕩 ⊐ nl)‿↑ ⥊ ids
+  part1 ← +´       numbers ⊏˜ ∾            (¬ raw ∊ nl ∾ ".0123456789") / adj
+  part2 ← +´ ×´ ˘ (numbers ⊏˜ > {2=≠∘>˘𝕩} ⊸/ (raw ∊ "*")                / adj)
   part1 ⋈ part2
 }
 
 # ⟨ 527144 81463996 ⟩
-Solve "467..114..
+Solve 1↓"
+467..114..
 ...*......
 ..35..633.
 ......#...
