@@ -17,9 +17,8 @@ Stencil3  ← {
 }
 Solve ← {
   raw     ← 𝕩 ∾ nl
-  digitsi ← raw ∊ "0123456789"
-  ids     ← ¯1 + ((+` »<⊢) ∧ ⊢) digitsi
-  numbers ← •ParseFloat ¨  ids ⊔ raw
+  ids     ← ¯1 + ((+` »<⊢) ∧ ⊢) raw ∊ "0123456789"
+  numbers ← •ParseFloat ¨ ids ⊔ raw
   adj   ← ⥊ (¯1⊸≠ ⊸/·⍷⥊) ¨ Stencil3 (⊑ 𝕩 ⊐ nl)‿↑ ⥊ ids
   part1 ← +´       numbers ⊏˜ ∾            (¬ raw ∊ nl ∾ ".0123456789") / adj
   part2 ← +´ ×´ ˘ (numbers ⊏˜ > {2=≠∘>˘𝕩} ⊸/ (raw ∊ "*")                / adj)
