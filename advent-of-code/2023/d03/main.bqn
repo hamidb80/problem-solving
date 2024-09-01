@@ -3,26 +3,24 @@
 
 nl ← @+10
 Stencil3  ← {
-  map  ← 𝕩
-  r‿c ← ≢ map
-  Fn ← {
+  map ←  𝕩
+  r‿c ← ≢𝕩
+  Impl ← {
     a ← 0 ⌈ (r-1) ⌊ (𝕨-1)
-    b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
-    
     c ← 0 ⌈ (c-1) ⌊ (𝕩-1)
+    b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
     d ← 3 - (𝕩=0) ∨ (𝕩=c-1)
-    
     indexes ← ¯1⊸≠ ⊸/ ⍷ ⥊ {d↑ c↓ 𝕩} ˘ b↑ a↓ map
   }
-  (↕r) Fn⌜ ↕c
+  (↕r) Impl⌜ ↕c
 }
 SplitGrid ← ((¯1+ (1+`⊢) ∧ ¬) nl⊸=) ⊔ ⊢
 Solve ← {
   grid      ← > SplitGrid 𝕩
   relaxed   ← ⥊grid
   digitsi   ← {𝕩 ∊ "0123456789"} ˘ grid
-  first     ← {<´˘ 2↕ 0∾𝕩} ˘ digitsi
-  uniq      ← ¯1 + (+` ⥊first) ∧ ⥊digitsi
+  firsts    ← {<´˘ 2↕ 0∾𝕩} ˘ digitsi
+  uniq      ← ¯1 + (+` ⥊firsts) ∧ ⥊digitsi
   numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
   map       ← uniq ⥊˜ ≢grid
   adjacencyMapR ← ⥊ Stencil3 map
