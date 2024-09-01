@@ -19,7 +19,6 @@ Stencil3  ← {
 SplitGrid ← ((¯1+ (1+`⊢) ∧ ¬) nl⊸=) ⊔ ⊢
 Solve ← {
   grid      ← > SplitGrid 𝕩
-  h‿w      ← ≢grid
   relaxed   ← ⥊grid
   digitsi   ← {𝕩 ∊ "0123456789"} ˘ grid
   first     ← {<´˘ 2↕ 0∾𝕩} ˘ digitsi
