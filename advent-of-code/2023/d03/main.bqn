@@ -1,18 +1,5 @@
 # Advent of Code 2023 day 3 in BQN
 # ideas from https://www.youtube.com/watch?v=77uUu4vcZ-8
-# XXX works on the test input but not actual input :(
-
-inp ← "467..114..
-...*......
-..35..633.
-......#...
-617*......
-.....+.58.
-..592.....
-......755.
-...$.*....
-.664.598.."
-
 
 nl ← @+10
 Stencil3  ← {
@@ -32,10 +19,11 @@ Stencil3  ← {
 SplitGrid ← ((¯1+ (1+`⊢) ∧ ¬) nl⊸=) ⊔ ⊢
 Solve ← {
   grid      ← > SplitGrid 𝕩
-  relaxed   ← ⥊ grid
-  digitsi   ← ∊⟜"0123456789" ˘ relaxed
-  first     ← <´˘ 2↕ 0 ∾ digitsi
-  uniq      ← ¯1 + (+` first) ∧ digitsi
+  h‿w      ← ≢grid
+  relaxed   ← ⥊grid
+  digitsi   ← {𝕩 ∊ "0123456789"} ˘ grid
+  first     ← {<´˘ 2↕ 0∾𝕩} ˘ digitsi
+  uniq      ← ¯1 + (+` ⥊first) ∧ ⥊digitsi
   numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
   map       ← uniq ⥊˜ ≢grid
   adjacencyMapR ← ⥊ Stencil3 map
@@ -44,4 +32,14 @@ Solve ← {
   part1 ⋈ part2
 }
 
-Solve inp
+# ⟨ 527144 81463996 ⟩
+Solve "467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598.."
