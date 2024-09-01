@@ -13,7 +13,22 @@ inp ← "467..114..
 ...$.*....
 .664.598.."
 
+
 nl ← @+10
+Stencil3  ← {
+  map  ← 𝕩
+  r‿c ← ≢ map
+  Fn ← {
+    a ← 0 ⌈ (r-1) ⌊ (𝕨-1)
+    b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
+    
+    c ← 0 ⌈ (c-1) ⌊ (𝕩-1)
+    d ← 3 - (𝕩=0) ∨ (𝕩=c-1)
+    
+    indexes ← ¯1⊸≠ ⊸/ ⍷ ⥊ {d↑ c↓ 𝕩} ˘ b↑ a↓ map
+  }
+  (↕r) Fn⌜ ↕c
+}
 SplitGrid ← ((¯1+ (1+`⊢) ∧ ¬) nl⊸=) ⊔ ⊢
 Solve ← {
   grid      ← > SplitGrid 𝕩
@@ -23,27 +38,9 @@ Solve ← {
   uniq      ← ¯1 + (+` first) ∧ digitsi
   numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
   map       ← uniq ⥊˜ ≢grid
-  r‿c      ← ≢ grid # rows‿cols
-  Stencil  ← {
-    a ← 0 ⌈ (r-1) ⌊ (𝕨-1)
-    b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
-    
-    c ← 0 ⌈ (c-1) ⌊ (𝕩-1)
-    d ← 3 - (𝕩=0) ∨ (𝕩=c-1)
-    
-    indexes ← ¯1⊸≠ ⊸/ ⍷ ⥊ {d↑ c↓ 𝕩} ˘ b↑ a↓ map
-  }
-  adjacencyMap ← (↕r) Stencil⌜ ↕c
-  adjacencyMapR ← ⥊adjacencyMap
-  filterP1  ← ¬ relaxed ∊ ".0123456789"
-  filterP2  ←   relaxed ∊ "*"          
-  temp1  ← filterP1 / adjacencyMapR 
-  temp2  ← filterP2 / adjacencyMapR 
-  ii2    ← 2⊸=≠∘> ˘ temp2
-  sel1   ← numbers ⊏˜ ∾       temp1
-  sel2   ← numbers ⊏˜ > ii2 / temp2
-  part1  ← +´      sel1
-  part2  ← +´ ×´ ˘ sel2
+  adjacencyMapR ← ⥊ Stencil3 map
+  part1  ← +´       numbers ⊏˜ ∾              (¬ relaxed ∊ ".0123456789") / adjacencyMapR  
+  part2  ← +´ ×´ ˘ (numbers ⊏˜ > {2⊸=≠∘> ˘ 𝕩}⊸/ (relaxed ∊ "*")           / adjacencyMapR)
   part1 ⋈ part2
 }
 
