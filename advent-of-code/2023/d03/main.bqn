@@ -24,25 +24,24 @@ Solve ← {
   numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
   map       ← uniq ⥊˜ ≢grid
   r‿c      ← ≢ grid # rows‿cols
-
   Stencil  ← {
-    nr ← 0 ⌈ (r-1) ⌊ (𝕨-1)
-    xr ← 3 - (𝕨=0) ∨ (𝕨=r-1)
+    a ← 0 ⌈ (r-1) ⌊ (𝕨-1)
+    b ← 3 - (𝕨=0) ∨ (𝕨=r-1)
     
-    nc ← 0 ⌈ (c-1) ⌊ (𝕩-1)
-    xc ← 3 - (𝕩=0) ∨ (𝕩=c-1)
+    c ← 0 ⌈ (c-1) ⌊ (𝕩-1)
+    d ← 3 - (𝕩=0) ∨ (𝕩=c-1)
     
-    indexes ← {𝕩≠¯1}⊸/ ⍷ ⥊ (xc⊸↑ nc⊸↓) ˘ xr ↑ nr ↓ map
+    indexes ← ¯1⊸≠ ⊸/ ⍷ ⥊ {d↑ c↓ 𝕩} ˘ b↑ a↓ map
   }
   adjacencyMap ← (↕r) Stencil⌜ ↕c
-  adjacencyMapRelaxed ← ⥊adjacencyMap
+  adjacencyMapR ← ⥊adjacencyMap
   filterP1  ← ¬ relaxed ∊ ".0123456789"
   filterP2  ←   relaxed ∊ "*"          
-  temp1  ← filterP1 / adjacencyMapRelaxed
-  temp2  ← filterP2 / adjacencyMapRelaxed 
-  ii2    ← {2=≠>𝕩} ˘ temp2
-  sel1   ← (⊏⟜numbers) ˘ ∾      temp1
-  sel2   ← (⊏⟜numbers) ˘ > ii2 / temp2
+  temp1  ← filterP1 / adjacencyMapR 
+  temp2  ← filterP2 / adjacencyMapR 
+  ii2    ← 2⊸=≠∘> ˘ temp2
+  sel1   ← numbers ⊏˜ ∾       temp1
+  sel2   ← numbers ⊏˜ > ii2 / temp2
   part1  ← +´      sel1
   part2  ← +´ ×´ ˘ sel2
   part1 ⋈ part2
