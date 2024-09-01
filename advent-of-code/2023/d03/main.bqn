@@ -39,8 +39,8 @@ Solve ← {
   numbers   ← •ParseFloat ¨ uniq ⊔ relaxed
   map       ← uniq ⥊˜ ≢grid
   adjacencyMapR ← ⥊ Stencil3 map
-  part1  ← +´       numbers ⊏˜ ∾              (¬ relaxed ∊ ".0123456789") / adjacencyMapR  
-  part2  ← +´ ×´ ˘ (numbers ⊏˜ > {2⊸=≠∘> ˘ 𝕩}⊸/ (relaxed ∊ "*")           / adjacencyMapR)
+  part1  ← +´       numbers ⊏˜ ∾            (¬ relaxed ∊ ".0123456789") / adjacencyMapR  
+  part2  ← +´ ×´ ˘ (numbers ⊏˜ > {2=≠∘>˘𝕩} ⊸/ (relaxed ∊ "*")           / adjacencyMapR)
   part1 ⋈ part2
 }
 
