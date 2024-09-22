@@ -1,0 +1,7 @@
+# https://leetcode.com/problems/lemonade-change/description/
+
+LemonadeChange ← {
+  c ← ⍉⌽(/⁼∘⊐ ≍ ⍷)𝕩
+}
+
+# TODO 
