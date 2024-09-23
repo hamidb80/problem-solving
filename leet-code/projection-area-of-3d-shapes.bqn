@@ -7,6 +7,7 @@ ProjArea ← {
  x+y+z
 }
 
-ProjArea [[1,2],[3,4]]
-ProjArea [[2]]
-ProjArea [[1,0],[0,2]]
+•Show ProjArea [[1,2],[3,4]]
+•Show ProjArea [[2]]
+•Show ProjArea [[1,0],[0,2]]
+'.'

@@ -10,6 +10,7 @@ SurfaceArea3D ← {                         # problem description
   z+z+h+v
 }
 
-SurfaceArea3D [[1,2],[3,4]]
-SurfaceArea3D [[1,1,1],[1,0,1],[1,1,1]]
-SurfaceArea3D [[2,2,2],[2,1,2],[2,2,2]]
+•Show SurfaceArea3D [[1,2],[3,4]]
+•Show SurfaceArea3D [[1,1,1],[1,0,1],[1,1,1]]
+•Show SurfaceArea3D [[2,2,2],[2,1,2],[2,2,2]]
+'.'

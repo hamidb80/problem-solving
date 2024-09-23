@@ -18,3 +18,5 @@ BackSpaceStrCmp ← ≡○TerminalType
 •Show "ab#c" BackSpaceStrCmp "ad#c"
 •Show "ab##" BackSpaceStrCmp "c#d#"
 •Show "a#c"  BackSpaceStrCmp "b"
+
+'.'

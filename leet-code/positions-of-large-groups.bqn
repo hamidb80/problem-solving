@@ -1,5 +1,4 @@
 # https://leetcode.com/problems/positions-of-large-groups/description/
-# Positions of Large Groups
 
 PostionOfLargestGroups ← {
   a ← 0 ∾ ⥊1(⌽≡⊢) ˘ 2↕' '∾𝕩
@@ -8,6 +7,7 @@ PostionOfLargestGroups ← {
   ¯1+c/˜(¯2≥-´)˘c
 }
 
-PostionOfLargestGroups "abbxxxxzzy"
-PostionOfLargestGroups "abc"
-PostionOfLargestGroups "abcdddeeeeaabbbcd"
+•Show PostionOfLargestGroups "abbxxxxzzy"
+•Show PostionOfLargestGroups "abc"
+•Show PostionOfLargestGroups "abcdddeeeeaabbbcd"
+'.'
