@@ -1,6 +1,6 @@
-Powers   ← {1 ∾ ×` 𝕨 ⥊˜ 𝕩-1}
-CalcPoly ← {+´ 𝕨 × ⌽ 𝕩 Powers ≠𝕨}
+CalcPoly ←{+´ 𝕨 × ⌽ 𝕩 ÷˜ ×` 𝕩 ⥊˜ ≠𝕨 }
 
-•Show     2 Powers   4
-•Show 1‿5‿6 CalcPoly 2
-';'
+#      1x² + 5x + 6 
+•Show [1,    5,   6] CalcPoly 2 
+# result would be 20
+'.'
