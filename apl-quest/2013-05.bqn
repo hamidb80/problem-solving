@@ -1,0 +1,3 @@
+IdentityMatrix ← =⌜˜ ↕∘⊢
+
+IdentityMatrix 5
