@@ -1,0 +1,36 @@
+#par_open      '(' 
+#keyword       "defun"
+#identifier    "double"
+#par_open      '('
+#identifier    "n"
+#par_close     ')'
+#par_open      '('
+#identifier    '*'
+#int_litteral  2
+#identifier    "n"
+#par_close     ')'
+#par_close     ')'
+
+#keyword             'if' 
+#identifier          "age"
+#operator            '>'
+#int_literal         20
+#colon               ':'
+#indent     
+#identifier          "print"
+#par_open            '('
+#string_literal      "Adult"
+#par_close           ')'
+#end_of_expression   ';'
+#identifier          "is_adult"
+#operator            '='
+#identifier          "True"
+#end_of_expression   ';'
+#de_indent
+#identifier          "print"
+#par_open            '('
+#string_literal      "Checked"
+#par_close           ')'
+#end_of_expression   ';'
+#end_of_file  
+

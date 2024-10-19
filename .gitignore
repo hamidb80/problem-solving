@@ -1,9 +1,10 @@
-play.*
+__pycache__
 
 .vscode/
 bin/
+
+play.*
 *.exe
+*.out
 
 issue.md
-
-__pycache__
