@@ -167,4 +167,5 @@ input_string = '''
 
 pprint(get_all_tokens(input_string))
 pprint("--------------")
+print(input_string)
 pprint(parse_lisp(input_string))

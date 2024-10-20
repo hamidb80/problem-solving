@@ -36,8 +36,8 @@ def p_program(p):
 
 def p_expression(p):
     '''expression : NUMBER
-                   | IDENT
-                   | call'''
+                  | IDENT
+                  | call'''
     p[0] = p[1]
 
 def p_call(p):
@@ -74,4 +74,5 @@ input_string = '''
 
 pprint(get_all_tokens(input_string))
 pprint("--------------")
+print(input_string)
 pprint(parse_lisp(input_string))

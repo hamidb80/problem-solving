@@ -8,3 +8,4 @@ play.*
 *.out
 
 issue.md
+parsetab.py
