@@ -9,7 +9,7 @@ SsfImpl ← {
   {0=≠r ? acc ; 
     m ← ⊑⍋|r-c
     v ← m⊑r
-    acc+v SsfImpl ⟨r /˜ m≠↕≠r, v⟩
+    (acc+|c-v) SsfImpl ⟨r /˜ m≠↕≠r, v⟩
   }
 }
 
