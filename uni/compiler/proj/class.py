@@ -3,7 +3,7 @@ from pprint import pprint
 import ply.lex  as lex 
 import ply.yacc as yacc
 
-# lexer ------------------------------
+# lexer -----------------------------------------
 
 tokens = [
     'OP',  # open paren
@@ -35,9 +35,7 @@ def get_all_tokens(input_string): # debug
         all_tokens.append(tok)
     return all_tokens
 
-# pprint.pprint(get_all_tokens("( - (* b b) (* 4 a c))"))
-
-# parser --------------------------------
+# parser ------------------------------------------
 
 def p_program(p):
     '''
@@ -91,8 +89,10 @@ parser = yacc.yacc()
 def parse_lisp(code):
     return parser.parse(code)
 
+# test ----------------------------------------
 
 input_string = '1 a b'
 
 print(input_string)
+pprint(get_all_tokens("( - (* b b) (* 4 a c))"))
 pprint(parse_lisp(input_string))
