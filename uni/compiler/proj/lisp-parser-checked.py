@@ -45,9 +45,7 @@ tokens = [
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
-# Regular expression rules for tokens
 t_NUMBER = r'\d+'
-
 t_ignore = '[ \t\n]'
 
 def t_IDENT(t): 

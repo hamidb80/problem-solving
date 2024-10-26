@@ -67,9 +67,8 @@ def parse_lisp(code):
 # ---------------------------------
 
 input_string = '''
-    (print 
-        (defun delta (a b c) 
-            (- (* b b) (* 4 a c))))
+    (defun delta (a b c) 
+        (- (* b b) (* 4 a c)))
 '''
 
 pprint(get_all_tokens(input_string))

@@ -1,0 +1,34 @@
+--- lexer rules ---
+
+OP  = (
+CP  = )
+ID  = [^ 0-9()"]+
+NUM = [0-9]+
+DEFUN = defun
+STR = ".*?"
+
+--- parser rules ---
+
+program : expr_list
+
+expr_list : empty
+          | expr expr_list
+
+empty :
+
+expr : num
+     | id
+     | call
+     | defun
+
+call : OP expr_list CP
+
+args_list : empty
+          | ident args_list
+
+defun : OP DEFUN ident OP args_list CP expr_list CP
+
+id : ID
+num : NUM
+
+
