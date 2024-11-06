@@ -1,25 +1,30 @@
 # generated  by Phind AI
 # prettified by me
 
+# ----- domain
 
 type
   Node = object
     value: int
     children: seq[Node]
 
+proc initNode(val: int): Node = 
+  Node(value: val)
+
 proc add(
-  parent: var Node; 
+  parent  : var    Node; 
   children: varargs[int]
 ) =
-  for childValue in children:
-    add parent.children, Node(value: childValue)
+  for val in children:
+    parent.children.add initNode val
 
+
+# ----- impl
 
 proc minimax(
-  node            : Node,
-  depth           : int,
-  maximizingPlayer: bool,
-  
+  node            :     Node,
+  depth           :     int,
+  maximizingPlayer:     bool,
   alpha           : var int,
   beta            : var int,
 ): int =
@@ -68,8 +73,10 @@ proc alphaBetaPruning(
   (bestMove, bestScore)
 
 
+# ----- test
+
 when isMainModule:
-  var root = Node(value: 0)
+  var root = initNode 0
   add root            ,   10,  -20, 30
   add root.children[0],  100,   50    
   add root.children[1], -500, -300   
