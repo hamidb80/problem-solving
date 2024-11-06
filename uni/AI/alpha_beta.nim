@@ -8,6 +8,10 @@ type
     value   : int
     children: seq[Node]
 
+  Player    = enum
+    Max
+    Min
+
 proc initNode(val: int): Node = 
   Node(value: val)
 
@@ -22,11 +26,11 @@ proc add(
 # ----- impl
 
 proc minimax(
-  node            :     Node;
-  depth           :     int ,
-  maximizingPlayer:     bool,
-  alpha           : var int ,
-  beta            : var int ,
+  node            :     Node  ;
+  depth           :     int   ,
+  player          :     Player,
+  alpha           : var int   ,
+  beta            : var int   ,
 ): int =
   
   if depth             == 0 or 
@@ -34,25 +38,27 @@ proc minimax(
   :
     node.value
   
-  elif maximizingPlayer:
-    var value = low int
-    
-    for child in node.children:
-      value    = max(value, minimax(child, depth-1, false, alpha, beta))
-      alpha    = max(alpha, value)
-      if alpha >= beta: break
-    
-    value
-  
   else:
-    var value = high int
+    case player
+    of Max:
+      var value = low int
+      
+      for child in node.children:
+        value    = max(value, minimax(child, depth-1, Min, alpha, beta))
+        alpha    = max(alpha, value)
+        if alpha >= beta: break
+      
+      value
     
-    for child in node.children:
-      value    = min(value, minimax(child, depth-1, true,  alpha, beta))
-      beta     = min(beta, value)
-      if alpha >= beta: break
-    
-    value
+    of Min:
+      var value = high int
+      
+      for child in node.children:
+        value    = min(value, minimax(child, depth-1, Max, alpha, beta))
+        beta     = min(beta, value)
+        if alpha >= beta: break
+      
+      value
 
 proc alphaBetaPruning(
   root : Node;
@@ -65,7 +71,7 @@ proc alphaBetaPruning(
   var beta      = high int
 
   for i, child in root.children:
-    let   score = minimax(child, depth-1, false, alpha, beta)
+    let   score = minimax(child, depth-1, Min, alpha, beta)
     if    score > bestScore:
       bestScore = score
       bestMove  = i
