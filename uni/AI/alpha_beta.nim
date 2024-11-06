@@ -5,7 +5,7 @@
 
 type
   Node = object
-    value: int
+    value   : int
     children: seq[Node]
 
 proc initNode(val: int): Node = 
@@ -23,10 +23,10 @@ proc add(
 
 proc minimax(
   node            :     Node,
-  depth           :     int,
+  depth           :     int ,
   maximizingPlayer:     bool,
-  alpha           : var int,
-  beta            : var int,
+  alpha           : var int ,
+  beta            : var int ,
 ): int =
   
   if depth             == 0 or 
@@ -55,7 +55,7 @@ proc minimax(
     value
 
 proc alphaBetaPruning(
-  root : Node; 
+  root : Node,
   depth: int
 ): tuple[bestMove, bestScore: int] =
 
