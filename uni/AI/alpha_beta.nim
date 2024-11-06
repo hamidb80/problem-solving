@@ -4,7 +4,7 @@
 # ----- domain
 
 type
-  Node = object
+  Node      = object
     value   : int
     children: seq[Node]
 
@@ -22,7 +22,7 @@ proc add(
 # ----- impl
 
 proc minimax(
-  node            :     Node,
+  node            :     Node;
   depth           :     int ,
   maximizingPlayer:     bool,
   alpha           : var int ,
@@ -55,7 +55,7 @@ proc minimax(
     value
 
 proc alphaBetaPruning(
-  root : Node,
+  root : Node;
   depth: int
 ): tuple[bestMove, bestScore: int] =
 
