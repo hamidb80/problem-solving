@@ -55,7 +55,7 @@ proc minimax(
       
       for child in node.children:
         value    = min(value, minimax(child, depth-1, Max, alpha, beta))
-        beta     = min(beta, value)
+        beta     = min(beta , value)
         if alpha >= beta: break
       
       value
