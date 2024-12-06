@@ -3,8 +3,8 @@ Fn ← {
   b ←   'B' Indexes 𝕩
   r ← ∧ 'R' Indexes 𝕩
   k ← ⊑ 'K' Indexes 𝕩
-  # length check - K is between the two Rs - Bs occupy one odd and one even position
-  ((2⊸= ≠r) ∧ (2⊸= ≠b)) ∧ (≠´ 2|b) ∧ (0‿1‿1‿0 ≡ k (<∾>) r)
+  # K is between the two Rs - Bs occupy one odd and one even position
+  (≠´ 2|b) ∧ (0‿1‿1‿0 ≡ k (<∾>) r)
 }
 
 
