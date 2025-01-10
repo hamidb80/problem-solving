@@ -76,7 +76,7 @@ when isMainModule:
 
   while true:  
     let 
-      acts = randomActivities(7, 0..50)
+      acts = randomActivities(9, 0..50)
       # acts = @[13 .. 46, 50 .. 66, 15 .. 31, 57 .. 73, 28 .. 42, 67 .. 84, 42 .. 53, 81 .. 99, 75 .. 96]
       op   = asOptimal          acts
       la   = leastConflictFirst acts
