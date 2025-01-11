@@ -40,5 +40,5 @@ def longest_increasing_subsequence(nums):
     return lis
 
 
-nums = [3, 10, 9, 2, 5, 3, 7, 3, 1, 0, 2] # it just gives you correct length, not correct sequesnce
+nums = [2, 3, 1, 0, 1, 7, 5, 3]
 print(longest_increasing_subsequence(nums))
