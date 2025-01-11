@@ -33,8 +33,10 @@ func hasConflict(s, r: Slice[int]): bool =
   let super = min(s.a, r.a) .. max(s.b, r.b)
   # debugecho (super, s,r)
   not (super.len >= s.len + r.len - 1)
-  
+
+
 func leastConflictFirst(activities: seq[Slice[int]]): seq[Slice[int]] = 
+  # https://www.cs.usfca.edu/~galles/cs673/lecture/lecture10.pdf
   var acts = activities
 
   while true:
