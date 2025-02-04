@@ -14,6 +14,12 @@
   (pp a)
 )
 
+(defn formula [code] (latex code))
+
+(def formula-1 (formula ""))
+
+(def article "./article")
+
 (mind-map
   {
     :name "Computer Networking"
