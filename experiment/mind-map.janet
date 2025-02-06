@@ -14,50 +14,30 @@
   (pp a)
 )
 
-(defn formula [code] (latex code))
-
-(def formula-1 (formula ""))
-
+# (defn formula [code] (latex code))
+# (def formula-1 (formula ""))
 (def article "./article")
 
-(mind-map
-  {
-    :name "Computer Networking"
-    :children [
-      {
-        :name "Application Layer"
-        :emoji "📱"
-      }
+(pp
+  [
+    "Computer Networking" [
+      "Application Layer 📱" [
+        "DHCP"
+        "DNS"
+      ]
+    
+      "Transport Layer 🛺" [
+        "TCP"
+        "UDP"
+      ]
       
-      {
-        :name "Transport Layer"
-        :emoji "🛺"
-
-        :children [
-          {
-            :name "TCP"
-          }
-          {
-            :name "UDP"
-          }
-        ]
-      }
-
-      {
-        :name "Network Layer"
-        :children [
-          {
-            :name  "Data Plane"
-            :emoji "🗄"
-          }
+      "Network Layer" [
+        "Data Plane 🗄" 
+        "Control Plane 🎮" (bk 26)
+      ]
       
-          {
-            :name  "Control Plane"
-            :emoji "🎮"
-          }
-        ]
-      }
-
+      "Link Layer" [
+      ]
     ]
-  }
+  ]
 )
