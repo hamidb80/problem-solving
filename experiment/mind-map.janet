@@ -1,3 +1,7 @@
+"""
+tiny mind-tree creator.
+"""
+
 (defn fwrite (path content)
   (def        f (file/open path :w))
   (file/write f content)
@@ -51,8 +55,12 @@
     (fn (u) (string
       "<details>
         <summary>" (u :label) "</summary>"
-        "<div style=\"padding-left:16px\">"
-          "<ul style=\"padding-left:16px\">"
+        "<div style=\"padding-left: 20px; padding-bottom: 4px\">"
+          "<ul style=\"
+            padding-left:16px; 
+            padding-bottom: " (if (or (empty? (u :children)) (empty? (u :properties))) 0 6) "px;
+          \">"
+          
           (string/join (map 
             (fn (p) (string 
                 "<li><a target='_blank' href='" 
@@ -64,6 +72,7 @@
             (u :properties)
           ))
           "</ul>"
+          
           (mind-map/html-impl (u :children))
         "</div>"
       "</details>"
@@ -80,22 +89,161 @@
 (def bk (pdf-page-ref "file:///E:/konkur/Subjects/Network/Computer Networking - A Top-Down Approach 8th.pdf"))
 
 (def mm (mind-map/create [
+  "Intro"
+
   "Application Layer" [
-    "DHCP"
-    "DNS"
+
+    "Distribution time for P2P and CS" [
+       "formula cs"  (bk 170)
+       "formula p2p" (bk 171)
+       "figure"      (bk 172)
+    ]
+
+    "BitTorrent" (bk 173)
+    "CDN" 
+
+    "DNS" (bk 180) [
+      "Hierarchy" (bk 159)
+
+      "Query" [
+        "Recursive" (bk 163)
+        "Iterative"
+      ]
+      "Record Types" (bk 164)
+      "Message Format" (bk 165)
+    ]
+
+    "Cache" [
+      "Formula" (bk 144)
+    ]
+
+    "STMP" (bk 154)
+
+    "HTTP" [
+      "Structure" (bk 136)
+
+      "DASH" (bk 176)
+
+      "versions" (bk 314) [
+        "v1.0"
+        "v1.1"
+        "v2" [
+          "Framing" (bk 146)
+        ]
+        "v3" [
+          "Quic"
+        ]
+      ]
+    ]
+
+    "Socket Programming" [
+      "UDP Server" 
+      "UDP Client" (bk 188)
+
+      "TCP Server" (bk 193)
+      "TCP Client" 
+    ]
   ]
 
   "Transport Layer" [
-    "TCP"
-    "UDP"
+    "UDP" [
+      "Segment" (bk 230)
+    ]
+    "TCP" [
+      "Segment" (bk 263)
+      "MSS MTU" (bk 261)
+
+      "3-way handshake" (bk 282)
+      "Closing" (bk 283)
+
+      "EstimatedRTT"
+      "DevRTT" (bk 268)
+
+      "Congestion Control" [
+        "FSM" (bk 300) [
+          "Fast Retransmit" (bk 277)
+        ]
+        "additive-increase, multiplicative-decrease (AIMD)" (bk 303)
+        "Explicit Notification" (bk 307)
+      ]
+    ]
   ]
   
   "Network Layer" [
-    "Data Plane" 
-    "Control Plane" 
+    "Data Plane" [
+      "Router Architecture" (bk 343) [
+
+        "Switching" (bk 349) [
+          "Bus"
+          "RAM"
+          "Interconnected"
+        ]
+
+        "Input Processing" (bk 346)
+        "Ouput Processing" (bk 351)
+        
+        "suitable Buffering" (bk 355) [
+          "other:: RTT.C"
+          "TCP  :: RTT.C/√N"
+        ]
+        "Buffer Bloat" (bk 356)
+        
+        "HOL Blocking" (bk 353)
+      ]
+
+      "DHCP" [
+        "interaction" (bk 375)
+      ]
+    ]
+
+    "Control Plane" [
+      "Routing Algorithms" [
+        "Distance Vector" [
+          "examples" [
+            "BGP"
+            "RIP"
+          ]
+          
+          "Count to Infinity & Poisen Reverse" (bk 426)
+        ]
+
+        "Link State" [
+          "OSPF" (bk 428)
+          "Oscillations with congestion-sensitive routing" (bk 419)
+        ]
+
+        "Comparison" (bk 426) [
+          "convergence message complexity:: O(V.E)" (bk 427)
+        ]
+      ]
+
+      "BGP" [
+        "eBGP"
+        "iBGP"
+      ]
+
+      "SDN" (bk 450)
+    ]
+
+    "IPv6" (bk 381)
   ]
   
-  "Link Layer" (bk 339)
+  "Link Layer" (bk 339) [
+    "ALLOHA" [
+      "Slotted/Pure" [
+        "formula" (bk 500)
+      ] 
+    ]
+
+    "VLAN" [
+      "Trunking" (bk 532)
+    ]
+    "CSMA/CD" 
+
+    "MPLS" (bk 534)
+    
+    "ARP"
+  ]
 ]))
 
 (pp mm)
