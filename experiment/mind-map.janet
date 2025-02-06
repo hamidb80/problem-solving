@@ -146,6 +146,10 @@ tiny mind-tree creator.
   ]
 
   "Transport Layer" [
+    "Selective Repeat"
+    "Go Back N"
+
+
     "UDP" [
       "Segment" (bk 230)
     ]
@@ -153,23 +157,38 @@ tiny mind-tree creator.
       "Segment" (bk 263)
       "MSS MTU" (bk 261)
 
-      "3-way handshake" (bk 282)
+      "3-way handshake" (bk 282) [
+        "SYNACK flood attack" (bk 281)
+      ]
+
       "Closing" (bk 283)
 
-      "EstimatedRTT"
-      "DevRTT" (bk 268)
+      "monitoring" [
+        "SampleRTT"
+        "EstimatedRTT"
+        "DevRTT" (bk 268)
+      ]
+
+      "Performace with Buffer" (bk 291)
 
       "Congestion Control" [
         "FSM" (bk 300) [
+          "Slow Start" (bk 296)
+          "Congestion Aviodance" (bk 296)
+          "Fast Recovery" (bk 297)
           "Fast Retransmit" (bk 277)
         ]
         "additive-increase, multiplicative-decrease (AIMD)" (bk 303)
         "Explicit Notification" (bk 307)
+
+        "TCP Reno vs Tahoe" (bk 302)
       ]
     ]
   ]
   
   "Network Layer" [
+    "Compare" (bk 386)
+
     "Data Plane" [
       "Router Architecture" (bk 343) [
 
@@ -193,12 +212,37 @@ tiny mind-tree creator.
 
       "DHCP" [
         "interaction" (bk 375)
+
+        "Stages" (bk 374) [
+          "Discovery"
+          "Offer"
+          "Request"
+          "Ack"
+        ]
+
+        "NAT" (bk 377)
+      ]
+
+      "Forwarding" [
+        "Destination Based"
+
+        "Generalized" [
+          "OpenFlow" [
+            "Usages" [
+              "Forwarding"
+              "Load Balancing"
+              "Firewalling"
+            ]
+          ]
+        ]
       ]
     ]
 
     "Control Plane" [
       "Routing Algorithms" [
         "Distance Vector" [
+          "Operation" (bk 423)
+
           "examples" [
             "BGP"
             "RIP"
@@ -225,7 +269,17 @@ tiny mind-tree creator.
       "SDN" (bk 450)
     ]
 
-    "IPv6" (bk 381)
+    "IPv4" [
+      "Classless Interdomain Routing CIDR" (bk 368)
+      "Lognest Prefix Match"
+    ]
+
+
+    "IPv6" [
+      "Segment"   (bk 381)
+      "Tunneling" (bk 384)
+    ]
+
   ]
   
   "Link Layer" (bk 339) [
@@ -246,5 +300,5 @@ tiny mind-tree creator.
   ]
 ]))
 
-(pp mm)
+# (pp mm)
 (fwrite "play.html" (mind-map/html mm))
