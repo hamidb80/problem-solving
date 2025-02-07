@@ -16,6 +16,9 @@ tiny mind-tree creator.
   (fn (page)
     (prop :pdf-reference {:file path :page page})))
 
+(defn latex (code) 
+  (prop :latex code))
+
 # (defn repr (& a) 
 #   (fwrite "./play.lisp" (string/format "%j" a))
 #   (pp a))
@@ -62,13 +65,15 @@ tiny mind-tree creator.
           \">"
           
           (string/join (map 
-            (fn (p) (string 
-                "<li><a target='_blank' href='" 
-                ((p :data) :file) 
-                "#page=" ((p :data) :page) 
-                "'>"
-                "page " ((p :data) :page)
-                "</a></li>"))
+            (fn (p) (match (p :kind)
+                           :pdf-reference (string 
+                              "<li>" "<a target='_blank' href='" 
+                              ((p :data) :file) 
+                              "#page=" ((p :data) :page) 
+                              "'>"
+                              "page " ((p :data) :page)
+                              "</a>" "</li>")
+                            :latex (string "<li><code>" (p :data) "</li></code>")))
             (u :properties)
           ))
           "</ul>"
@@ -79,10 +84,12 @@ tiny mind-tree creator.
     ))
     mm
 )))
+
 (defn mind-map/html (mm) 
   (string
     "<style>*{padding:0;margin:0;}</style>"
     (mind-map/html-impl mm)))
+
 
 # --------------
 
@@ -204,8 +211,8 @@ tiny mind-tree creator.
         "Ouput Processing" (bk 351)
         
         "suitable Buffering" (bk 355) [
-          "other:: RTT.C"
-          "TCP  :: RTT.C/√N"
+          "other" (latex "B = RTT.C")
+          "TCP"   (latex "B = RTT.C/√N")
         ]
         "Buffer Bloat" (bk 356)
         
@@ -264,8 +271,11 @@ tiny mind-tree creator.
       ]
 
       "BGP" [
-        "eBGP"
-        "iBGP"
+        "policy based"
+        "types" [
+          "eBGP"
+          "iBGP"
+        ]
       ]
 
       "SDN" (bk 450)
@@ -286,9 +296,12 @@ tiny mind-tree creator.
   
   "Link Layer" (bk 339) [
     "ALLOHA" [
-      "Slotted/Pure" [
-        "formula" (bk 500)
-      ] 
+      "Slotted" [
+        "formula" (bk 500) (latex "N.p.(1-p)^(N-1)")
+      ]
+      "Pure" [
+        "formula" (bk 500) (latex "N.p.(1-p)^2(N-1)")
+      ]
     ]
 
     "VLAN" [
