@@ -178,7 +178,9 @@ tiny mind-tree creator.
           "Fast Recovery" (bk 297)
           "Fast Retransmit" (bk 277)
         ]
-        "additive-increase, multiplicative-decrease (AIMD)" (bk 303)
+        "additive-increase, multiplicative-decrease (AIMD)" (bk 303) [
+          "Fairness"
+        ]
         "Explicit Notification" (bk 307)
 
         "TCP Reno vs Tahoe" (bk 302)
