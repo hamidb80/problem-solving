@@ -9,7 +9,7 @@ days_in_month ← [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 IsLeap        ← {≠´ 0= 400‿100‿4 |⌜ 𝕩}
 Lcm           ← •math.LCM ´
 
-Dt2d ← { # date to days from 1/1/1
+Dt2d ← { # convert date to days from 1/1/1
   y‿m‿d   ← 𝕩
   
   y_days  ← (365×y-1) 
@@ -20,7 +20,7 @@ Dt2d ← { # date to days from 1/1/1
   d + y_days + m_days + l_years + is_leap
 }
 
-D2dt ← { # TODO days from 1/1/1 to date 
+D2dt ← { # TODO convert days from 1/1/1 to date 
   𝕩
 }
 
