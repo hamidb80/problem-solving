@@ -53,8 +53,11 @@ tiny mind-tree creator.
   acc
 )
 
+(defn join-map (lst f)
+  (string/join (map f lst)))
+
 (defn mind-map/html-impl (mm)
-  (string/join (map
+  (join-map mm
     (fn (u) (string
       "<details>
         <summary>" (u :label) "</summary>"
@@ -64,26 +67,17 @@ tiny mind-tree creator.
             padding-bottom: " (if (or (empty? (u :children)) (empty? (u :properties))) 0 6) "px;
           \">"
           
-          (string/join (map 
-            (fn (p) (match (p :kind)
-                           :pdf-reference (string 
-                              "<li>" "<a target='_blank' href='" 
-                              ((p :data) :file) 
-                              "#page=" ((p :data) :page) 
-                              "'>"
-                              "page " ((p :data) :page)
-                              "</a>" "</li>")
-                            :latex (string "<li><code>" (p :data) "</li></code>")))
-            (u :properties)
-          ))
+          (join-map (u :properties) 
+                     (fn (p) (match (p :kind)
+                                    :pdf-reference (string "<li>" "<a target='_blank' href='" ((p :data) :file) "#page=" ((p :data) :page) "'>" "page " ((p :data) :page) "</a>" "</li>")
+                                    :latex         (string "<li><code>" (p :data) "</li></code>"))))
           "</ul>"
           
           (mind-map/html-impl (u :children))
         "</div>"
       "</details>"
     ))
-    mm
-)))
+))
 
 (defn mind-map/html (mm) 
   (string
