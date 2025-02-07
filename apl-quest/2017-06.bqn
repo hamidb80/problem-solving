@@ -1,1 +1,2 @@
-4 ↕ "ATCGAAGGTCGT"
+•Show 4 ↕ "ATCGAAGGTCGT"
+------------------

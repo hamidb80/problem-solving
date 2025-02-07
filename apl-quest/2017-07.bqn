@@ -2,3 +2,4 @@ CountDNA ← { +´˘ 𝕩⊸=˘ "ACGT"}
 
 •Show CountDNA "AGCTTTTCATTCTGACTGCTGTCTTTAAAAAAAGAGTGTCTGATAGCAG" 
 •Show CountDNA "CCAAATGGGG"
+--------------------------
