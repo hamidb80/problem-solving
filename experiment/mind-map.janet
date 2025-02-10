@@ -249,7 +249,7 @@ tiny mind-tree creator.
 
         "Generalized" [
           "OpenFlow" [
-            "Usages" [
+            "Match + Action" (bk 389) [
               "Forwarding"
               "Load Balancing"
               "Firewalling"
@@ -269,7 +269,9 @@ tiny mind-tree creator.
             "RIP"
           ]
           
-          "Count to Infinity & Poisen Reverse" (bk 426)
+          "Count to Infinity" (bk 426) [
+            "Poisen Reverse"
+          ]
         ]
 
         "Link State" [
@@ -302,6 +304,7 @@ tiny mind-tree creator.
       "v6" [
         "Segment"   (bk 381)
         "Tunneling" (bk 384)
+        "Does not have segmentation like in v4"
       ]
     ]
 
