@@ -27,7 +27,7 @@ tiny mind-tree creator.
 #   (pp a))
 
 (defn extract-page (pdf-file-path page-num out-path)
-  (exec ["magick" (string pdf-file-path "[" page-num "]") out-path])
+  (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path])
 )
 
 (defn mind-map/create (data)
