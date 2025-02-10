@@ -2,6 +2,9 @@
 tiny mind-tree creator.
 """
 
+(defn exec (cmd)
+  (os/execute cmd :pe))
+
 (defn fwrite (path content)
   (def        f (file/open path :w))
   (file/write f content)
@@ -22,6 +25,10 @@ tiny mind-tree creator.
 # (defn repr (& a) 
 #   (fwrite "./play.lisp" (string/format "%j" a))
 #   (pp a))
+
+(defn extract-page (pdf-file-path page-num out-path)
+  (exec ["magick" (string pdf-file-path "[" page-num "]") out-path])
+)
 
 (defn mind-map/create (data)
   (def acc @[])
@@ -53,6 +60,10 @@ tiny mind-tree creator.
   acc
 )
 
+(def out-dir "./play/")
+(def bk-path "E:/konkur/Subjects/Network/Computer Networking - A Top-Down Approach 8th.pdf")
+
+
 (defn join-map (lst f)
   (string/join (map f lst)))
 
@@ -69,7 +80,7 @@ tiny mind-tree creator.
           
           (join-map (u :properties) 
                      (fn (p) (match (p :kind)
-                                    :pdf-reference (string "<li>" "<a target='_blank' href='" ((p :data) :file) "#page=" ((p :data) :page) "'>" "page " ((p :data) :page) "</a>" "</li>")
+                                    :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path))] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 100%;" src="./` img-path `"/>` "</li>"))
                                     :latex         (string "<li><code>" (p :data) "</li></code>"))))
           "</ul>"
           
@@ -87,7 +98,7 @@ tiny mind-tree creator.
 
 # --------------
 
-(def bk (pdf-page-ref "file:///E:/konkur/Subjects/Network/Computer Networking - A Top-Down Approach 8th.pdf"))
+(def bk (pdf-page-ref bk-path))
 
 (def mm (mind-map/create [
   "Intro"
@@ -305,9 +316,12 @@ tiny mind-tree creator.
 
     "MPLS" (bk 534)
     
-    "ARP"
+    "ARP" [
+      "Address Resolution Protocol"
+    ]
   ]
 ]))
 
-# (pp mm)
-(fwrite "play.html" (mind-map/html mm))
+
+(pp (dyn *args*))
+(fwrite (string out-dir "play.html") (mind-map/html mm))
