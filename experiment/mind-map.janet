@@ -26,8 +26,10 @@ tiny mind-tree creator.
 #   (fwrite "./play.lisp" (string/format "%j" a))
 #   (pp a))
 
-(defn extract-page (pdf-file-path page-num out-path)
-  (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path])
+(defn extract-page (pdf-file-path page-num out-path shallow)
+  (if shallow
+    (print "image " pdf-file-path " page " page-num " cached")
+    (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path]))
 )
 
 (defn mind-map/create (data)
@@ -67,7 +69,7 @@ tiny mind-tree creator.
 (defn join-map (lst f)
   (string/join (map f lst)))
 
-(defn mind-map/html-impl (mm)
+(defn mind-map/html-impl (mm shallow)
   (join-map mm
     (fn (u) (string
       "<details>
@@ -80,20 +82,20 @@ tiny mind-tree creator.
           
           (join-map (u :properties) 
                      (fn (p) (match (p :kind)
-                                    :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path))] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 100%;" src="./` img-path `"/>` "</li>"))
+                                    :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path) shallow)] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 400px;" src="./` img-path `"/>` "</li>"))
                                     :latex         (string "<li><code>" (p :data) "</li></code>"))))
           "</ul>"
           
-          (mind-map/html-impl (u :children))
+          (mind-map/html-impl (u :children) shallow)
         "</div>"
       "</details>"
     ))
 ))
 
-(defn mind-map/html (mm) 
+(defn mind-map/html (mm shallow) 
   (string
     "<style>*{padding:0;margin:0;}</style>"
-    (mind-map/html-impl mm)))
+    (mind-map/html-impl mm shallow)))
 
 
 # --------------
@@ -190,7 +192,8 @@ tiny mind-tree creator.
           "Fast Recovery" (bk 297)
           "Fast Retransmit" (bk 277)
         ]
-        "additive-increase, multiplicative-decrease (AIMD)" (bk 303) [
+        "AIMD" (bk 303) [
+          "additive-increase, multiplicative-decrease"
           "Fairness"
         ]
         "Explicit Notification" (bk 307)
@@ -324,4 +327,4 @@ tiny mind-tree creator.
 
 
 (pp (dyn *args*))
-(fwrite (string out-dir "play.html") (mind-map/html mm))
+(fwrite (string out-dir "play.html") (mind-map/html mm true))
