@@ -33,9 +33,7 @@ tiny mind-tree creator.
 (defn extract-page (pdf-file-path page-num out-path use-cache)
   (if (and use-cache (file/exists out-path))
     (print "image " pdf-file-path " page " page-num " cached")
-    (do
-      (print ">> image " pdf-file-path " page " page-num)
-      (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path])))
+    (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path]))
 )
 
 (defn mind-map/create (data)
