@@ -10,6 +10,10 @@ tiny mind-tree creator.
   (file/write f content)
   (file/close f))
 
+
+(defn file/exists (path) 
+  (not (nil? (os/stat path))))
+  
 (defn prop (kind data)
   {:kind   kind
    :data   data
@@ -26,10 +30,12 @@ tiny mind-tree creator.
 #   (fwrite "./play.lisp" (string/format "%j" a))
 #   (pp a))
 
-(defn extract-page (pdf-file-path page-num out-path shallow)
-  (if shallow
+(defn extract-page (pdf-file-path page-num out-path use-cache)
+  (if (and use-cache (file/exists out-path))
     (print "image " pdf-file-path " page " page-num " cached")
-    (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path]))
+    (do
+      (print ">> image " pdf-file-path " page " page-num)
+      (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path])))
 )
 
 (defn mind-map/create (data)
@@ -69,7 +75,7 @@ tiny mind-tree creator.
 (defn join-map (lst f)
   (string/join (map f lst)))
 
-(defn mind-map/html-impl (mm shallow)
+(defn mind-map/html-impl (mm use-cache)
   (join-map mm
     (fn (u) (string
       "<details>
@@ -82,20 +88,20 @@ tiny mind-tree creator.
           
           (join-map (u :properties) 
                      (fn (p) (match (p :kind)
-                                    :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path) shallow)] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 400px;" src="./` img-path `"/>` "</li>"))
+                                    :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path) use-cache)] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 400px;" src="./` img-path `"/>` "</li>"))
                                     :latex         (string "<li><code>" (p :data) "</li></code>"))))
           "</ul>"
           
-          (mind-map/html-impl (u :children) shallow)
+          (mind-map/html-impl (u :children) use-cache)
         "</div>"
       "</details>"
     ))
 ))
 
-(defn mind-map/html (mm shallow) 
+(defn mind-map/html (mm use-cache) 
   (string
     "<style>*{padding:0;margin:0;}</style>"
-    (mind-map/html-impl mm shallow)))
+    (mind-map/html-impl mm use-cache)))
 
 
 # --------------
@@ -113,7 +119,7 @@ tiny mind-tree creator.
        "figure"      (bk 172)
     ]
 
-    "BitTorrent" (bk 173)
+    "BitTorrent" (bk 173) (bk 174)
     "CDN" 
 
     "DNS" (bk 180) [
