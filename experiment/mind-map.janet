@@ -5,42 +5,46 @@ tiny mind-tree creator.
 (defn exec (cmd)
   (os/execute cmd :pe))
 
-(defn fwrite (path content)
+(defn file/put (path content)
   (def        f (file/open path :w))
   (file/write f content)
   (file/close f))
 
-
 (defn file/exists (path) 
   (not (nil? (os/stat path))))
-  
-(defn prop (kind data)
-  {:kind   kind
-   :data   data
-  })
+
+# props
+
+(defn prop (kind data) 
+  {:kind kind :data data })
+
+(defn latex (code) 
+  (prop :latex code))
+
+(defn important () 
+  (prop :important nil))
+
+(defn web (url &opt text) 
+  (prop :web-url {:url url 
+                  :text (if (nil? text) url text)}))
 
 (defn pdf-page-ref (path) 
   (fn (page)
     (prop :pdf-reference {:file path :page page})))
 
-(defn latex (code) 
-  (prop :latex code))
-
-# (defn repr (& a) 
-#   (fwrite "./play.lisp" (string/format "%j" a))
-#   (pp a))
-
 (defn extract-page (pdf-file-path page-num out-path use-cache)
   (if (and use-cache (file/exists out-path))
-    (print "image " pdf-file-path " page " page-num " cached")
+    nil # cached
     (exec ["magick" "-density" "300" (string pdf-file-path "[" page-num "]") out-path]))
 )
+
+# ------------------
 
 (defn mind-map/create (data)
   (def acc @[])
   (var cur nil)
 
-  (defn reset-cur () 
+  (defn reset-cur ()
     (set cur @{
       :properties @[] 
       :children   @[]
@@ -53,13 +57,12 @@ tiny mind-tree creator.
 
   (each d data
     (match (type d)
-      :string (do
+      :string  (do
         (if (not (empty-cur)) (array/push acc cur))
         (reset-cur)
-        (put cur :label d)
-      )
-      :tuple  (put         cur :children    (mind-map/create d))
-      :struct (array/push (cur :properties) d)
+        (put cur :label d))
+      :tuple   (put         cur :children    (mind-map/create d))
+      :struct  (array/push (cur :properties) d)
     ))
   
   (if (not (empty? cur)) (array/push acc cur))
@@ -87,7 +90,10 @@ tiny mind-tree creator.
           (join-map (u :properties) 
                      (fn (p) (match (p :kind)
                                     :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path) use-cache)] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 400px;" src="./` img-path `"/>` "</li>"))
-                                    :latex         (string "<li><code>" (p :data) "</li></code>"))))
+                                    :latex         (string "<li><code>" (p :data) "</li></code>")
+                                    :web-url       (string `<li><a href="` ((p :data) :url) `">` ((p :data) :text) `</a></li>`)
+                                    :important     "<li>🌟 important</li>"
+                                                   (error (string "the attr :" (p :kind) " not implemented")))))
           "</ul>"
           
           (mind-map/html-impl (u :children) use-cache)
@@ -308,7 +314,9 @@ tiny mind-tree creator.
       ]
     ]
 
-    "ICMP" (bk 455) (bk 456)
+    "ICMP" (bk 455) (bk 456) [
+      "TraceRoute" (bk 74) 
+    ]
   ]
   
   "Link Layer" [
@@ -324,18 +332,28 @@ tiny mind-tree creator.
     "VLAN" [
       "Trunking" (bk 532)
     ]
+
     "CSMA/CD" (bk 503) (bk 504) [
       "Efficiency" (latex "(1 + 5d_prop/d_trans)^-1") (bk 506)
     ]
 
-    "MPLS" (bk 534) (bk 535)
+    "MPLS" (important) (bk 534) (bk 535)
     
     "ARP" (bk 514) [
       "Address Resolution Protocol"
     ]
   ]
+
+  "Summary" [
+    "life of a web request" (important) (web "https://youtube.com/watch?v=I6twhxwycyM" "video at youtube")
+  ]
 ]))
 
-
 (pp (dyn *args*))
-(fwrite (string out-dir "index.html") (mind-map/html mm true))
+# (defn repr (& a) 
+#   (file/put "./play.lisp" (string/format "%j" a))
+#   (pp a))
+
+(def build-file (string out-dir "index.html"))
+(file/put build-file (mind-map/html mm true))
+(print "success: " build-file)
