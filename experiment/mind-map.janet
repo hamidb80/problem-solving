@@ -293,20 +293,22 @@ tiny mind-tree creator.
       "SDN" (bk 450)
     ]
 
-    "IPv4" [
-      "Classless Interdomain Routing CIDR" (bk 368)
-      "Lognest Prefix Match"
+    "IP" [
+      "v4" [
+        "Classless Interdomain Routing CIDR" (bk 368)
+        "Lognest Prefix Match"
+      ]
+    
+      "v6" [
+        "Segment"   (bk 381)
+        "Tunneling" (bk 384)
+      ]
     ]
 
-
-    "IPv6" [
-      "Segment"   (bk 381)
-      "Tunneling" (bk 384)
-    ]
-
+    "ICMP" (bk 455) (bk 456)
   ]
   
-  "Link Layer" (bk 339) [
+  "Link Layer" [
     "ALLOHA" [
       "Slotted" [
         "formula" (bk 500) (latex "N.p.(1-p)^(N-1)")
@@ -319,11 +321,13 @@ tiny mind-tree creator.
     "VLAN" [
       "Trunking" (bk 532)
     ]
-    "CSMA/CD" 
+    "CSMA/CD" (bk 503) (bk 504) [
+      "Efficiency" (latex "(1 + 5d_prop/d_trans)^-1") (bk 506)
+    ]
 
-    "MPLS" (bk 534)
+    "MPLS" (bk 534) (bk 535)
     
-    "ARP" [
+    "ARP" (bk 514) [
       "Address Resolution Protocol"
     ]
   ]
@@ -331,4 +335,4 @@ tiny mind-tree creator.
 
 
 (pp (dyn *args*))
-(fwrite (string out-dir "play.html") (mind-map/html mm true))
+(fwrite (string out-dir "index.html") (mind-map/html mm true))
