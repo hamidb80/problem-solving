@@ -69,14 +69,12 @@ tiny mind-tree creator.
   acc
 )
 
-(def out-dir "./play/")
-(def bk-path "E:/konkur/Subjects/Network/Computer Networking - A Top-Down Approach 8th.pdf")
-
+(def bk-path "E:/konkur/Subjects/Network/cnet-8th.pdf")
 
 (defn join-map (lst f)
   (string/join (map f lst)))
 
-(defn mind-map/html-impl (mm use-cache)
+(defn mind-map/html-impl (mm out-dir use-cache)
   (join-map mm
     (fn (u) (string
       "<details>
@@ -91,21 +89,21 @@ tiny mind-tree creator.
                      (fn (p) (match (p :kind)
                                     :pdf-reference (let [page-num ((p :data) :page) file-path ((p :data) :file) img-path (string ((p :data) :page) ".png") e (extract-page file-path (- page-num 1) (string out-dir img-path) use-cache)] (string "<li>" "<a target='_blank' href='" "file:///" file-path "#page=" page-num "'>" "page " page-num "</a>" "<br/>" `<img style="max-width: 400px;" src="./` img-path `"/>` "</li>"))
                                     :latex         (string "<li><code>" (p :data) "</li></code>")
-                                    :web-url       (string `<li><a href="` ((p :data) :url) `">` ((p :data) :text) `</a></li>`)
+                                    :web-url       (string `<li><a target='_blank' href="` ((p :data) :url) `">` ((p :data) :text) `</a></li>`)
                                     :important     "<li>🌟 important</li>"
                                                    (error (string "the attr :" (p :kind) " not implemented")))))
           "</ul>"
           
-          (mind-map/html-impl (u :children) use-cache)
+          (mind-map/html-impl (u :children) out-dir use-cache)
         "</div>"
       "</details>"
     ))
 ))
 
-(defn mind-map/html (mm use-cache) 
+(defn mind-map/html (mm out-dir use-cache) 
   (string
     "<style>*{padding:0;margin:0;}</style>"
-    (mind-map/html-impl mm use-cache)))
+    (mind-map/html-impl mm out-dir use-cache)))
 
 
 # --------------
@@ -124,7 +122,13 @@ tiny mind-tree creator.
     ]
 
     "BitTorrent" (bk 173) (bk 174)
-    "CDN" 
+    
+    "CDN" [
+      "Strategies" (bk 178) [
+        "Enter deep :: rent room of computers inside ISP :: costly but efficient"
+        "bring home :: build your cluster :: cheap but lower quality"
+      ]
+    ] 
 
     "DNS" (bk 180) [
       "Hierarchy" (bk 159)
@@ -217,49 +221,53 @@ tiny mind-tree creator.
     "Compare" (bk 386)
 
     "Data Plane" [
-      "Router Architecture" (bk 343) [
+      "Router Architecture" (bk 349) (bk 350) [
+        "Bus"
+        "RAM"
+        "Interconnected"
+      ]
+      "Input Processing" (bk 346)
+      "Ouput Processing" (bk 351)
+      
+      "suitable Buffering" (bk 355) [
+        "other" (latex "B = RTT.C")
+        "TCP"   (latex "B = RTT.C/√N")
 
-        "Switching" (bk 349) [
-          "Bus"
-          "RAM"
-          "Interconnected"
-        ]
-
-        "Input Processing" (bk 346)
-        "Ouput Processing" (bk 351)
-        
-        "suitable Buffering" (bk 355) [
-          "other" (latex "B = RTT.C")
-          "TCP"   (latex "B = RTT.C/√N")
+        "paramters" [
+          "B: Buffering"
+          "RTT: Round Time Trip of connection"
+          "N: number of TCP connections"
+          "C: link capacity"
         ]
         "Buffer Bloat" (bk 356)
         
         "HOL Blocking" (bk 353)
       ]
+    ]
+  
+    "DHCP" [
+      "interaction" (bk 375)
+      "plug-and-play" (bk 373)
 
-      "DHCP" [
-        "interaction" (bk 375)
-
-        "Stages" (bk 374) [
-          "Discovery"
-          "Offer"
-          "Request"
-          "Ack"
-        ]
-
-        "NAT" (bk 377)
+      "Stages" (bk 374) [
+        "Discovery"
+        "Offer"
+        "Request"
+        "Ack"
       ]
+    ]
 
-      "Forwarding" [
-        "Destination Based"
+    "NAT" (bk 377)
 
-        "Generalized" [
-          "OpenFlow" [
-            "Match + Action" (bk 389) [
-              "Forwarding"
-              "Load Balancing"
-              "Firewalling"
-            ]
+    "Forwarding" [
+      "Destination Based"
+
+      "Generalized" [
+        "OpenFlow" [
+          "Match + Action" (bk 389) [
+            "Forwarding"
+            "Load Balancing"
+            "Firewalling"
           ]
         ]
       ]
@@ -290,6 +298,8 @@ tiny mind-tree creator.
         ]
       ]
 
+      "SDN" (bk 450)
+
       "BGP" [
         "policy based"
         "types" [
@@ -297,8 +307,6 @@ tiny mind-tree creator.
           "iBGP"
         ]
       ]
-
-      "SDN" (bk 450)
     ]
 
     "IP" [
@@ -314,8 +322,8 @@ tiny mind-tree creator.
       ]
     ]
 
-    "ICMP" (bk 455) (bk 456) [
-      "TraceRoute" (bk 74) 
+    "ICMP" (bk 455)  [
+      "TraceRoute" (bk 456) 
     ]
   ]
   
@@ -345,15 +353,16 @@ tiny mind-tree creator.
   ]
 
   "Summary" [
-    "life of a web request" (important) (web "https://youtube.com/watch?v=I6twhxwycyM" "video at youtube")
+    "life of a web request" (important) (web "file:///E:/konkur/Subjects/Network/videos/retrospective%20a%20day%20in%20the%20life%20of%20a%20web%20request.mp4" "https://youtube.com/watch?v=I6twhxwycyM")
   ]
 ]))
 
-(pp (dyn *args*))
-# (defn repr (& a) 
-#   (file/put "./play.lisp" (string/format "%j" a))
-#   (pp a))
+# ---------------------- go
 
-(def build-file (string out-dir "index.html"))
-(file/put build-file (mind-map/html mm true))
-(print "success: " build-file)
+(pp (dyn *args*))
+
+(let [build-dir "./play/" 
+      build-file (string build-dir "index.html")]
+
+  (file/put build-file (mind-map/html mm build-dir true))
+  (print "success: " build-file))
