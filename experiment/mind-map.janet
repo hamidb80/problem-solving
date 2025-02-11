@@ -111,13 +111,25 @@ tiny mind-tree creator.
 (def bk (pdf-page-ref bk-path))
 
 (def mm (mind-map/create [
-  "Intro"
+  "Intro" [
+    "Delays" [
+      "Transmission" (latex "size of packet / transmission rate")
+      "Propagation"  (latex "distance / speed of propagation")
+      "Queue"   
+      "Processing"
+    ]
+
+  ]
 
   "Application Layer" [
 
-    "Distribution time for P2P and CS" [
-       "formula cs"  (bk 170)
-       "formula p2p" (bk 171)
+    "Distribution" [
+       "Client-Server"  [
+         "formula" (bk 170)
+       ]
+       "Point to Point" [
+        "formula" (bk 171)
+       ]
        "figure"      (bk 172)
     ]
 
