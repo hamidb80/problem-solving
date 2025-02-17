@@ -143,6 +143,19 @@ tiny mind-tree creator.
     ] 
 
     "DNS" (bk 180) [
+      "Services" (bk 156) [
+        "Host Aliasing"
+        "Mail Server Aliasing"
+        "Load Distribution"
+      ]
+
+      "Challenges" (bk 158) [
+        "single point of failure (if it fails, all internet fails)"
+        "Traffic volume"
+        "Distant"
+        "Maintenance (big database)"
+      ]
+
       "Hierarchy" (bk 159)
 
       "Query" [
@@ -186,6 +199,13 @@ tiny mind-tree creator.
   ]
 
   "Transport Layer" [
+    "services" (bk 121) [
+      "Reliable data transfer"
+      "Throuput"
+      "Timing"
+      "Security"
+    ]
+
     "Selective Repeat"
     "Go Back N"
 
@@ -340,6 +360,12 @@ tiny mind-tree creator.
   ]
   
   "Link Layer" [
+    "services" (bk 484) [
+      "Framing"
+      "Link Access"
+      "Reliable Delivery"
+    ]
+
     "ALLOHA" [
       "Slotted" [
         "formula" (bk 500) (latex "N.p.(1-p)^(N-1)")
