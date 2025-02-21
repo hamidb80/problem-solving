@@ -40,7 +40,7 @@ tiny mind-tree creator.
 
 # ------------------
 
-(defn mind-map/create (data)
+(defn mind-map/create-impl (data state)
   (def acc @[])
   (var cur nil)
 
@@ -61,12 +61,17 @@ tiny mind-tree creator.
         (if (not (empty-cur)) (array/push acc cur))
         (reset-cur)
         (put cur :label d))
-      :tuple   (put         cur :children    (mind-map/create d))
+      :tuple   (put         cur :children    (mind-map/create-impl d state))
       :struct  (array/push (cur :properties) d)
     ))
   
   (if (not (empty? cur)) (array/push acc cur))
   acc
+)
+
+(defn mind-map/create (data)
+  (def state @{})
+  (mind-map/create-impl data state)
 )
 
 (def bk-path "E:/konkur/Subjects/Network/cnet-8th.pdf")
