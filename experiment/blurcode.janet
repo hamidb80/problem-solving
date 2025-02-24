@@ -64,14 +64,4 @@
 
 (print (blur-code ctx '(var a (reverse (join 1 (not 2))))))
 (print (blur-code ctx '(+ 1 (* 2 (range y))) )) # 1 + 2 * i. y
-(print (blur-code ctx '(
-  Huffman ← {
-    (1 = ≠𝕩) ? 𝕨 ;
-    y ← ⍋𝕩
-    j ← 2 ↑y
-    i ← (¬ j ∊˜)⊸/ ↕≠𝕩
-    newFreq ← (i⊏∘𝕩) ∾ +´ j⊏𝕩
-    newSym  ← (i⊏𝕨) ∾ <  j⊏𝕨
-    newSym Huffman newFreq
-  }
-) )) # 1 + 2 * i. y
+(print (blur-code ctx '() ))

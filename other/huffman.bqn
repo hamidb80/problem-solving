@@ -3,19 +3,12 @@
 
 Huffman ← {
   (1=≠𝕩) ? 𝕨 ;
-  y ← ⍋𝕩
-  j ← 2↑y
+  j ← 2↑⍋𝕩
   i ← (¬∘∊⟜j) ⊸/ ↕≠𝕩
-  newFreq ← (i⊏𝕩) ∾ +´ j⊏𝕩
-  newSym  ← (i⊏𝕨) ∾ <  j⊏𝕨
-  newSym Huffman newFreq
-}
-
-ToCodeImpl ← { 
-   2= •Type 𝕩 ? 𝕨 ;
-   l ← (𝕨∾0) ToCodeImpl 0⊑𝕩
-   r ← (𝕨∾1) ToCodeImpl 1⊑𝕩
-   l ⋈ r
+  
+  f ← (i⊏𝕩) ∾ +´ j⊏𝕩 # new frequencies
+  s ← (i⊏𝕨) ∾ < j⊏𝕨 # new symbols
+  s 𝕊 f
 }
 
 Repr ← {
@@ -25,8 +18,15 @@ Repr ← {
   codes ← l ∾ r
 }
 
+ToCodeImpl ← { 
+   2= •Type 𝕩 ? 𝕨 ;
+   l ← (𝕨∾0) ToCodeImpl 0⊑𝕩
+   r ← (𝕨∾1) ToCodeImpl 1⊑𝕩
+   l ⋈ r
+}
+
 ToCode ← {
-  t ← ⟨⟩ ToCodeImpl ⊑𝕩
+  t      ← ⟨⟩ ToCodeImpl ⊑𝕩
   codes  ← t Repr ⊑𝕩
   string ← ({(∾𝕊¨)⍟(1<≡)⥊𝕩} 𝕩) # stolen from BQNcrate
   ⍉ string ≍ codes
@@ -36,10 +36,11 @@ ToCode ← {
 sym ←  ⟨'a','b','c', 'd', 'e', 'f'⟩
 freq ← ⟨5,   9,  12, 13,   16, 45⟩
 
-huffmanTree ← sym Huffman freq
+huffmanTree  ← sym Huffman freq
+huffmanTable ← ToCode huffmanTree
 
 •Show huffmanTree
-•Show ToCode huffmanTree
+•Show huffmanTable
 -----------------------
 
 # ┌─                               
