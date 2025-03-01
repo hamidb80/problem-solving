@@ -1,3 +1,5 @@
+# please read https://mlochbaum.github.io/BQN/doc/map.html
+
 Partition ← { 𝕨 ⊔˜ ¯1 + 𝕩 ∧ +` »⊸<𝕩 }
 Parse ← { ↑‿2 ⥊ •ParseFloat⌜ 𝕩 Partition 𝕩∊"0123456789" }
 Part1 ← { +´ | -˝ ∧˘ ⍉ 𝕩 }
