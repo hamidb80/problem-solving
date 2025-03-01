@@ -1,14 +1,12 @@
 Partition ← { 𝕨 ⊔˜ ¯1 + 𝕩 ∧ +` »⊸<𝕩 }
 Parse ← { ↑‿2 ⥊ •ParseFloat⌜ 𝕩 Partition 𝕩∊"0123456789" }
-Part1 ← { +´ | -˝ ∧˘ ⍉ Parse 𝕩 }
-Part2 ← { 
-  t ← ⍉ Parse 𝕩
-  a ← 0⊏t
-  b ← 1⊏t
-  +´ ×˝ a ≍ +˝ b =⌜ a
+Part1 ← { +´ | -˝ ∧˘ ⍉ 𝕩 }
+Part2 ← {
+  a‿b ← <˘ ⍉ 𝕩
+  +´ a × +˝ b =⌜ a
 }
 
-Day01 ← Part1 ∾ Part2
+Day01 ← (Part1 ∾ Part2) ○ Parse
 
 input ← "3   4
 4   3
