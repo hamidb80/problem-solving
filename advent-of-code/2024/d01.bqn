@@ -7,14 +7,11 @@ Part2 ← {
   a‿b ← <˘ ⍉ 𝕩
   +´ a × +˝ b =⌜ a
 }
-
 Day01 ← (Part1 ∾ Part2) ○ Parse
 
-input ← "3   4
+Day01 "3   4
 4   3
 2   5
 1   3
 3   9
-3   3"
-
-Day01 input
+3   3" 
