@@ -2,11 +2,10 @@
 # I frequently find myself re-implemment this
 # very useful function and I don't know why BQN does not have this built-in.
 
-Partition ← {
-  i ← »⊸<𝕩 
+Partition ← { 
   # stolen from BQNcrate: https://mlochbaum.github.io/bqncrate/
   # it called "Boolean first ones in each group of ones"
-  𝕨 ⊔˜ ¯1 + 𝕩 ∧ +`i
+  𝕨 ⊔˜ ¯1 + 𝕩 ∧ +` »⊸<𝕩
 }
 
 # example usage
