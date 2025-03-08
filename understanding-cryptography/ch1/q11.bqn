@@ -1,8 +1,8 @@
 # implementation of affine cypher in BQN
 
-ModulusInv ← { ⊑ (↕𝕩) /˜ 1 = 𝕩 | 𝕨 × ↕𝕩 }
+ModInv ← { ⊑ (↕𝕩) /˜ 1 = 𝕩 | 𝕨 × ↕𝕩 }
 Decript ← { a‿b 𝕊 y:
-  c ← a ModulusInv 26
+  c ← a ModInv 26
   'a' + 26 | c × (y - 'a') - b
 }
 
