@@ -28,18 +28,23 @@
 (defn svg/circle [x y r fill]
   (string `<circle r="`r`" cx="`x`" cy="`y`" fill="`fill`"></circle>`))
 
-(def size 10)
-(def space 60)
-(def padx 300)
-(def pady 300)
 
 (defn GoT/to-svg [got] 
   (svg/wrap 50 50
-    (let [h (length (got :levels))]
-      (def acc @[])
+    (let [acc @[]
+          size 10
+          space 60
+          padx 300
+          pady 300
+          h (length (got :levels))
+          ]
       (eachp [l nodes] (got :levels)
         (eachp [i n] nodes
-          (array/push acc (svg/circle (+ padx (* space i)) (+ pady(* space (- h l))) size "black"))))
+          (array/push acc (svg/circle 
+                              (+ padx (* space i)) 
+                              (+ pady (* space (- h l))) 
+                              size 
+                              "black"))))
       acc)))
 
 (defn rev-table [tab]
