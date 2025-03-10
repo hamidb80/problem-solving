@@ -43,9 +43,31 @@
 (defn svg/path [points fill]
   (string `<path d="` (string/join points " ") `" fill="transparent" stroke="`fill`"></path>`))
 
+(defn not-nil-indexes (row)
+  (def acc @[])
+  (eachp [i n] row
+    (if n (array/push acc i)))
+  acc)
+
+(defn GoT/to-svg-impl (got)
+  (def acc @[])
+  (eachp [l nodes] (got :grid)
+        (def idx (not-nil-indexes nodes))
+        (def w (inc (- (last idx) (first idx)))) # width of row
+        (pp idx)
+        (pp w)
+        (eachp [i n] nodes
+          (if (nil? n) nil 
+              (array/push acc [l i w n]))))
+              
+  (pp acc))
+
+# TODO
 (defn GoT/svg/calc-pos (grid row col))
 
 (defn GoT/to-svg [got cfg] 
+  # TODO calc height & width
+  (GoT/to-svg-impl got)
   (svg/wrap 50 50
     (let [h    (length (got :grid))
           acc  @[]]
@@ -55,8 +77,8 @@
               (array/push acc (svg/circle 
                               (+ (cfg :padx) (* (cfg :space) i)) 
                               (+ (cfg :pady) (* (cfg :space) (- h l))) 
-                              (cfg :size) 
-                              (cfg :color))))))
+                                 (cfg :size) 
+                                 (cfg :color))))))
       acc)))
 
 (defn rev-table [tab]
