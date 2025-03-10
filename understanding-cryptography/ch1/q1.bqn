@@ -1,9 +1,5 @@
-import std/[tables, algorithm, sequtils]
-
-func orderedFreqs(text: string): seq[(char, int)] = 
-  text.toCountTable.pairs.toSeq.sortedByIt(it[1]).reversed
-  
-echo orderedFreqs """
+F ← {∨(/⁼∘⊐ ≍˘ ⍷)𝕩} # stolem from BQNcrate
+F "
 lrvmnir bpr sumvbwvr jx bpr lmiwv yjeryrkbi jx qmbm wi
 bpr xjvni mkd ymibrut jx irhx wi bpr riirkvr jx
 ymbinlmtmipw utn qmumbr dj w ipmhh but bj rhnvwdmbr bpr
@@ -19,4 +15,34 @@ mnbpjuwbt lnb yt rasruwrkvr cwbp qmbm pmi hrxb kj djnlb
 bpmb bpr xjhhjcwko wi bpr sujsru msshwvmbwjk mkd
 wkbrusurbmbwjk w jxxru yt bprjuwri wk bpr pjsr bpmb bpr
 riirkvr jx jqwkmcmk qmumbr cwhh urymwk wkbmvb
-"""
+"
+
+# ┌─         
+# ╵ 123 ' '  
+#   84  'r'  
+#   68  'b'  
+#   62  'm'  
+#   49  'k'  
+#   48  'j'  
+#   47  'w'  
+#   41  'i'  
+#   30  'p'  
+#   24  'u'  
+#   23  'h'  
+#   23  'd'  
+#   22  'v'  
+#   20  'x'  
+#   19  'y'  
+#   17  's'  
+#   17  'n'  
+#   16  '\n'  
+#   13  't'  
+#   8   'l'  
+#   7   'q'  
+#   7   'o'  
+#   5   'e'  
+#   5   'c'  
+#   5   'a'  
+#   1   'g'  
+#   1   'f'  
+#           ┘
