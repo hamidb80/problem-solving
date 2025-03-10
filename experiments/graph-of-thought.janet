@@ -12,6 +12,11 @@
   (pp a)
   a)
 
+(defn inspects (a) 
+  (print a)
+  a)
+
+
 (defn svg/normalize (c)
   (match (type c)
           :array  (string/join c " ")
@@ -38,24 +43,20 @@
 (defn svg/path [points fill]
   (string `<path d="` (string/join points " ") `" fill="transparent" stroke="`fill`"></path>`))
 
+(defn GoT/svg/calc-pos (grid row col))
 
-(defn GoT/to-svg [got] 
+(defn GoT/to-svg [got cfg] 
   (svg/wrap 50 50
-    (let [size  10
-          space 60
-          padx 300
-          pady 300
-          h    (length (got :levels))
-          c    "black"
-          acc  @[]
-          ]
-      (eachp [l nodes] (got :levels)
+    (let [h    (length (got :grid))
+          acc  @[]]
+      (eachp [l nodes] (got :grid)
         (eachp [i n] nodes
-          (array/push acc (svg/circle 
-                              (+ padx (* space i)) 
-                              (+ pady (* space (- h l))) 
-                              size 
-                              c))))
+          (if (nil? n) nil 
+              (array/push acc (svg/circle 
+                              (+ (cfg :padx) (* (cfg :space) i)) 
+                              (+ (cfg :pady) (* (cfg :space) (- h l))) 
+                              (cfg :size) 
+                              (cfg :color))))))
       acc)))
 
 (defn rev-table [tab]
@@ -107,13 +108,15 @@
 
 (defn GoT/place-node (grid size levels node selected-row parents)
   # places and then returns the position
- 
+  (def height (first size))
+  (def width  (last size))
+  
   (def parents-col (map (fn [p] (let [row (dec (levels p))
                         col (find-index (fn [y] (= y p)) (grid row))] 
                         col)) 
                     parents))
  
-  (def center (math/floor (/ (dec (last size)) 2)))
+  (def center (/ (if (even? width) width (inc width)) 2))
   (def avg-parents-col (if (empty? parents) center (avg parents-col)))
 
   (var i avg-parents-col)
@@ -124,12 +127,8 @@
       (nil? (get-cell grid selected-row i)) (break (put-cell grid selected-row i node))
       (nil? (get-cell grid selected-row j)) (break (put-cell grid selected-row j node))
             (do 
-              (set i (max 0                 (dec i)))
-              (set j (min (dec (last size)) (inc j))))))
-              
-  (pp node)
-  (pp grid)
-  )
+              (set i (max 0           (dec i)))
+              (set j (min (dec width) (inc j)))))))
 
 (defn GoT/fill-grid (events levels)
   (let [rows  (rev-table levels)
@@ -137,7 +136,8 @@
         grid  (GoT/init-grid rows)]
     (each e events
       (match (e :kind)
-        :node (GoT/place-node grid shape levels (e :id) (dec (levels (e :id))) (e :ans) )))))
+        :node (GoT/place-node grid shape levels (e :id) (dec (levels (e :id))) (e :ans) )))
+    grid))
 
 
 (defn GoT/init [events] 
@@ -160,7 +160,6 @@
   {:kind    :question 
    :content content})
 
-# TODO list
 (def p1 (GoT/init [
   (n :root :problem [])
   (q  "what is")
@@ -170,4 +169,8 @@
   (n :t4 :recall [:t2])
 ]))
 (pp p1)
-# (file/put "./play.svg" (GoT/to-svg p1))
+(file/put "./play.svg" (GoT/to-svg p1 {:size  10
+                                       :space 60
+                                       :padx 300
+                                       :pady 300
+                                       :color "black"}))
