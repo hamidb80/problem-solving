@@ -33,18 +33,18 @@
   (string `<circle r="`r`" cx="`x`" cy="`y`" fill="`fill`"></circle>`))
 
 (defn svg/path [points fill]
-  (string `<path d="` (string points " ") `" fill="transparent" stroke="`fill`"></path>`))
+  (string `<path d="` (string/join points " ") `" fill="transparent" stroke="`fill`"></path>`))
 
 
 (defn GoT/to-svg [got] 
   (svg/wrap 50 50
-    (let [acc @[]
-          size 10
+    (let [size  10
           space 60
           padx 300
           pady 300
-          h (length (got :levels))
-          c "black"
+          h    (length (got :levels))
+          c    "black"
+          acc  @[]
           ]
       (eachp [l nodes] (got :levels)
         (eachp [i n] nodes
@@ -86,26 +86,41 @@
     (length levels) 
     (reduce max 0 (map length (values levels)))))
 
-(defn const1 (val) 
-  (fn [_] val))
-
 (defn matrix-of (rows cols val)
-  (let [row (map (const1 val) (range cols))]
-            (map (const1 row) (range rows))))
+  (def matrix @[])
+  (for y 0 rows
+    (def row @[])
+    (for x 0 cols
+      (array/push row val))
+    (array/push matrix row))
+  matrix)
 
-(defn GoT/build-grid [levels]
-  (let [size (grid-size levels)
-        rows (first size)
-        cols (last  size)]
-       (matrix-of rows cols nil)
-  ))
+(defn GoT/init-grid [levels]
+  (let [size (grid-size levels)]
+       (matrix-of (first size) (last size) nil)))
+
+(defn GoT/place-node (grid node r parent)
+  # places and then returns the position
+  (def   avg-parents-col 1)
+  (var i avg-parents-col)
+  (var j avg-parents-col)
+
+  )
+
+
+(defn GoT/fill-grid (events levels)
+  (let [grid (GoT/init-grid levels)]
+    (each e events
+      (match (e :kind)
+        :node (GoT/place-node grid (e :id) (dec (levels (e :id))) (e :ans) )))))
+
 
 (defn GoT/init [events] 
   (def levels (rev-table (GoT/build-levels events)))
   {:events events
    :edges  (GoT/extract-edges events)
    :levels levels
-   :grid   (GoT/build-grid levels)}
+   :grid   (GoT/fill-grid events levels)}
 )
 
 
