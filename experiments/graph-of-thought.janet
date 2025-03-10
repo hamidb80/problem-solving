@@ -8,6 +8,9 @@
 (defn file/exists (path) 
   (not (nil? (os/stat path))))
 
+(defn inspect (a) 
+  (pp a)
+  a)
 
 (defn svg/normalize (c)
   (match (type c)
@@ -81,47 +84,68 @@
        acc))
 
 
-(defn grid-size (levels)
+(defn grid-size (rows)
   (tuple 
-    (length levels) 
-    (reduce max 0 (map length (values levels)))))
+    (length rows) 
+    (reduce max 0 (map length (values rows)))))
 
 (defn matrix-of (rows cols val)
-  (def matrix @[])
-  (for y 0 rows
-    (def row @[])
-    (for x 0 cols
-      (array/push row val))
-    (array/push matrix row))
-  matrix)
+  (map (fn [_] (array/new-filled cols)) (range rows)))
 
-(defn GoT/init-grid [levels]
-  (let [size (grid-size levels)]
+(defn GoT/init-grid [rows]
+  (let [size (grid-size rows)]
        (matrix-of (first size) (last size) nil)))
 
-(defn GoT/place-node (grid node r parent)
+(defn get-cell [grid y x]
+  ((grid y) x))
+
+(defn put-cell [grid y x val]
+  (put (grid y) x val))
+
+(defn avg (lst)
+  (/ (reduce + 0 lst) (length lst)))
+
+(defn GoT/place-node (grid size levels node selected-row parents)
   # places and then returns the position
-  (def   avg-parents-col 1)
+ 
+  (def parents-col (map (fn [p] (let [row (dec (levels p))
+                        col (find-index (fn [y] (= y p)) (grid row))] 
+                        col)) 
+                    parents))
+ 
+  (def center (math/floor (/ (dec (last size)) 2)))
+  (def avg-parents-col (if (empty? parents) center (avg parents-col)))
+
   (var i avg-parents-col)
   (var j avg-parents-col)
 
+  (while true 
+    (cond
+      (nil? (get-cell grid selected-row i)) (break (put-cell grid selected-row i node))
+      (nil? (get-cell grid selected-row j)) (break (put-cell grid selected-row j node))
+            (do 
+              (set i (max 0                 (dec i)))
+              (set j (min (dec (last size)) (inc j))))))
+              
+  (pp node)
+  (pp grid)
   )
 
-
 (defn GoT/fill-grid (events levels)
-  (let [grid (GoT/init-grid levels)]
+  (let [rows  (rev-table levels)
+        shape (grid-size     rows)
+        grid  (GoT/init-grid rows)]
     (each e events
       (match (e :kind)
-        :node (GoT/place-node grid (e :id) (dec (levels (e :id))) (e :ans) )))))
+        :node (GoT/place-node grid shape levels (e :id) (dec (levels (e :id))) (e :ans) )))))
 
 
 (defn GoT/init [events] 
-  (def levels (rev-table (GoT/build-levels events)))
-  {:events events
-   :edges  (GoT/extract-edges events)
-   :levels levels
-   :grid   (GoT/fill-grid events levels)}
-)
+  (let [levels   (GoT/build-levels events)]
+        {:events events
+         :edges  (GoT/extract-edges events)
+         :levels levels
+         :grid   (GoT/fill-grid events levels)}))
 
 
 :problem :recall :reason :reason :compute
@@ -146,4 +170,4 @@
   (n :t4 :recall [:t2])
 ]))
 (pp p1)
-(file/put "./play.svg" (GoT/to-svg p1))
+# (file/put "./play.svg" (GoT/to-svg p1))
