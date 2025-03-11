@@ -86,7 +86,7 @@
     [(+ (cfg :padx) (* (cfg :spacex) (got :width)     (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
      (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row))))])
 
-(defn GoT/to-svg [got cfg] # TODO calc height & width
+(defn GoT/to-svg [got cfg]
   (svg/wrap 
     (+ (* 2 (cfg :pady)) (*      (got :height) (cfg :spacey))) 
     (+ (* 2 (cfg :padx)) (* (+ 1 (got :width)) (cfg :spacex))) 
@@ -202,6 +202,7 @@
   {:kind    :question 
    :content content})
 
+# TODO color based on node kind
 (def p1 (GoT/init [
   (n :root :problem [])
   (q  "what is")
