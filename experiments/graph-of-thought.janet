@@ -25,8 +25,11 @@
 (defn svg/wrap [w h content]
   (string 
     `<svg 
-        xmlns="http://www.w3.org/2000/svg"
-        viewbox="` w ` ` h ` ` w ` ` h `">`
+      xmlns="http://www.w3.org/2000/svg"
+      viewbox="`0` `0` ` w ` ` h `"
+      width="` w`"
+      height="`h`"
+    >`
         (svg/normalize content)
     `</svg>`))
 
@@ -34,52 +37,68 @@
   (string `<g>` (svg/normalize content) `</g>`))
 
 (defn svg/circle [x y r fill]
-  (string `<circle r="`r`" cx="`x`" cy="`y`" fill="`fill`"></circle>`))
+  (string 
+    `<circle 
+      r="` r`" 
+      cx="`x`" 
+      cy="`y`" 
+      fill="`fill`"/>`))
 
-
-(defn svg/circle [x y r fill]
-  (string `<circle r="`r`" cx="`x`" cy="`y`" fill="`fill`"></circle>`))
-
-(defn svg/path [points fill]
-  (string `<path d="` (string/join points " ") `" fill="transparent" stroke="`fill`"></path>`))
+(defn svg/line [p g w fill]
+  (string 
+    `<line 
+      x1="` (first p) `" 
+      y1="` (last  p) `" 
+      x2="` (first g) `" 
+      y2="` (last  g) `" 
+      stroke-width="` w `"
+      stroke="` fill `"/>`))
 
 (defn not-nil-indexes (row)
-  (def acc @[])
-  (eachp [i n] row
-    (if n (array/push acc i)))
-  acc)
+  (let [acc @[]]
+    (eachp [i n] row
+      (if n (array/push acc i)))
+    acc))
 
-(defn GoT/to-svg-impl (got)
-  (def acc @[])
-  (eachp [l nodes] (got :grid)
-        (def idx (not-nil-indexes nodes))
-        (def w (inc (- (last idx) (first idx)))) # width of row
-        (pp idx)
-        (pp w)
-        (eachp [i n] nodes
-          (if (nil? n) nil 
-              (array/push acc [l i w n]))))
-              
-  (pp acc))
+(defn keep-ends (lst) 
+    [(first lst) (last lst)])
 
-# TODO
-(defn GoT/svg/calc-pos (grid row col))
+(defn range-len (indicies)
+  (+ 1 (- (last indicies) (first indicies))))
 
-(defn GoT/to-svg [got cfg] 
-  # TODO calc height & width
-  (GoT/to-svg-impl got)
-  (svg/wrap 50 50
-    (let [h    (length (got :grid))
-          acc  @[]]
-      (eachp [l nodes] (got :grid)
-        (eachp [i n] nodes
-          (if (nil? n) nil 
-              (array/push acc (svg/circle 
-                              (+ (cfg :padx) (* (cfg :space) i)) 
-                              (+ (cfg :pady) (* (cfg :space) (- h l))) 
-                                 (cfg :size) 
-                                 (cfg :color))))))
-      acc)))
+(defn to-table (lst key-generator)
+  (let [acc @{}]
+      (each n lst (put acc (key-generator n) n))
+      acc))
+
+(defn positioned-item (n r c rng rw) 
+  {:node n :row r :col c :row-range rng :row-width rw})
+
+(defn GoT/to-svg-impl (got) # extracts nessesary information for plotting
+  (let [acc @[]]
+    (eachp [l nodes] (got :grid)
+      (eachp [i n] nodes
+        (let [idx (not-nil-indexes nodes)]
+          (if n (array/push acc (positioned-item n l i (keep-ends idx) (range-len idx)))))))
+    acc))
+
+(defn GoT/svg-calc-pos (item got cfg)
+    [(+ (cfg :padx) (* (cfg :spacex) (got :width)     (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
+     (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row))))])
+
+(defn GoT/to-svg [got cfg] # TODO calc height & width
+  (svg/wrap 
+    (+ (* 2 (cfg :pady)) (*      (got :height) (cfg :spacey))) 
+    (+ (* 2 (cfg :padx)) (* (+ 1 (got :width)) (cfg :spacex))) 
+    (let [acc  @[]
+          locs @{}]
+      (each item (GoT/to-svg-impl got)
+        (let [pos (GoT/svg-calc-pos item got cfg)]
+          (put locs   (item :node) pos)
+          (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) (cfg :color)))))
+      (each e (got :edges)
+        (array/push acc (svg/line (locs (first e)) (locs (last e)) (cfg :stroke) (cfg :color))))
+    acc)))
 
 (defn rev-table [tab]
   (def acc @{})
@@ -108,9 +127,8 @@
 
 
 (defn grid-size (rows)
-  (tuple 
-    (length rows) 
-    (reduce max 0 (map length (values rows)))))
+  [ (length rows) 
+    (reduce max 0 (map length (values rows)))])
 
 (defn matrix-of (rows cols val)
   (map (fn [_] (array/new-filled cols)) (range rows)))
@@ -153,7 +171,7 @@
               (set j (min (dec width) (inc j)))))))
 
 (defn GoT/fill-grid (events levels)
-  (let [rows  (rev-table levels)
+  (let [rows  (rev-table   levels)
         shape (grid-size     rows)
         grid  (GoT/init-grid rows)]
     (each e events
@@ -163,16 +181,18 @@
 
 
 (defn GoT/init [events] 
-  (let [levels   (GoT/build-levels events)]
+  (let [levels   (GoT/build-levels events)
+        grid     (GoT/fill-grid     events levels)]
         {:events events
-         :edges  (GoT/extract-edges events)
          :levels levels
-         :grid   (GoT/fill-grid events levels)}))
+         :grid   grid
+         :edges  (GoT/extract-edges events)
+         :height (length grid) 
+         :width  (length (grid 0))}))
 
-
-:problem :recall :reason :reason :compute
 
 (defn n [id class anscestors] # node
+  # :problem :recall :reason :reason :compute
   {:kind  :node 
    :id    id
    :class class 
@@ -187,12 +207,16 @@
   (q  "what is")
   (n :t1 :recall [:root])
   (n :t2 :recall [:t1])
+  (n :t22 :recall [:root])
+  (n :t23 :recall [:root])
   (n :t3 :recall [:t2 :t1])
   (n :t4 :recall [:t2])
 ]))
 (pp p1)
-(file/put "./play.svg" (GoT/to-svg p1 {:size  10
-                                       :space 60
-                                       :padx 300
-                                       :pady 300
+(file/put "./play.svg" (GoT/to-svg p1 {:radius  20
+                                       :spacex 100
+                                       :spacey  80
+                                       :padx    40
+                                       :pady    40
+                                       :stroke   4
                                        :color "black"}))
