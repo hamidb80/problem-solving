@@ -42,7 +42,10 @@
       r="` r`" 
       cx="`x`" 
       cy="`y`" 
-      fill="`fill`"/>`))
+      fill="`fill`"
+      stroke="white"
+      stroke-width="4"
+      />`))
 
 (defn svg/line [p g w fill]
   (string 
@@ -83,7 +86,7 @@
     acc))
 
 (defn GoT/svg-calc-pos (item got cfg)
-    [(+ (cfg :padx) (* (cfg :spacex) (got :width)     (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
+    [(+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
      (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row))))])
 
 (defn GoT/to-svg [got cfg]
@@ -95,10 +98,10 @@
       (each item (GoT/to-svg-impl got)
         (let [pos (GoT/svg-calc-pos item got cfg)]
           (put locs   (item :node) pos)
-          (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) (cfg :color)))))
+          (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) ((cfg :color-map) (((got :nodes) (item :node)) :class)) ))))
       (each e (got :edges)
-        (array/push acc (svg/line (locs (first e)) (locs (last e)) (cfg :stroke) (cfg :color))))
-    acc)))
+        (array/push acc (svg/line (locs (first e)) (locs (last e)) (cfg :stroke) (cfg :stroke-color))))
+    (reverse acc))))
 
 (defn rev-table [tab]
   (def acc @{})
@@ -124,7 +127,6 @@
             :node (each a (e :ans)
                     (array/push acc [a (e :id)]))))
        acc))
-
 
 (defn grid-size (rows)
   [ (length rows) 
@@ -182,17 +184,18 @@
 
 (defn GoT/init [events] 
   (let [levels   (GoT/build-levels events)
-        grid     (GoT/fill-grid     events levels)]
+        grid     (GoT/fill-grid    events levels)]
         {:events events
          :levels levels
          :grid   grid
+         :nodes  (to-table events (fn [e] (if (= :node (e :kind)) (e :id))))
          :edges  (GoT/extract-edges events)
          :height (length grid) 
          :width  (length (grid 0))}))
 
 
 (defn n [id class anscestors] # node
-  # :problem :recall :reason :reason :compute
+  # :problem :recall :reason :calculate
   {:kind  :node 
    :id    id
    :class class 
@@ -202,22 +205,29 @@
   {:kind    :question 
    :content content})
 
-# TODO color based on node kind
 (def p1 (GoT/init [
   (n :root :problem [])
   (q  "what is")
   (n :t1 :recall [:root])
-  (n :t2 :recall [:t1])
-  (n :t22 :recall [:root])
+  (n :t2 :reason [:t1])
+  (n :t22 :calculate [:root])
   (n :t23 :recall [:root])
-  (n :t3 :recall [:t2 :t1])
-  (n :t4 :recall [:t2])
+  (n :t3 :calculate [:t2 :t1])
+  (n :t4 :reason [:t2])
+  (n :t5 :goal [:t4])
 ]))
+
+
 (pp p1)
-(file/put "./play.svg" (GoT/to-svg p1 {:radius  20
+(file/put "./play.svg" (GoT/to-svg p1 {:radius  16
                                        :spacex 100
                                        :spacey  80
                                        :padx    40
                                        :pady    40
                                        :stroke   4
-                                       :color "black"}))
+                                       :stroke-color "#212121"
+                                       :color-map { :problem   "#212121"
+                                                    :goal      "#212121"
+                                                    :recall    "#864AF9"
+                                                    :calculate "#E85C0D"
+                                                    :reason    "#5CB338" }}))
