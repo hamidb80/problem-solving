@@ -42,6 +42,12 @@
           :array  (string/join c " ")
           :string              c))
 
+(defn to-xml-attrs (attrs)
+  (let [acc @[]]
+    (eachp [k v] attrs
+      (array/push acc (string k `="` v `"`)))
+    (string/join acc " ")))
+
 (defn svg/rect [x y w h c]
    (string `<rect 
       x="`x`" 
@@ -64,18 +70,22 @@
     `</svg>`))
 
 (defn svg/group [content]
-  (string `<g>` (svg/normalize content) `</g>`))
+  (string 
+    `<g` `>` 
+      (svg/normalize content) 
+    `</g>`))
 
-(defn svg/circle [x y r fill]
+(defn svg/circle [x y r fill &opt attrs]
   (string 
     `<circle 
       r="` r`" 
       cx="`x`" 
       cy="`y`" 
-      fill="`fill`"
-      />`))
+      fill="`fill`" `
+      (if attrs (to-xml-attrs attrs))
+      `/>`))
 
-(defn svg/line [p g w fill]
+(defn svg/line [p g w fill &opt attrs]
   (string 
     `<line 
       x1="` (first p) `" 
@@ -83,7 +93,8 @@
       x2="` (first g) `" 
       y2="` (last  g) `" 
       stroke-width="` w `"
-      stroke="` fill `"/>`))
+      stroke="` fill `"
+      ` (if attrs (to-xml-attrs attrs)) `/>`))
 
 # ----------- random helpers
 (defn not-nil-indexes (row)
@@ -121,6 +132,8 @@
   (put (grid y) x val))
 
 # ---------- domain
+(defn node-class (id)
+  (string "node-" id))
 (defn positioned-item (n r c rng rw) 
   {:node n :row r :col c :row-range rng :row-width rw})
 
@@ -152,18 +165,19 @@
       (each item (GoT/to-svg-impl got)
         (let [pos (GoT/svg-calc-pos item got cfg ctx)]
           (put locs   (item :node) pos)
-          (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) ((cfg :color-map) (((got :nodes) (item :node)) :class)) ))))
+          (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) ((cfg :color-map) (((got :nodes) (item :node)) :class)) {:class (string "node " (node-class (item :node)))}))))
       
       (each e (got :edges)
-        (let [head (locs (first e))
-              tail (locs (last  e))
+        (let [from (first e)
+              to   (last  e)
+              head (locs from)
+              tail (locs to)
               vec  (v- tail head)
               nv   (v-norm vec)
               diff (v* (+ (cfg :node-pad) (cfg :radius)) nv)
               h    (v+ head diff)
-              t    (v- tail diff)
-              ]
-          (array/push acc (svg/line h t (cfg :stroke) (cfg :stroke-color)))))
+              t    (v- tail diff)]
+          (array/push acc (svg/line h t (cfg :stroke) (cfg :stroke-color) {:class (string "edge " (node-class to))}))))
     
       (reverse acc))))
 
@@ -242,6 +256,85 @@
          :height (length grid) 
          :width  (length (grid 0))}))
 
+(defn GoT/to-html (got svg)
+  (string `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title> Name </title>
+
+        
+    <script>
+      const events = [` (string/join (map (fn [n] (string `'.` (node-class (n :id)) `'`)) (filter (fn [e] (= (e :kind) :node)) (got :events))) ", ") `]
+      let cursor = -1
+
+      // ------------------ states
+
+      function q(sel){
+        return [...document.querySelectorAll(sel)]
+      }
+
+      function hide(el){
+        el.style.visibility="hidden"
+      }
+      
+      function show(el){
+        el.style.visibility= "visible"
+      }
+
+      function init(){
+        q(".node").forEach(hide)
+        q(".edge").forEach(hide)
+      }
+
+      // -----------------------
+
+      console.log('huh')
+
+      function goNext(){
+        cursor ++
+        q(events[cursor]).forEach(show)
+      }
+      function goPrev(){
+        q(events[cursor]).forEach(hide)
+        cursor --
+      }
+    </script>
+
+    <style>
+      button {
+        cursor: pointer;
+      }
+      .node {
+        cursor: pointer;
+      }
+
+      .node:hover {
+        opacity: 0.5;
+      }
+    </style>
+
+    </head>
+    <body>
+      <div>
+        <button onclick="goPrev()">
+          <<
+        </button>
+
+        <button onclick="goNext()">
+          >>
+        </button>
+      </div>
+     ` svg `
+    </body>
+
+    <script>
+      init()
+    </script>
+    
+    </html>`))
 
 (defn n [id class anscestors] # node
   # :problem :recall :reason :calculate
@@ -255,29 +348,41 @@
    :content content})
 # ---------- test
 (def p1 (GoT/init [
+  (q  "1.")
   (n :root :problem [])
-  (q  "what is")
+  (q  "2.")
   (n :t1 :recall [:root])
+  (q  "3.")
   (n :t2 :reason [:t1])
+  (q  "4.")
   (n :t22 :calculate [:root])
+  (q  "5.")
   (n :t23 :recall [:root])
+  (q  "6.")
   (n :t3 :calculate [:t2 :t1])
+  (q  "7.")
   (n :t4 :reason [:t2])
+  (q  "8.")
   (n :t5 :goal [:t4])
+  (q  "well done!")
 ]))
+
 (pp p1)
 
-(file/put "./play.svg" (GoT/to-svg p1 {:radius   16
-                                       :spacex  100
-                                       :spacey   80
-                                       :padx     50
-                                       :pady     50
-                                       :stroke    4
-                                       :node-pad  6
-                                       :background nil # "black"
-                                       :stroke-color           "#212121"
-                                       :color-map { :problem   "#212121"
-                                                    :goal      "#212121"
-                                                    :recall    "#864AF9"
-                                                    :calculate "#E85C0D"
-                                                    :reason    "#5CB338" }}))
+(def svg-p1 
+  (GoT/to-svg p1 {:radius   16
+                  :spacex  100
+                  :spacey   80
+                  :padx     50
+                  :pady     50
+                  :stroke    4
+                  :node-pad  6
+                  :background nil # "black"
+                  :stroke-color          "#212121"
+                  :color-map { :problem  "#212121"
+                              :goal      "#212121"
+                              :recall    "#864AF9"
+                              :calculate "#E85C0D"
+                              :reason    "#5CB338" }}))
+
+(file/put "./play.html" (GoT/to-html p1 svg-p1))
