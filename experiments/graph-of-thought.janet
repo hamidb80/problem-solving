@@ -100,23 +100,25 @@
 (defn v-mag     (v) (math/sqrt (reduce + 0 (map * v v))))
 (defn v-norm    (a) (v* (/ 1 (v-mag a)) a))
 
-(defn GoT/svg-calc-pos (item got cfg)
-    [(+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
-     (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row) 1)))])
+(defn GoT/svg-calc-pos (item got cfg ctx)
+    [(- (+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) (ctx :cutx) ) 
+        (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row) 1)))])
 
 (defn GoT/to-svg [got cfg]
-  (def cutx (/ (* (got :width)(cfg :spacex)) (+ 1 (got :width))))
+  (def cutx (/ (* (got :width) (cfg :spacex)) (+ 1 (got :width))))
+
   (svg/wrap 0 0
-    (+ (* 2 (cfg :padx)) (* (+  0  (got :width))  (cfg :spacex)))
-    (+ (* 2 (cfg :pady)) (* (+ -1 (got :height)) (cfg :spacey))) 
+    (- (+ (* 2 (cfg :padx)) (* (+  0 (got :width))  (cfg :spacex))) (* 2 cutx))
+    (- (+ (* 2 (cfg :pady)) (* (+ -1 (got :height)) (cfg :spacey))) 0) 
 
     (cfg :background)
     
     (let [acc  @[]
-          locs @{}]
+          locs @{}
+          ctx  {:cutx cutx}]
       
       (each item (GoT/to-svg-impl got)
-        (let [pos (GoT/svg-calc-pos item got cfg)]
+        (let [pos (GoT/svg-calc-pos item got cfg ctx)]
           (put locs   (item :node) pos)
           (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) ((cfg :color-map) (((got :nodes) (item :node)) :class)) ))))
       
@@ -253,7 +255,7 @@
 (file/put "./play.svg" (GoT/to-svg p1 {:radius  16
                                        :spacex  100
                                        :spacey  80
-                                       :padx     0
+                                       :padx     50
                                        :pady     50
                                        :stroke   4
                                        :node-pad 6
