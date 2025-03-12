@@ -101,8 +101,8 @@
 (defn v-norm    (a) (v* (/ 1 (v-mag a)) a))
 
 (defn GoT/svg-calc-pos (item got cfg ctx)
-    [(- (+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) (ctx :cutx) ) 
-        (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row) 1)))])
+    [(+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) ) (* -1 (ctx :cutx))) 
+     (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row) 1)))])
 
 (defn GoT/to-svg [got cfg]
   (def cutx (/ (* (got :width) (cfg :spacex)) (+ 1 (got :width))))
