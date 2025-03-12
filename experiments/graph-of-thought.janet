@@ -319,13 +319,8 @@
     </head>
     <body>
       <div>
-        <button onclick="goPrev()">
-          <<
-        </button>
-
-        <button onclick="goNext()">
-          >>
-        </button>
+        <button onclick="goPrev()"> prev </button>
+        <button onclick="goNext()"> next </button>
       </div>
      ` svg `
     </body>
@@ -379,7 +374,7 @@
                   :node-pad  6
                   :background nil # "black"
                   :stroke-color          "#212121"
-                  :color-map { :problem  "#212121"
+                  :color-map {:problem   "#212121"
                               :goal      "#212121"
                               :recall    "#864AF9"
                               :calculate "#E85C0D"
