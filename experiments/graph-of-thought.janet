@@ -22,15 +22,25 @@
           :array  (string/join c " ")
           :string              c))
 
-(defn svg/wrap [w h content]
+(defn svg/rect [x y w h c]
+   (string `<rect 
+      x="`x`" 
+      y="`y`" 
+      width="`w`" 
+      height="`h`" 
+      fill="`c`" 
+    />`))
+
+(defn svg/wrap [ox oy w h b content]
   (string 
     `<svg 
       xmlns="http://www.w3.org/2000/svg"
-      viewbox="`0` `0` ` w ` ` h `"
+      viewBox="`ox` `oy` ` w ` ` h `"
       width="` w`"
       height="`h`"
     >`
-        (svg/normalize content)
+      (if b (svg/rect 0 0 w h b))
+      (svg/normalize content)
     `</svg>`))
 
 (defn svg/group [content]
@@ -43,8 +53,6 @@
       cx="`x`" 
       cy="`y`" 
       fill="`fill`"
-      stroke="white"
-      stroke-width="4"
       />`))
 
 (defn svg/line [p g w fill]
@@ -85,23 +93,45 @@
           (if n (array/push acc (positioned-item n l i (keep-ends idx) (range-len idx)))))))
     acc))
 
+# (defn zip (a b) (map tuple a b))
+(defn v+    (v1 v2) (map + v1 v2))
+(defn v-    (v1 v2) (map - v1 v2))
+(defn v* (scalar v) (map (fn (x) (* x scalar)) v))
+(defn v-mag     (v) (math/sqrt (reduce + 0 (map * v v))))
+(defn v-norm    (a) (v* (/ 1 (v-mag a)) a))
+
 (defn GoT/svg-calc-pos (item got cfg)
     [(+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) )) 
-     (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row))))])
+     (+ (cfg :pady) (* (cfg :spacey) (- (got :height) (item :row) 1)))])
 
 (defn GoT/to-svg [got cfg]
-  (svg/wrap 
-    (+ (* 2 (cfg :pady)) (*      (got :height) (cfg :spacey))) 
-    (+ (* 2 (cfg :padx)) (* (+ 1 (got :width)) (cfg :spacex))) 
+  (def cutx (/ (* (got :width)(cfg :spacex)) (+ 1 (got :width))))
+  (svg/wrap 0 0
+    (+ (* 2 (cfg :padx)) (* (+  0  (got :width))  (cfg :spacex)))
+    (+ (* 2 (cfg :pady)) (* (+ -1 (got :height)) (cfg :spacey))) 
+
+    (cfg :background)
+    
     (let [acc  @[]
           locs @{}]
+      
       (each item (GoT/to-svg-impl got)
         (let [pos (GoT/svg-calc-pos item got cfg)]
           (put locs   (item :node) pos)
           (array/push acc (svg/circle (first pos) (last pos) (cfg :radius) ((cfg :color-map) (((got :nodes) (item :node)) :class)) ))))
+      
       (each e (got :edges)
-        (array/push acc (svg/line (locs (first e)) (locs (last e)) (cfg :stroke) (cfg :stroke-color))))
-    (reverse acc))))
+        (let [head (locs (first e))
+              tail (locs (last  e))
+              vec  (v- tail head)
+              nv   (v-norm vec)
+              diff (v* (+ (cfg :node-pad) (cfg :radius)) nv)
+              h    (v+ head diff)
+              t    (v- tail diff)
+              ]
+          (array/push acc (svg/line h t (cfg :stroke) (cfg :stroke-color)))))
+    
+      (reverse acc))))
 
 (defn rev-table [tab]
   (def acc @{})
@@ -219,12 +249,15 @@
 
 
 (pp p1)
+# colors stolen from https://colorhunt.co/
 (file/put "./play.svg" (GoT/to-svg p1 {:radius  16
-                                       :spacex 100
+                                       :spacex  100
                                        :spacey  80
-                                       :padx    40
-                                       :pady    40
+                                       :padx     0
+                                       :pady     50
                                        :stroke   4
+                                       :node-pad 6
+                                       :background nil # "black"
                                        :stroke-color "#212121"
                                        :color-map { :problem   "#212121"
                                                     :goal      "#212121"
