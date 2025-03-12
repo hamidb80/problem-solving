@@ -1,5 +1,5 @@
 # GoT (Graph of Thought) is a DAG (Direct Acyclic Graph)
-
+# colors stolen from https://colorhunt.co/
 # ----------- debugging
 (defn inspect (a) 
   (pp a)
@@ -266,16 +266,16 @@
   (n :t5 :goal [:t4])
 ]))
 (pp p1)
-# colors stolen from https://colorhunt.co/
-(file/put "./play.svg" (GoT/to-svg p1 {:radius  16
+
+(file/put "./play.svg" (GoT/to-svg p1 {:radius   16
                                        :spacex  100
-                                       :spacey  80
+                                       :spacey   80
                                        :padx     50
                                        :pady     50
-                                       :stroke   4
-                                       :node-pad 6
+                                       :stroke    4
+                                       :node-pad  6
                                        :background nil # "black"
-                                       :stroke-color "#212121"
+                                       :stroke-color           "#212121"
                                        :color-map { :problem   "#212121"
                                                     :goal      "#212121"
                                                     :recall    "#864AF9"
