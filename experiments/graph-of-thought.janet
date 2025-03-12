@@ -1,13 +1,6 @@
 # GoT (Graph of Thought) is a DAG (Direct Acyclic Graph)
 
-(defn file/put (path content)
-  (def        f (file/open path :w))
-  (file/write f content)
-  (file/close f))
-
-(defn file/exists (path) 
-  (not (nil? (os/stat path))))
-
+# ----------- debugging
 (defn inspect (a) 
   (pp a)
   a)
@@ -16,7 +9,34 @@
   (print a)
   a)
 
+# ------------ files 
+(defn file/put (path content)
+  (def        f (file/open path :w))
+  (file/write f content)
+  (file/close f))
 
+(defn file/exists (path) 
+  (not (nil? (os/stat path))))
+
+# ---------- vector arithmatic
+# (defn zip (a b) (map tuple a b))
+(defn v+    (v1 v2) 
+  (map + v1 v2))
+
+(defn v-    (v1 v2) 
+  (map - v1 v2))
+
+(defn v* (scalar v) 
+  (map (fn (x) (* x scalar)) v))
+
+(defn v-mag     (v) 
+  (math/sqrt (reduce + 0 (map * v v))))
+
+(defn v-norm    (a) 
+  (v* (/ 1 (v-mag a)) a))
+
+
+# ---------- pure svg thing
 (defn svg/normalize (c)
   (match (type c)
           :array  (string/join c " ")
@@ -65,6 +85,7 @@
       stroke-width="` w `"
       stroke="` fill `"/>`))
 
+# ----------- random helpers
 (defn not-nil-indexes (row)
   (let [acc @[]]
     (eachp [i n] row
@@ -82,6 +103,24 @@
       (each n lst (put acc (key-generator n) n))
       acc))
 
+(defn avg (lst)
+  (/ (reduce + 0 lst) (length lst)))
+
+# ---------- matrix 
+(defn matrix-size (rows)
+  [ (length rows) 
+    (reduce max 0 (map length (values rows)))])
+
+(defn matrix-of (rows cols val)
+  (map (fn [_] (array/new-filled cols)) (range rows)))
+
+(defn get-cell [grid y x]
+  ((grid y) x))
+
+(defn put-cell [grid y x val]
+  (put (grid y) x val))
+
+# ---------- domain
 (defn positioned-item (n r c rng rw) 
   {:node n :row r :col c :row-range rng :row-width rw})
 
@@ -92,13 +131,6 @@
         (let [idx (not-nil-indexes nodes)]
           (if n (array/push acc (positioned-item n l i (keep-ends idx) (range-len idx)))))))
     acc))
-
-# (defn zip (a b) (map tuple a b))
-(defn v+    (v1 v2) (map + v1 v2))
-(defn v-    (v1 v2) (map - v1 v2))
-(defn v* (scalar v) (map (fn (x) (* x scalar)) v))
-(defn v-mag     (v) (math/sqrt (reduce + 0 (map * v v))))
-(defn v-norm    (a) (v* (/ 1 (v-mag a)) a))
 
 (defn GoT/svg-calc-pos (item got cfg ctx)
     [(+ (cfg :padx) (* (cfg :spacex)    (got :width)  (* (/ 1 (+ 1 (item :row-width))) (+ 1 (- (item :col) (first (item :row-range))))) ) (* -1 (ctx :cutx))) 
@@ -160,25 +192,10 @@
                     (array/push acc [a (e :id)]))))
        acc))
 
-(defn grid-size (rows)
-  [ (length rows) 
-    (reduce max 0 (map length (values rows)))])
-
-(defn matrix-of (rows cols val)
-  (map (fn [_] (array/new-filled cols)) (range rows)))
-
 (defn GoT/init-grid [rows]
-  (let [size (grid-size rows)]
+  (let [size (matrix-size rows)]
        (matrix-of (first size) (last size) nil)))
 
-(defn get-cell [grid y x]
-  ((grid y) x))
-
-(defn put-cell [grid y x val]
-  (put (grid y) x val))
-
-(defn avg (lst)
-  (/ (reduce + 0 lst) (length lst)))
 
 (defn GoT/place-node (grid size levels node selected-row parents)
   # places and then returns the position
@@ -206,7 +223,7 @@
 
 (defn GoT/fill-grid (events levels)
   (let [rows  (rev-table   levels)
-        shape (grid-size     rows)
+        shape (matrix-size rows)
         grid  (GoT/init-grid rows)]
     (each e events
       (match (e :kind)
@@ -236,7 +253,7 @@
 (defn q [content] # question or hint
   {:kind    :question 
    :content content})
-
+# ---------- test
 (def p1 (GoT/init [
   (n :root :problem [])
   (q  "what is")
@@ -248,8 +265,6 @@
   (n :t4 :reason [:t2])
   (n :t5 :goal [:t4])
 ]))
-
-
 (pp p1)
 # colors stolen from https://colorhunt.co/
 (file/put "./play.svg" (GoT/to-svg p1 {:radius  16
