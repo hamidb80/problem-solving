@@ -1,0 +1,2 @@
+DnaDistance ← +´≠
+"GAGCCTACTAACGGGAT" DnaDistance "CATCGTAATGACGGCCT" # 7
