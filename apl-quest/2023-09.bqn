@@ -1,6 +1,5 @@
 FlipPairs ← {𝕊x: # rename the argument 𝕩 to `x` so that stupid BQN does not mis-understand 𝕩 in the last expression as a function rather than if expression
-  e ← ⥊⌽˘⌊‿2 ⥊ x # result for even case
-  {2|≠x ? e ∾ ⊏⌽x ; e}
+  {2|≠x ? ⊏⌽x ; ⟨⟩} ∾˜ ⥊ ⌽˘ ⌊‿2 ⥊ x
 }
 
 
